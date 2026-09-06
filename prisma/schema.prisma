@@ -1,0 +1,407 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CUSTOMER
+  COMPANION
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  VERIFIED
+  REJECTED
+  SUSPENDED
+  BANNED
+}
+
+enum BookingStatus {
+  PENDING
+  PAYMENT_PENDING
+  PAID
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  REFUNDED
+  DISPUTED
+}
+
+enum PaymentType {
+  REGISTRATION_FEE
+  BOOKING_PAYMENT
+  REFUND
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REFUNDED
+}
+
+enum DocumentType {
+  GOVT_ID
+  SELFIE
+  ADDRESS_PROOF
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReportStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+model User {
+  id                    String            @id @default(uuid())
+  email                 String            @unique
+  passwordHash          String
+  phone                 String?
+  role                  Role              @default(CUSTOMER)
+  isEmailVerified       Boolean           @default(false)
+  isPhoneVerified       Boolean           @default(false)
+  isRegistrationFeePaid Boolean           @default(false)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  customerProfile       CustomerProfile?
+  companionProfile      CompanionProfile?
+  payments              Payment[]
+  bookingsAsCustomer    Booking[]         @relation("CustomerBookings")
+  reviewsGiven          Review[]          @relation("ReviewsGiven")
+  reviewsReceived       Review[]          @relation("ReviewsReceived")
+  messagesSent          Message[]
+  notifications         Notification[]
+  reportsFiled          Report[]          @relation("ReportsFiled")
+  reportsReceived       Report[]          @relation("ReportsReceived")
+  favorites             Favorite[]
+  blockedUsers          BlockedUser[]     @relation("BlockerUsers")
+  blockedBy             BlockedUser[]     @relation("BlockedUsers")
+  adminLogs             AuditLog[]
+
+  customerConversations  Conversation[]   @relation("CustomerConversations")
+  companionConversations Conversation[]   @relation("CompanionConversations")
+
+  @@index([email])
+  @@index([role])
+}
+
+model CustomerProfile {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  displayAvatar String?
+  age           Int
+  gender        String?
+  city          String?
+  interests     String[] @default([])
+  languages     String[] @default([])
+  bio           String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model City {
+  id         String             @id @default(uuid())
+  name       String             @unique
+  state      String
+  slug       String             @unique
+  imageUrl   String?
+  isPopular  Boolean            @default(false)
+  createdAt  DateTime           @default(now())
+  companions CompanionProfile[]
+}
+
+model Activity {
+  id                  String              @id @default(uuid())
+  name                String              @unique
+  slug                String              @unique
+  icon                String?
+  description         String?
+  category            String?
+  createdAt           DateTime            @default(now())
+  companionActivities CompanionActivity[]
+  bookings            Booking[]
+}
+
+model CompanionProfile {
+  id                 String               @id @default(uuid())
+  userId             String               @unique
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  username           String               @unique
+  fullName           String
+  displayName        String
+  age                Int
+  gender             String
+  cityId             String
+  city               City                 @relation(fields: [cityId], references: [id])
+  profilePhoto       String?
+  gallery            String[]             @default([])
+  bio                String
+  languages          String[]             @default([])
+  interests          String[]             @default([])
+  hourlyPrice        Float                @default(500)
+  verificationStatus VerificationStatus   @default(PENDING)
+  verificationReason String?
+  isFeatured         Boolean              @default(false)
+  averageRating      Float                @default(0.0)
+  totalReviews       Int                  @default(0)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  activities         CompanionActivity[]
+  availabilitySlots  AvailabilitySlot[]
+  bookings           Booking[]            @relation("CompanionBookings")
+  verificationDocs   VerificationDocument[]
+  favoritedBy        Favorite[]
+
+  @@index([cityId])
+  @@index([verificationStatus])
+  @@index([hourlyPrice])
+  @@index([averageRating])
+}
+
+model CompanionActivity {
+  companionId String
+  companion   CompanionProfile @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  activityId  String
+  activity    Activity         @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@id([companionId, activityId])
+}
+
+model VerificationDocument {
+  id           String             @id @default(uuid())
+  companionId  String
+  companion    CompanionProfile   @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  documentType DocumentType
+  fileUrl      String
+  status       DocumentStatus     @default(PENDING)
+  reviewNotes  String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model AvailabilitySlot {
+  id          String           @id @default(uuid())
+  companionId String
+  companion   CompanionProfile @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  date        String
+  startTime   String
+  endTime     String
+  isBooked    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  @@unique([companionId, date, startTime])
+  @@index([companionId, date])
+}
+
+model Booking {
+  id                   String        @id @default(uuid())
+  bookingNumber        String        @unique
+  customerId           String
+  customer             User          @relation("CustomerBookings", fields: [customerId], references: [id])
+  companionId          String
+  companion            CompanionProfile @relation("CompanionBookings", fields: [companionId], references: [id])
+  activityId           String
+  activity             Activity      @relation(fields: [activityId], references: [id])
+  date                 String
+  startTime            String
+  endTime              String
+  durationHours        Float
+  hourlyPriceSnapshot  Float
+  totalAmount          Float
+  commissionRateSnapshot Float       @default(15.0)
+  commissionAmount     Float
+  companionEarnings    Float
+  status               BookingStatus @default(PENDING)
+  cancellationReason   String?
+  notes                String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  payment              Payment?
+  refund               Refund?
+  review               Review?
+  conversation         Conversation?
+
+  @@index([customerId])
+  @@index([companionId])
+  @@index([status])
+  @@index([date])
+}
+
+model Payment {
+  id                String        @id @default(uuid())
+  paymentNumber     String        @unique
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  bookingId         String?       @unique
+  booking           Booking?      @relation(fields: [bookingId], references: [id])
+  paymentType       PaymentType
+  amount            Float
+  currency          String        @default("INR")
+  razorpayOrderId   String        @unique
+  razorpayPaymentId String?       @unique
+  razorpaySignature String?
+  status            PaymentStatus @default(PENDING)
+  paymentMethod     String?
+  errorReason       String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  refunds           Refund[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model Refund {
+  id               String   @id @default(uuid())
+  paymentId        String
+  payment          Payment  @relation(fields: [paymentId], references: [id])
+  bookingId        String   @unique
+  booking          Booking  @relation(fields: [bookingId], references: [id])
+  amount           Float
+  reason           String
+  status           String   @default("PROCESSED")
+  razorpayRefundId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Review {
+  id                           String   @id @default(uuid())
+  bookingId                    String   @unique
+  booking                      Booking  @relation(fields: [bookingId], references: [id])
+  reviewerId                   String
+  reviewer                     User     @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  revieweeId                   String
+  reviewee                     User     @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+  rating                       Int
+  comment                      String
+  isCustomerReviewingCompanion Boolean  @default(true)
+  createdAt                    DateTime @default(now())
+
+  @@index([reviewerId])
+  @@index([revieweeId])
+}
+
+model Conversation {
+  id              String   @id @default(uuid())
+  bookingId       String?  @unique
+  booking         Booking? @relation(fields: [bookingId], references: [id])
+  customerId      String
+  customer        User     @relation("CustomerConversations", fields: [customerId], references: [id])
+  companionUserId String
+  companionUser   User     @relation("CompanionConversations", fields: [companionUserId], references: [id])
+  lastMessageAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  messages        Message[]
+
+  @@unique([customerId, companionUserId, bookingId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id])
+  text           String
+  isRead         Boolean      @default(false)
+  isReported     Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("SYSTEM")
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Report {
+  id             String       @id @default(uuid())
+  reporterId     String
+  reporter       User         @relation("ReportsFiled", fields: [reporterId], references: [id])
+  reportedUserId String
+  reportedUser   User         @relation("ReportsReceived", fields: [reportedUserId], references: [id])
+  reason         String
+  description    String
+  status         ReportStatus @default(PENDING)
+  messageId      String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+}
+
+model Favorite {
+  id          String           @id @default(uuid())
+  customerId  String
+  customer    User             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  companionId String
+  companion   CompanionProfile @relation(fields: [companionId], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+
+  @@unique([customerId, companionId])
+}
+
+model BlockedUser {
+  id        String   @id @default(uuid())
+  blockerId String
+  blocker   User     @relation("BlockerUsers", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BlockedUsers", fields: [blockedId], references: [id], onDelete: Cascade)
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+}
+
+model PlatformSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String
+  targetType String
+  targetId   String?
+  details    String?
+  createdAt  DateTime @default(now())
+}
+
