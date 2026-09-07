@@ -150,7 +150,7 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
   });
 
   return (
-    <section id="discover" className="py-20 bg-[#FFF8F5] border-b border-[#F47B8F]/20 relative">
+    <section id="discover" className="scroll-mt-24 py-20 bg-[#FFF8F5] border-b border-[#F47B8F]/20 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Locked Preview UX Heading (Req 6) */}
         <div className="text-center max-w-2xl mx-auto mb-10">
@@ -439,7 +439,7 @@ export function FAQSection() {
   ];
 
   return (
-    <section id="faqs" className="py-20 bg-[#FFF0F3] border-b border-[#F47B8F]/20">
+    <section id="faqs" className="scroll-mt-24 py-20 bg-[#FFF0F3] border-b border-[#F47B8F]/20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 bg-white border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3 shadow-sm">
@@ -482,6 +482,86 @@ export function FAQSection() {
       </div>
     </section>
   );
+}
+
+export function HowItWorksSection() {
+  return (
+    <section id="how-it-works" className="scroll-mt-24 py-20 bg-[#FFF0F3] border-b border-[#F47B8F]/20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 bg-white border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3 shadow-sm">
+            <span>Seamless Experience</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
+            How It Works
+          </h2>
+          <p className="text-[#756A70] text-sm mt-2 font-medium">Your 4-step journey to finding the right companion</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+          <div className="bg-white p-6 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-3 hover:shadow-md transition-all">
+            <span className="text-3xl font-black text-[#6D315D] block">01</span>
+            <h3 className="text-base font-extrabold text-[#292126]">CREATE YOUR PROFILE</h3>
+            <p className="text-xs text-[#756A70] leading-relaxed font-medium">
+              Register and tell us a little about yourself.
+            </p>
+          </div>
+
+          <div className="bg-[#FFF8F5] p-6 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-3 hover:shadow-md transition-all">
+            <span className="text-3xl font-black text-[#E94B83] block">02</span>
+            <h3 className="text-base font-extrabold text-[#292126]">DISCOVER</h3>
+            <p className="text-xs text-[#756A70] leading-relaxed font-medium">
+              Browse available girlfriend, boyfriend and companion profiles.
+            </p>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-3 hover:shadow-md transition-all">
+            <span className="text-3xl font-black text-[#D9A85C] block">03</span>
+            <h3 className="text-base font-extrabold text-[#292126]">CHOOSE</h3>
+            <p className="text-xs text-[#756A70] leading-relaxed font-medium">
+              Find someone who matches your preferred experience.
+            </p>
+          </div>
+
+          <div className="bg-[#FFF8F5] p-6 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-3 hover:shadow-md transition-all">
+            <span className="text-3xl font-black text-[#6D315D] block">04</span>
+            <h3 className="text-base font-extrabold text-[#292126]">CONNECT</h3>
+            <p className="text-xs text-[#756A70] leading-relaxed font-medium">
+              Book your experience and spend time together.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function HashScrollHandler() {
+  React.useEffect(() => {
+    const handleScroll = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const targetId = hash.replace('#', '');
+        let attempts = 0;
+        const interval = setInterval(() => {
+          const element = document.getElementById(targetId);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+            clearInterval(interval);
+          } else if (attempts > 25) {
+            clearInterval(interval);
+          }
+          attempts++;
+        }, 100);
+      }
+    };
+
+    handleScroll();
+    window.addEventListener('hashchange', handleScroll);
+    return () => window.removeEventListener('hashchange', handleScroll);
+  }, []);
+
+  return null;
 }
 
 export function StickyMobileCTA() {

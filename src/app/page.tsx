@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CompanionCard from '@/components/CompanionCard';
-import { CompanionDiscoverySection, FAQSection, StickyMobileCTA } from '@/components/LandingPageClient';
+import { CompanionDiscoverySection, FAQSection, HowItWorksSection, StickyMobileCTA } from '@/components/LandingPageClient';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { ShieldCheck, Search, MapPin, Sparkles, Coffee, Heart, Lock, Calendar, CheckCircle2, UserCheck, ArrowRight, MessageSquare, Star } from 'lucide-react';
@@ -498,57 +498,7 @@ export default async function HomePage() {
           />
 
           {/* ==================== 5. HOW IT WORKS ==================== */}
-          <section id="how-it-works" className="py-20 bg-[#FFF0F3] border-b border-[#F47B8F]/20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center max-w-2xl mx-auto mb-16">
-                <div className="inline-flex items-center gap-2 bg-white border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3 shadow-sm">
-                  <span>Seamless Experience</span>
-                </div>
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-                  How It Works
-                </h2>
-                <p className="text-[#756A70] text-sm mt-2 font-medium">Your 4-step journey to finding the right companion</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-                {/* Step 01 */}
-                <div className="bg-white p-6 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-3 hover:shadow-md transition-all">
-                  <span className="text-3xl font-black text-[#6D315D] block">01</span>
-                  <h3 className="text-base font-extrabold text-[#292126]">CREATE YOUR PROFILE</h3>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Register and tell us a little about yourself.
-                  </p>
-                </div>
-
-                {/* Step 02 */}
-                <div className="bg-[#FFF8F5] p-6 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-3 hover:shadow-md transition-all">
-                  <span className="text-3xl font-black text-[#E94B83] block">02</span>
-                  <h3 className="text-base font-extrabold text-[#292126]">DISCOVER</h3>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Browse available girlfriend, boyfriend and companion profiles.
-                  </p>
-                </div>
-
-                {/* Step 03 */}
-                <div className="bg-white p-6 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-3 hover:shadow-md transition-all">
-                  <span className="text-3xl font-black text-[#D9A85C] block">03</span>
-                  <h3 className="text-base font-extrabold text-[#292126]">CHOOSE</h3>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Find someone who matches your preferred experience.
-                  </p>
-                </div>
-
-                {/* Step 04 */}
-                <div className="bg-[#FFF8F5] p-6 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-3 hover:shadow-md transition-all">
-                  <span className="text-3xl font-black text-[#6D315D] block">04</span>
-                  <h3 className="text-base font-extrabold text-[#292126]">CONNECT</h3>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Book your experience and spend time together.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
+          <HowItWorksSection />
 
           {/* ==================== 6. PREMIUM CINEMATIC BREAK ==================== */}
           <section className="relative py-28 bg-[#6D315D] text-white overflow-hidden border-b border-[#F47B8F]/20">

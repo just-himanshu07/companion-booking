@@ -72,9 +72,9 @@ export default function Header({ currentUser }: HeaderProps) {
   }, []);
 
   const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, hashTarget: string) => {
-    if (typeof window !== 'undefined' && window.location.pathname === '/') {
-      const targetId = hashTarget.replace('/#', '').replace('#', '');
-      const element = document.getElementById(targetId);
+    const [targetPath, targetHash] = hashTarget.split('#');
+    if (typeof window !== 'undefined' && window.location.pathname === targetPath && targetHash) {
+      const element = document.getElementById(targetHash);
       if (element) {
         e.preventDefault();
         element.scrollIntoView({ behavior: 'smooth' });
@@ -82,6 +82,10 @@ export default function Header({ currentUser }: HeaderProps) {
       }
     }
   };
+
+  const discoverTarget = currentUser ? '/explore#discover' : '/#discover';
+  const howItWorksTarget = currentUser ? '/explore#how-it-works' : '/#how-it-works';
+  const faqsTarget = currentUser ? '/explore#faqs' : '/#faqs';
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -121,16 +125,16 @@ export default function Header({ currentUser }: HeaderProps) {
               </Link>
             ) : (
               <Link
-                href="/#discover"
-                onClick={(e) => handleAnchorClick(e, '/#discover')}
+                href={discoverTarget}
+                onClick={(e) => handleAnchorClick(e, discoverTarget)}
                 className="hover:text-[#E94B83] transition-colors"
               >
                 Discover
               </Link>
             )}
             <Link
-              href="/#how-it-works"
-              onClick={(e) => handleAnchorClick(e, '/#how-it-works')}
+              href={howItWorksTarget}
+              onClick={(e) => handleAnchorClick(e, howItWorksTarget)}
               className="hover:text-[#E94B83] transition-colors"
             >
               How It Works
@@ -143,8 +147,8 @@ export default function Header({ currentUser }: HeaderProps) {
               Safety
             </Link>
             <Link
-              href="/#faqs"
-              onClick={(e) => handleAnchorClick(e, '/#faqs')}
+              href={faqsTarget}
+              onClick={(e) => handleAnchorClick(e, faqsTarget)}
               className="hover:text-[#E94B83] transition-colors"
             >
               FAQs
@@ -321,20 +325,20 @@ export default function Header({ currentUser }: HeaderProps) {
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-[#F47B8F]/20 bg-white/98 backdrop-blur-2xl px-5 pt-3 pb-8 space-y-4 animate-in fade-in slide-in-from-top-2 shadow-xl">
           <Link
-            href="/#discover"
+            href={discoverTarget}
             onClick={(e) => {
               setMobileMenuOpen(false);
-              handleAnchorClick(e, '/#discover');
+              handleAnchorClick(e, discoverTarget);
             }}
             className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
           >
             Discover
           </Link>
           <Link
-            href="/#how-it-works"
+            href={howItWorksTarget}
             onClick={(e) => {
               setMobileMenuOpen(false);
-              handleAnchorClick(e, '/#how-it-works');
+              handleAnchorClick(e, howItWorksTarget);
             }}
             className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
           >
@@ -355,10 +359,10 @@ export default function Header({ currentUser }: HeaderProps) {
             Safety Center
           </Link>
           <Link
-            href="/#faqs"
+            href={faqsTarget}
             onClick={(e) => {
               setMobileMenuOpen(false);
-              handleAnchorClick(e, '/#faqs');
+              handleAnchorClick(e, faqsTarget);
             }}
             className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
           >
