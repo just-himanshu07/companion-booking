@@ -66,6 +66,14 @@ export async function POST(req: Request) {
           errorReason: null,
         },
       });
+
+      // Remove registration fee reminder notification for paid user
+      await tx.notification.deleteMany({
+        where: {
+          userId: user.id,
+          title: 'Welcome to Companion Marketplace!',
+        },
+      });
     });
 
     await createNotification(

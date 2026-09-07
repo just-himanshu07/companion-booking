@@ -7,7 +7,16 @@ export async function GET() {
     const user = await requireAuth();
 
     const notifications = await prisma.notification.findMany({
-      where: { userId: user.id },
+      where: {
+        userId: user.id,
+        ...(user.isRegistrationFeePaid
+          ? {
+              NOT: {
+                title: 'Welcome to Companion Marketplace!',
+              },
+            }
+          : {}),
+      },
       orderBy: { createdAt: 'desc' },
       take: 30,
     });

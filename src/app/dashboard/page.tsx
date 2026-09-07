@@ -60,7 +60,16 @@ export default async function DashboardPage() {
       take: 3,
     }),
     prisma.notification.findMany({
-      where: { userId: currentUser.id },
+      where: {
+        userId: currentUser.id,
+        ...(currentUser.isRegistrationFeePaid
+          ? {
+              NOT: {
+                title: 'Welcome to Companion Marketplace!',
+              },
+            }
+          : {}),
+      },
       orderBy: { createdAt: 'desc' },
       take: 5,
     }),
