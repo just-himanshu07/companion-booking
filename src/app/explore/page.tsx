@@ -94,6 +94,85 @@ export default async function ExplorePage() {
         </div>
 
         {/* Section 1: Discover */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-2">
+          <div className="bg-white border border-[#F47B8F]/25 rounded-3xl p-6 sm:p-8 shadow-sm">
+            <div className="max-w-3xl mb-6">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-[#292126] tracking-tight flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-[#E94B83]" />
+                What You Can Discover on Paireva
+              </h2>
+              <p className="text-xs sm:text-sm text-[#756A70] font-medium mt-1">
+                Everything you need to find and book your ideal social companion.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="bg-[#FFF8F5] p-4 rounded-2xl border border-[#F47B8F]/20 space-y-2">
+                <div className="w-8 h-8 rounded-xl bg-[#FFF0F3] text-[#E94B83] flex items-center justify-center font-bold text-xs">
+                  1
+                </div>
+                <h3 className="text-xs font-extrabold text-[#292126]">Browse Companions</h3>
+                <p className="text-[11px] text-[#756A70] font-medium leading-relaxed">
+                  Browse available companions across cities, categories, and preferences.
+                </p>
+              </div>
+
+              <div className="bg-[#FFF8F5] p-4 rounded-2xl border border-[#F47B8F]/20 space-y-2">
+                <div className="w-8 h-8 rounded-xl bg-[#FFF0F3] text-[#E94B83] flex items-center justify-center font-bold text-xs">
+                  2
+                </div>
+                <h3 className="text-xs font-extrabold text-[#292126]">View Profiles</h3>
+                <p className="text-[11px] text-[#756A70] font-medium leading-relaxed">
+                  View companion photo galleries, bios, ratings, and verified background details.
+                </p>
+              </div>
+
+              <div className="bg-[#FFF8F5] p-4 rounded-2xl border border-[#F47B8F]/20 space-y-2">
+                <div className="w-8 h-8 rounded-xl bg-[#FFF0F3] text-[#E94B83] flex items-center justify-center font-bold text-xs">
+                  3
+                </div>
+                <h3 className="text-xs font-extrabold text-[#292126]">Check Details</h3>
+                <p className="text-[11px] text-[#756A70] font-medium leading-relaxed">
+                  Check availability schedules, hourly pricing rates, and social activities.
+                </p>
+              </div>
+
+              <div className="bg-[#FFF8F5] p-4 rounded-2xl border border-[#F47B8F]/20 space-y-2">
+                <div className="w-8 h-8 rounded-xl bg-[#FFF0F3] text-[#E94B83] flex items-center justify-center font-bold text-xs">
+                  4
+                </div>
+                <h3 className="text-xs font-extrabold text-[#292126]">Choose Companion</h3>
+                <p className="text-[11px] text-[#756A70] font-medium leading-relaxed">
+                  Choose a companion based on your personal social preferences and dates.
+                </p>
+              </div>
+
+              <div className="bg-[#FFF8F5] p-4 rounded-2xl border border-[#F47B8F]/20 space-y-2">
+                <div className="w-8 h-8 rounded-xl bg-[#FFF0F3] text-[#E94B83] flex items-center justify-center font-bold text-xs">
+                  5
+                </div>
+                <h3 className="text-xs font-extrabold text-[#292126]">Proceed to Booking</h3>
+                <p className="text-[11px] text-[#756A70] font-medium leading-relaxed">
+                  Proceed to instant booking with transparent rates and safe Razorpay payments.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-[#F47B8F]/20 flex items-center justify-between gap-4 flex-wrap">
+              <p className="text-xs text-[#756A70] font-medium">
+                Ready to find your companion? Explore full profiles and book directly.
+              </p>
+              <Link
+                href="/companions"
+                className="bg-[#E94B83] hover:bg-[#D43770] text-white text-xs font-extrabold px-6 py-3 rounded-xl shadow-md shadow-[#E94B83]/20 flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              >
+                <Search className="w-4 h-4" />
+                Discover Companions →
+              </Link>
+            </div>
+          </div>
+        </div>
+
         <CompanionDiscoverySection initialCompanions={featuredCompanions} isLoggedIn={true} />
 
         {/* Section 2: How It Works */}
@@ -120,7 +199,7 @@ export default async function ExplorePage() {
                 href="/companions"
                 className="inline-flex items-center gap-2 bg-white text-[#6D315D] hover:bg-rose-50 font-extrabold text-xs px-7 py-3.5 rounded-2xl shadow-lg transition-all hover:scale-105 active:scale-95 cursor-pointer"
               >
-                Browse All Companions <ArrowRight className="w-4 h-4 text-[#E94B83]" />
+                Discover Companions <ArrowRight className="w-4 h-4 text-[#E94B83]" />
               </Link>
             </div>
           </div>
