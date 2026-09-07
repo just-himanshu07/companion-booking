@@ -16,17 +16,17 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'RentMate — Rent a Girlfriend. Rent a Boyfriend. Real People. Real Company.',
-  description: 'RentMate is India’s premier verified companionship marketplace. Discover companions for coffee dates, events, conversations, and public social activities.',
-  keywords: ['rent girlfriend', 'rent boyfriend', 'rentmate', 'companion booking', 'social companion', 'verified companion', 'coffee date companion'],
+  title: 'Paireva — Rent a Girlfriend. Rent a Boyfriend. Real People. Real Company.',
+  description: 'Paireva is India’s premier verified companionship marketplace. Discover companions for coffee dates, events, conversations, and public social activities.',
+  keywords: ['rent girlfriend', 'rent boyfriend', 'paireva', 'companion booking', 'social companion', 'verified companion', 'coffee date companion'],
   openGraph: {
-    title: 'RentMate — Real People. Real Company.',
+    title: 'Paireva — Real People. Real Company.',
     description: 'Rent a Girlfriend. Rent a Boyfriend. Or just Some Company.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'RentMate — Real People. Real Company.',
+    title: 'Paireva — Real People. Real Company.',
     description: 'Rent a Girlfriend. Rent a Boyfriend. Or just Some Company.',
   },
 };

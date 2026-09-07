@@ -93,7 +93,7 @@ export default async function HomePage() {
                 <span>Opposite-Gender Match Active ({currentUser.customerProfile?.gender || 'Member'})</span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-                Welcome to RentMate, <span className="text-[#6D315D] font-serif italic">{currentUser.customerProfile?.name || 'Member'}</span>!
+                Welcome to Paireva, <span className="text-[#6D315D] font-serif italic">{currentUser.customerProfile?.name || 'Member'}</span>!
               </h1>
               <p className="text-xs sm:text-sm text-[#756A70] mt-1 font-medium">
                 Discover verified companion profiles available by the hour in your city.
@@ -272,7 +272,7 @@ export default async function HomePage() {
         </div>
       ) : (
         /* ========================================================================= */
-        /* 2. LOGGED-OUT VIEW: RENTMATE WARM ROMANTIC LUXURY BRANDING                */
+        /* 2. LOGGED-OUT VIEW: PAIREVA WARM ROMANTIC LUXURY BRANDING                 */
         /* ========================================================================= */
         <>
           {/* ==================== 1. HERO SECTION ==================== */}
@@ -322,7 +322,7 @@ export default async function HomePage() {
 
                     {/* Small Supporting Text for Companion CTA */}
                     <p className="text-xs text-[#756A70] font-semibold pl-1">
-                      Want to offer companionship? Join RentMate.
+                      Want to offer companionship? Join Paireva.
                     </p>
                   </div>
 
@@ -413,7 +413,7 @@ export default async function HomePage() {
                   </div>
 
                   <p className="text-sm sm:text-base text-[#756A70] leading-relaxed font-medium">
-                    Coffee. Conversations. Events. A little company when you want it. RentMate provides a safe, discreet marketplace to discover like-minded companions available by the hour.
+                    Coffee. Conversations. Events. A little company when you want it. Paireva provides a safe, discreet marketplace to discover like-minded companions available by the hour.
                   </p>
                 </div>
               </div>
@@ -426,7 +426,7 @@ export default async function HomePage() {
               <div className="text-center max-w-2xl mx-auto mb-14">
                 <div className="inline-flex items-center gap-2 bg-[#FFF0F3] border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3">
                   <Heart className="w-3.5 h-3.5 text-[#E94B83] fill-[#E94B83]" />
-                  <span>RentMate Experiences</span>
+                  <span>Paireva Experiences</span>
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
                   Sometimes You Just Want <span className="font-serif text-[#6D315D] italic">Good Company</span>.
@@ -634,7 +634,7 @@ export default async function HomePage() {
                   <span>Transparent Pricing</span>
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-                  Start Your RentMate Journey
+                  Start Your Paireva Journey
                 </h2>
               </div>
 
@@ -658,7 +658,7 @@ export default async function HomePage() {
                     </div>
                     <div className="flex items-center gap-2.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                      <span>Access to the RentMate platform</span>
+                      <span>Access to the Paireva platform</span>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />

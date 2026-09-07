@@ -69,7 +69,7 @@ export default function Header({ currentUser }: HeaderProps) {
             </div>
             <div>
               <span className="text-2xl font-extrabold tracking-tight text-[#6D315D] group-hover:text-[#E94B83] transition-colors">
-                Rent<span className="text-[#E94B83]">Mate</span>
+                Pair<span className="text-[#E94B83]">eva</span>
               </span>
               <span className="text-[10px] font-bold uppercase tracking-widest text-[#756A70] block -mt-1">
                 Real People. Real Company.

@@ -29,11 +29,11 @@ export default async function BecomeCompanionPage() {
         <div className="text-center space-y-3 max-w-2xl mx-auto">
           <div className="inline-flex items-center gap-2 bg-[#FFF0F3] border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-4 py-1.5 rounded-full shadow-sm">
             <Sparkles className="w-4 h-4 text-[#E94B83]" />
-            <span>Join the RentMate Community</span>
+            <span>Join the Paireva Community</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-extrabold text-[#292126] tracking-tight">
-            Become a <span className="font-serif italic text-[#6D315D]">RentMate Companion</span>
+            Become a <span className="font-serif italic text-[#6D315D]">Paireva Companion</span>
           </h1>
 
           <p className="text-sm sm:text-base text-[#756A70] leading-relaxed font-medium">
@@ -49,7 +49,7 @@ export default async function BecomeCompanionPage() {
           <div>
             <h4 className="font-extrabold text-[#292126]">Strict Safety & Non-Sexual Platform Guidelines</h4>
             <p className="text-[#756A70] mt-0.5 leading-relaxed font-medium">
-              RentMate is a companionship platform. Sexual services, illegal activities and prohibited arrangements are not allowed. All meetings take place in safe public venues.
+              Paireva is a companionship platform. Sexual services, illegal activities and prohibited arrangements are not allowed. All meetings take place in safe public venues.
             </p>
           </div>
         </div>

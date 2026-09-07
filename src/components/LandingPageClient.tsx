@@ -273,8 +273,8 @@ export function FAQSection() {
 
   const faqs = [
     {
-      q: 'What is RentMate?',
-      a: 'RentMate is India’s premier verified social companionship platform. It allows adults (18+) to rent companions by the hour for legitimate social experiences such as coffee dates, dining, movies, concerts, sightseeing, and public events.'
+      q: 'What is Paireva?',
+      a: 'Paireva is India’s premier verified social companionship platform. It allows adults (18+) to rent companions by the hour for legitimate social experiences such as coffee dates, dining, movies, concerts, sightseeing, and public events.'
     },
     {
       q: 'How does renting a girlfriend or boyfriend work?',
@@ -282,7 +282,7 @@ export function FAQSection() {
     },
     {
       q: 'What does the ₹399 registration fee cover?',
-      a: 'The ₹399 one-time registration fee covers platform onboarding, 18+ age verification, identity document checks, and lifelong access to discover companions on RentMate.'
+      a: 'The ₹399 one-time registration fee covers platform onboarding, 18+ age verification, identity document checks, and lifelong access to discover companions on Paireva.'
     },
     {
       q: 'Are companion booking charges separate?',
@@ -310,7 +310,7 @@ export function FAQSection() {
     },
     {
       q: 'What are the platform rules?',
-      a: 'All companion meetings MUST take place in public venues (cafes, restaurants, theaters, public event arenas). RentMate strictly prohibits sexual services, prostitution, harassment, and illegal activities.'
+      a: 'All companion meetings MUST take place in public venues (cafes, restaurants, theaters, public event arenas). Paireva strictly prohibits sexual services, prostitution, harassment, and illegal activities.'
     }
   ];
 
@@ -325,7 +325,7 @@ export function FAQSection() {
             Everything You Need to Know
           </h2>
           <p className="text-[#756A70] text-sm mt-2 font-medium">
-            Clear, transparent answers about RentMate platform, safety, and bookings.
+            Clear, transparent answers about Paireva platform, safety, and bookings.
           </p>
         </div>
 

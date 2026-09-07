@@ -111,7 +111,7 @@ export default function BecomeCompanionForm({ currentUser, cities, activities }:
     }
 
     if (!formData.agreeToTerms) {
-      setError('You must confirm that you are 18+ and agree to RentMate Companion Guidelines.');
+      setError('You must confirm that you are 18+ and agree to Paireva Companion Guidelines.');
       return;
     }
 
@@ -170,7 +170,7 @@ export default function BecomeCompanionForm({ currentUser, cities, activities }:
             Your companion profile has been submitted for review.
           </h2>
           <p className="text-xs sm:text-sm text-[#756A70] max-w-lg mx-auto leading-relaxed font-medium">
-            Thank you for applying to become a RentMate Companion. Our team will review your profile and verification details. Only approved profiles appear publicly in discovery.
+            Thank you for applying to become a Paireva Companion. Our team will review your profile and verification details. Only approved profiles appear publicly in discovery.
           </p>
         </div>
 
@@ -435,7 +435,7 @@ export default function BecomeCompanionForm({ currentUser, cities, activities }:
               className="mt-0.5 w-4 h-4 text-[#E94B83] rounded border-slate-300 focus:ring-[#E94B83]"
             />
             <span className="text-xs font-extrabold text-[#292126] leading-relaxed">
-              I confirm that I am 18 years or older and agree to RentMate's Companion Guidelines and Non-Sexual Policy.
+              I confirm that I am 18 years or older and agree to Paireva's Companion Guidelines and Non-Sexual Policy.
             </span>
           </label>
         </div>

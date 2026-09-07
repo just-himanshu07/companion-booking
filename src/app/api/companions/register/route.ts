@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     }
 
     if (!agreeToTerms) {
-      return NextResponse.json({ error: 'You must confirm that you are 18+ and agree to RentMate Companion Guidelines.' }, { status: 400 });
+      return NextResponse.json({ error: 'You must confirm that you are 18+ and agree to Paireva Companion Guidelines.' }, { status: 400 });
     }
 
     if (!fullName || !displayName || !cityId || !hourlyPrice || !bio) {

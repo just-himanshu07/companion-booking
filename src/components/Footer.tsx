@@ -15,7 +15,7 @@ export default function Footer() {
             <div>
               <h4 className="text-white font-extrabold text-sm">Strict Non-Sexual Policy & Code of Conduct</h4>
               <p className="text-xs text-rose-100/80 mt-0.5 max-w-3xl leading-relaxed">
-                RentMate is a legitimate marketplace for public social activities (coffee dates, dining, movies, concerts, sightseeing, events). Sexual services, prostitution, solicitation, and harassment are strictly prohibited and result in immediate lifetime bans and legal reporting.
+                Paireva is a legitimate marketplace for public social activities (coffee dates, dining, movies, concerts, sightseeing, events). Sexual services, prostitution, solicitation, and harassment are strictly prohibited and result in immediate lifetime bans and legal reporting.
               </p>
             </div>
           </div>
@@ -36,7 +36,7 @@ export default function Footer() {
               </div>
               <div>
                 <span className="text-xl font-extrabold text-white tracking-tight">
-                  Rent<span className="text-[#F47B8F]">Mate</span>
+                  Pair<span className="text-[#F47B8F]">eva</span>
                 </span>
                 <span className="text-[9px] font-bold uppercase tracking-widest text-rose-200/80 block -mt-1">
                   Real People. Real Company.
@@ -148,7 +148,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-white/15 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-rose-200/80 gap-4">
-          <p>© {new Date().getFullYear()} RentMate Social Marketplace. All rights reserved. 18+ Only Platform.</p>
+          <p>© {new Date().getFullYear()} Paireva Social Marketplace. All rights reserved. 18+ Only Platform.</p>
           <div className="flex items-center gap-1 font-medium text-rose-100">
             Made with <Heart className="w-3.5 h-3.5 text-[#E94B83] fill-[#E94B83] inline mx-0.5" /> for Authentic Companionship
           </div>

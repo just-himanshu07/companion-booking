@@ -9,6 +9,20 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        paireva: {
+          ivory: '#FFF8F5',
+          blush: '#FFF0F3',
+          plum: '#6D315D',
+          'plum-hover': '#58264A',
+          rose: '#E94B83',
+          'rose-hover': '#D43770',
+          coral: '#F47B8F',
+          gold: '#D9A85C',
+          espresso: '#292126',
+          mauve: '#756A70',
+          peach: '#FFD8C8',
+          lavender: '#DCC7F5',
+        },
         rentmate: {
           ivory: '#FFF8F5',
           blush: '#FFF0F3',
