@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       'Registration Fee Verified',
       `Your ₹${payment.amount} one-time registration fee has been successfully processed. You can now discover and book verified companions.`,
       'PAYMENT',
-      '/companions'
+      '/dashboard'
     );
 
     return NextResponse.json({
