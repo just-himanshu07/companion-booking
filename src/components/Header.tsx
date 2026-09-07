@@ -176,12 +176,20 @@ export default function Header({ currentUser }: HeaderProps) {
                       ) : (
                         <>
                           <Link
+                            href="/dashboard"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-[#6D315D] hover:bg-[#FFF0F3]"
+                          >
+                            <Sparkles className="w-4 h-4 text-[#E94B83]" />
+                            Dashboard
+                          </Link>
+                          <Link
                             href="/profile"
                             onClick={() => setUserDropdownOpen(false)}
                             className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-[#6D315D] hover:bg-[#FFF0F3]"
                           >
                             <UserIcon className="w-4 h-4 text-[#E94B83]" />
-                            My Profile & Bookings
+                            My Profile &amp; Bookings
                           </Link>
                           <Link
                             href="/become-a-companion"

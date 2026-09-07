@@ -5,6 +5,7 @@ const AUTH_COOKIE_NAME = 'companion_auth_token';
 
 // Routes requiring authentication
 const PROTECTED_ROUTES = [
+  '/dashboard',
   '/companions',
   '/profile',
   '/companion-dashboard',
@@ -35,6 +36,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/dashboard/:path*',
     '/companions/:path*',
     '/profile/:path*',
     '/companion-dashboard/:path*',
@@ -42,4 +44,3 @@ export const config = {
     '/admin/:path*',
   ],
 };
-

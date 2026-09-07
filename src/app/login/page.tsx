@@ -39,7 +39,7 @@ function LoginFormContent() {
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
       // Determine redirect destination
-      let target = '/companions';
+      let target = '/dashboard';
       if (redirectTo) {
         target = redirectTo;
       } else if (data.user.role === 'ADMIN') {
