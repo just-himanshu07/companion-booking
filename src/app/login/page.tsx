@@ -9,7 +9,7 @@ import { Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
 
 function LoginFormContent() {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get('redirectTo') || '';
+  const redirectTo = searchParams.get('redirect') || searchParams.get('redirectTo') || '';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -117,7 +117,7 @@ function LoginFormContent() {
 
       <div className="text-center text-xs text-slate-500 border-t border-slate-100 pt-4">
         Don't have an account?{' '}
-        <Link href="/register" className="font-bold text-brand-600 hover:underline">
+        <Link href={redirectTo ? `/register?redirect=${encodeURIComponent(redirectTo)}` : '/register'} className="font-bold text-brand-600 hover:underline">
           Register as Customer (₹149)
         </Link>
       </div>

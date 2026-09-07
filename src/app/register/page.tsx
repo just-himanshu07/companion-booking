@@ -2,13 +2,15 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ShieldCheck, Sparkles, CheckCircle2, Lock, ArrowRight } from 'lucide-react';
 
-export default function CustomerRegisterPage() {
+function CustomerRegisterFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect') || searchParams.get('redirectTo') || '';
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -74,8 +76,8 @@ export default function CustomerRegisterPage() {
       });
 
       if (verifyRes.ok) {
-        alert('One-time ₹149 Registration fee verified successfully! Welcome to Companion.');
-        router.push('/companions');
+        alert('One-time ₹399 Registration fee verified successfully! Welcome to Paireva.');
+        window.location.href = redirectTo || '/companions';
       } else {
         setError('Payment verification failed.');
       }
@@ -226,7 +228,7 @@ export default function CustomerRegisterPage() {
 
           <div className="text-center text-xs text-slate-500 border-t border-slate-100 pt-4">
             Already have an account?{' '}
-            <Link href="/login" className="font-bold text-brand-600 hover:underline">
+            <Link href={redirectTo ? `/login?redirect=${encodeURIComponent(redirectTo)}` : '/login'} className="font-bold text-brand-600 hover:underline">
               Log In
             </Link>
           </div>
@@ -235,6 +237,14 @@ export default function CustomerRegisterPage() {
 
       <Footer />
     </div>
+  );
+}
+
+export default function CustomerRegisterPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 text-xs text-slate-500">Loading registration...</div>}>
+      <CustomerRegisterFormContent />
+    </React.Suspense>
   );
 }
 

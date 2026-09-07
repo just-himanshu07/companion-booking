@@ -482,7 +482,20 @@ export default async function HomePage() {
           </section>
 
           {/* ==================== 4. COMPANION DISCOVERY ==================== */}
-          <CompanionDiscoverySection initialCompanions={featuredCompanions} />
+          <CompanionDiscoverySection
+            initialCompanions={
+              currentUser
+                ? featuredCompanions
+                : featuredCompanions.map((comp) => ({
+                    ...comp,
+                    displayName: '••••••',
+                    bio: 'Register or log in to view full profile details and bio.',
+                    city: { name: 'City hidden' },
+                    username: 'locked',
+                  }))
+            }
+            isLoggedIn={!!currentUser}
+          />
 
           {/* ==================== 5. HOW IT WORKS ==================== */}
           <section id="how-it-works" className="py-20 bg-[#FFF0F3] border-b border-[#F47B8F]/20">

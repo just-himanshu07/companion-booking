@@ -23,12 +23,13 @@ interface CompanionItem {
 
 interface LandingPageClientProps {
   initialCompanions: CompanionItem[];
+  isLoggedIn?: boolean;
 }
 
-export function CompanionDiscoverySection({ initialCompanions }: LandingPageClientProps) {
+export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = false }: LandingPageClientProps) {
   const [activeTab, setActiveTab] = useState<'All' | 'Girlfriend' | 'Boyfriend' | 'Coffee' | 'Events' | 'Conversation'>('All');
 
-  // Fallback high quality demo candidates for visual preview
+  // Fallback high quality demo candidates for visual preview (always 6 total)
   const demoCompanions: CompanionItem[] = [
     {
       id: 'demo-1',
@@ -122,7 +123,21 @@ export function CompanionDiscoverySection({ initialCompanions }: LandingPageClie
     }
   ];
 
-  const companionsToUse = initialCompanions.length >= 4 ? initialCompanions : demoCompanions;
+  // Guarantee exactly 6 companion cards (DB candidates first, padded with demo candidates)
+  const rawCompanions = initialCompanions.length >= 6
+    ? initialCompanions.slice(0, 6)
+    : [...initialCompanions, ...demoCompanions.slice(initialCompanions.length)].slice(0, 6);
+
+  // For logged-out visitors, sanitize sensitive data strings
+  const companionsToUse = isLoggedIn
+    ? rawCompanions
+    : rawCompanions.map((c) => ({
+        ...c,
+        displayName: '••••••',
+        bio: 'Register or log in to view full profile details and bio.',
+        city: { name: 'City hidden' },
+        username: 'locked',
+      }));
 
   const filteredCompanions = companionsToUse.filter((c) => {
     if (activeTab === 'All') return true;
@@ -137,30 +152,22 @@ export function CompanionDiscoverySection({ initialCompanions }: LandingPageClie
   return (
     <section id="discover" className="py-20 bg-[#FFF8F5] border-b border-[#F47B8F]/20 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-[#FFF0F3] border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-[#E94B83]" />
-              <span>Companion Discovery</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-              Meet Someone Worth <span className="font-serif text-[#6D315D] italic">Spending Time With</span>.
-            </h2>
-            <p className="text-[#756A70] text-sm sm:text-base mt-2 max-w-2xl font-medium">
-              Explore companions based on your city, interests and the experience you're looking for.
-            </p>
+        {/* Locked Preview UX Heading (Req 6) */}
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="inline-flex items-center gap-2 bg-[#FFF0F3] border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-[#E94B83]" />
+            <span>{isLoggedIn ? 'Companion Discovery' : 'Member Teaser Preview'}</span>
           </div>
-
-          <Link
-            href="/companions"
-            className="inline-flex items-center gap-2 text-xs font-extrabold bg-[#6D315D] hover:bg-[#58264A] text-white px-5 py-3 rounded-xl shadow-md transition-all cursor-pointer self-start md:self-auto"
-          >
-            Explore All Companions →
-          </Link>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
+            Meet Your Potential Companion
+          </h2>
+          <p className="text-[#756A70] text-sm sm:text-base mt-2 max-w-2xl mx-auto font-medium">
+            Explore a few of the people available on Paireva.
+          </p>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar">
+        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar">
           {(['All', 'Girlfriend', 'Boyfriend', 'Coffee', 'Events', 'Conversation'] as const).map((tab) => (
             <button
               key={tab}
@@ -176,16 +183,111 @@ export function CompanionDiscoverySection({ initialCompanions }: LandingPageClie
           ))}
         </div>
 
-        {/* Cards Grid / Mobile Horizontal Scroll */}
+        {/* Exactly 6 Companion Cards (3x2 Desktop, 2x3 Tablet, 1-2 Mobile) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCompanions.map((comp) => {
             const roleLabel = comp.gender?.toLowerCase() === 'male' ? 'Rent Boyfriend' : 'Rent Girlfriend';
+
+            // LOGGED OUT VISITOR CARD (Blurred Teaser)
+            if (!isLoggedIn) {
+              return (
+                <div
+                  key={comp.id}
+                  className="group bg-white rounded-3xl border border-[#F47B8F]/20 hover:border-[#E94B83]/50 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1 relative"
+                >
+                  {/* Blurred Photo Header */}
+                  <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
+                    <img
+                      src={comp.profilePhoto || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80'}
+                      alt="Verified Companion Preview"
+                      className="w-full h-full object-cover filter blur-[4px] scale-105 select-none pointer-events-none transition-all duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#292126]/80 via-black/30 to-transparent" />
+
+                    {/* Top Badges */}
+                    <div className="absolute top-3.5 left-3.5 right-3.5 flex items-center justify-between">
+                      <span className="inline-flex items-center gap-1.5 bg-emerald-600/90 text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm backdrop-blur-md border border-white/20">
+                        <ShieldCheck className="w-3.5 h-3.5 text-white" />
+                        Verified Companion
+                      </span>
+                      <span className="inline-flex items-center gap-1 bg-[#6D315D]/90 text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm backdrop-blur-md border border-white/20">
+                        {roleLabel}
+                      </span>
+                    </div>
+
+                    {/* Center Lock Badge */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="bg-black/60 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl flex items-center gap-2 shadow-xl">
+                        <Lock className="w-4 h-4 text-[#E94B83]" />
+                        <span className="text-xs font-extrabold text-white">Login to View Profile</span>
+                      </div>
+                    </div>
+
+                    {/* Location & Rating */}
+                    <div className="absolute bottom-3 left-3.5 right-3.5 flex items-center justify-between text-white text-xs font-bold">
+                      <div className="flex items-center gap-1 bg-black/60 px-2.5 py-1 rounded-full backdrop-blur-md border border-white/20">
+                        <MapPin className="w-3.5 h-3.5 text-[#F47B8F]" />
+                        <span>City hidden</span>
+                      </div>
+
+                      <div className="flex items-center gap-1 bg-black/60 px-2.5 py-1 rounded-full backdrop-blur-md border border-white/20">
+                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <span>4.9</span>
+                        <span className="text-slate-300 font-normal">(Verified)</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Details (Obscured) */}
+                  <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <h3 className="text-xl font-extrabold text-[#292126] flex items-center gap-2">
+                          <span>••••••</span>
+                          <Lock className="w-4 h-4 text-[#E94B83]" />
+                        </h3>
+                        <div className="text-right">
+                          <span className="text-[10px] text-[#756A70] uppercase font-bold tracking-wider block">Hourly Rate</span>
+                          <span className="text-xs font-bold text-[#6D315D] bg-[#FFF0F3] px-2.5 py-0.5 rounded-full border border-[#F47B8F]/30">Rate Locked</span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-[#756A70] line-clamp-2 leading-relaxed mb-3 font-medium bg-[#FFF0F3]/60 p-2.5 rounded-xl border border-[#F47B8F]/20 flex items-start gap-2">
+                        <Lock className="w-3.5 h-3.5 text-[#E94B83] shrink-0 mt-0.5" />
+                        <span>Register or log in to view full profile details and bio.</span>
+                      </p>
+
+                      {/* Masked Activity Chips */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {comp.activities.slice(0, 2).map((act, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[10px] font-bold bg-[#FFF0F3] border border-[#F47B8F]/30 text-[#6D315D] px-2.5 py-1 rounded-full flex items-center gap-1"
+                          >
+                            <Lock className="w-2.5 h-2.5 text-[#E94B83]" /> {act.activity.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Link
+                      href="/login?redirect=/companions"
+                      className="w-full inline-flex items-center justify-center gap-2 bg-[#6D315D] hover:bg-[#58264A] text-white text-xs font-extrabold py-3.5 rounded-xl shadow-md transition-all cursor-pointer hover:scale-[1.01] active:scale-95"
+                    >
+                      <Lock className="w-3.5 h-3.5 text-[#E94B83]" /> Login to View Profile →
+                    </Link>
+                  </div>
+                </div>
+              );
+            }
+
+            // LOGGED IN USER CARD (Normal Profile)
             return (
               <div
                 key={comp.id}
                 className="group bg-white rounded-3xl border border-[#F47B8F]/20 hover:border-[#E94B83]/50 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1"
               >
-                {/* Photo Header */}
+                {/* Clear Photo Header */}
                 <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
                   <img
                     src={comp.profilePhoto || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80'}
@@ -262,6 +364,28 @@ export function CompanionDiscoverySection({ initialCompanions }: LandingPageClie
               </div>
             );
           })}
+        </div>
+
+        {/* Bottom Teaser Footer / View All CTA (Req 4 & 6 & 9) */}
+        <div className="mt-14 text-center space-y-4 max-w-xl mx-auto pt-8 border-t border-[#F47B8F]/20">
+          <h3 className="text-2xl font-extrabold text-[#292126] tracking-tight">
+            Want to see everyone?
+          </h3>
+
+          <div>
+            <Link
+              href={isLoggedIn ? "/companions" : "/login?redirect=/companions"}
+              className="bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold px-8 py-4 rounded-2xl shadow-lg shadow-[#E94B83]/25 transition-all hover:scale-[1.02] text-base text-center inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+            >
+              View All Companions →
+            </Link>
+          </div>
+
+          <p className="text-xs text-[#756A70] font-semibold">
+            {isLoggedIn
+              ? "Explore all companion profiles, availability schedules, and instant messaging."
+              : "Sign in or create an account to explore full profiles."}
+          </p>
         </div>
       </div>
     </section>
