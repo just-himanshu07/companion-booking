@@ -9,10 +9,10 @@ async function main() {
   // 1. Platform Settings
   await prisma.platformSetting.upsert({
     where: { key: 'REGISTRATION_FEE_INR' },
-    update: {},
+    update: { value: '399' },
     create: {
       key: 'REGISTRATION_FEE_INR',
-      value: '149',
+      value: '399',
       description: 'One-time customer registration fee in INR',
     },
   });

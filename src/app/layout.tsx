@@ -1,15 +1,33 @@
 import type { Metadata } from 'next';
 import Script from 'next/script';
+import { Plus_Jakarta_Sans, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-plus-jakarta',
+  display: 'swap',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'Companion - Verified Social Companion Marketplace',
-  description: 'Book 100% verified social companions for dining, movies, concerts, sightseeing, and public activities.',
-  keywords: ['companion booking', 'verified companion', 'social activities', 'dinner partner', 'movie companion'],
+  title: 'RentMate — Rent a Girlfriend. Rent a Boyfriend. Real People. Real Company.',
+  description: 'RentMate is India’s premier verified companionship marketplace. Discover companions for coffee dates, events, conversations, and public social activities.',
+  keywords: ['rent girlfriend', 'rent boyfriend', 'rentmate', 'companion booking', 'social companion', 'verified companion', 'coffee date companion'],
   openGraph: {
-    title: 'Companion - Verified Social Companion Marketplace',
-    description: 'Book verified companions for public social activities.',
+    title: 'RentMate — Real People. Real Company.',
+    description: 'Rent a Girlfriend. Rent a Boyfriend. Or just Some Company.',
     type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'RentMate — Real People. Real Company.',
+    description: 'Rent a Girlfriend. Rent a Boyfriend. Or just Some Company.',
   },
 };
 
@@ -19,14 +37,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className={`scroll-smooth ${plusJakarta.variable} ${playfair.variable}`}>
       <head>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       </head>
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased selection:bg-brand-500 selection:text-white">
+      <body className="min-h-screen bg-[#FFF8F5] text-[#292126] antialiased selection:bg-[#E94B83] selection:text-white font-sans">
         {children}
       </body>
     </html>
   );
 }
-

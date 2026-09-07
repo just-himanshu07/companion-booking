@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShieldCheck, Star, MapPin, Heart, Calendar, UserCheck } from 'lucide-react';
+import { ShieldCheck, Star, MapPin, Heart, Calendar } from 'lucide-react';
 
 interface CompanionCardProps {
   companion: {
@@ -43,10 +43,10 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
 
   const isVerified = companion.verificationStatus === 'VERIFIED';
   const displayPhoto = companion.profilePhoto || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
-  const roleLabel = companion.gender?.toLowerCase() === 'male' ? 'Rent Boyfriend' : companion.gender?.toLowerCase() === 'female' ? 'Rent Girlfriend' : 'Social Partner';
+  const roleLabel = companion.gender?.toLowerCase() === 'male' ? 'Rent Boyfriend' : companion.gender?.toLowerCase() === 'female' ? 'Rent Girlfriend' : 'Companion';
 
   return (
-    <div className="group bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1">
+    <div className="group bg-white rounded-3xl border border-[#F47B8F]/20 hover:border-[#E94B83]/50 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1">
       {/* Image Container */}
       <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
         <Image
@@ -56,17 +56,17 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
           className="object-cover group-hover:scale-105 transition-transform duration-500"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#292126]/60 via-transparent to-transparent" />
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
           {isVerified && (
-            <span className="inline-flex items-center gap-1 bg-emerald-500/90 text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full backdrop-blur-md shadow-sm">
+            <span className="inline-flex items-center gap-1 bg-emerald-600/90 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md shadow-sm">
               <ShieldCheck className="w-3.5 h-3.5" />
               Verified
             </span>
           )}
-          <span className="inline-flex items-center gap-1 bg-brand-600/90 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md shadow-sm">
+          <span className="inline-flex items-center gap-1 bg-[#6D315D]/90 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md shadow-sm">
             {roleLabel}
           </span>
         </div>
@@ -74,28 +74,28 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
         {/* Favorite Button */}
         <button
           onClick={toggleFavorite}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/80 hover:bg-white text-slate-700 flex items-center justify-center backdrop-blur-md shadow-sm transition-transform active:scale-95"
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-[#292126] flex items-center justify-center backdrop-blur-md shadow-sm transition-transform active:scale-95"
           title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
         >
           <Heart
             className={`w-5 h-5 ${
-              isFavorite ? 'fill-rosebrand-500 text-rosebrand-500' : 'text-slate-600 hover:text-rosebrand-500'
+              isFavorite ? 'fill-[#E94B83] text-[#E94B83]' : 'text-[#756A70] hover:text-[#E94B83]'
             } transition-colors`}
           />
         </button>
 
         {/* Rating and City Overlay */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs">
-          <div className="flex items-center gap-1 bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-sm">
-            <MapPin className="w-3.5 h-3.5 text-brand-400" />
-            <span className="font-medium truncate">{companion.city.name}</span>
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs font-bold">
+          <div className="flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-full backdrop-blur-sm">
+            <MapPin className="w-3.5 h-3.5 text-[#F47B8F]" />
+            <span className="truncate">{companion.city.name}</span>
           </div>
 
           {companion.averageRating > 0 && (
-            <div className="flex items-center gap-1 bg-black/40 px-2.5 py-1 rounded-full backdrop-blur-sm">
+            <div className="flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-full backdrop-blur-sm">
               <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-              <span className="font-bold">{companion.averageRating.toFixed(1)}</span>
-              <span className="text-slate-300">({companion.totalReviews})</span>
+              <span>{companion.averageRating.toFixed(1)}</span>
+              <span className="text-slate-300 font-normal">({companion.totalReviews})</span>
             </div>
           )}
         </div>
@@ -105,13 +105,13 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between gap-2 mb-1.5">
-            <h3 className="text-lg font-bold text-slate-900 group-hover:text-brand-600 transition-colors truncate">
+            <h3 className="text-lg font-extrabold text-[#292126] group-hover:text-[#6D315D] transition-colors truncate">
               {companion.displayName}, {companion.age}
             </h3>
             <div className="text-right shrink-0">
-              <span className="text-xs text-slate-400 block">Per hour</span>
-              <span className="text-base font-extrabold text-slate-900">
-                ₹{companion.hourlyPrice}
+              <span className="text-[10px] text-[#756A70] uppercase font-bold tracking-wider block">Hourly Rate</span>
+              <span className="text-base font-black text-[#E94B83]">
+                ₹{companion.hourlyPrice}/hr
               </span>
             </div>
           </div>
@@ -121,13 +121,13 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
             {companion.activities.slice(0, 3).map((act, i) => (
               <span
                 key={i}
-                className="text-[11px] font-medium bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full"
+                className="text-[11px] font-bold bg-[#FFF0F3] text-[#6D315D] border border-[#F47B8F]/30 px-2.5 py-0.5 rounded-full"
               >
                 {act.activity.name}
               </span>
             ))}
             {companion.activities.length > 3 && (
-              <span className="text-[11px] font-medium bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+              <span className="text-[11px] font-bold bg-[#FFF0F3] text-[#756A70] px-2 py-0.5 rounded-full">
                 +{companion.activities.length - 3} more
               </span>
             )}
@@ -137,10 +137,10 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
         {/* Action Button */}
         <Link
           href={`/companions/${companion.username}`}
-          className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-brand-600 text-white text-xs font-semibold py-2.5 rounded-xl transition-colors shadow-sm"
+          className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-[#E94B83] hover:bg-[#D43770] text-white text-xs font-extrabold py-3 rounded-xl transition-all shadow-md shadow-[#E94B83]/20"
         >
           <Calendar className="w-4 h-4" />
-          View Profile & Book
+          View Profile & Availability →
         </Link>
       </div>
     </div>
