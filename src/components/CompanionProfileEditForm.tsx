@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Save, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
+import PhotoUploadGallery from '@/components/PhotoUploadGallery';
 
 interface CompanionProfileEditFormProps {
   initialProfile: {
@@ -37,8 +38,8 @@ export default function CompanionProfileEditForm({
     bio: initialProfile.bio || '',
     languagesInput: (initialProfile.languages || []).join(', '),
     interestsInput: (initialProfile.interests || []).join(', '),
-    profilePhoto: initialProfile.profilePhoto || '',
-    galleryInput: (initialProfile.gallery || []).join('\n'),
+    profilePhoto: initialProfile.profilePhoto || null,
+    gallery: initialProfile.gallery || [],
     selectedActivityIds: initialProfile.activities.map((a) => a.activityId),
   });
 
@@ -67,7 +68,6 @@ export default function CompanionProfileEditForm({
     try {
       const languages = formData.languagesInput.split(',').map((s) => s.trim()).filter(Boolean);
       const interests = formData.interestsInput.split(',').map((s) => s.trim()).filter(Boolean);
-      const gallery = formData.galleryInput.split('\n').map((s) => s.trim()).filter(Boolean);
 
       const res = await fetch('/api/companion/profile', {
         method: 'PATCH',
@@ -84,7 +84,7 @@ export default function CompanionProfileEditForm({
           interests,
           activityIds: formData.selectedActivityIds,
           profilePhoto: formData.profilePhoto,
-          gallery,
+          gallery: formData.gallery,
         }),
       });
 
@@ -114,6 +114,21 @@ export default function CompanionProfileEditForm({
           <span>{message.text}</span>
         </div>
       )}
+
+      {/* PHOTO UPLOAD & GALLERY SECTION */}
+      <PhotoUploadGallery
+        primaryPhoto={formData.profilePhoto}
+        galleryPhotos={formData.gallery}
+        onChange={({ primaryPhoto, galleryPhotos }) => {
+          setFormData((prev) => ({
+            ...prev,
+            profilePhoto: primaryPhoto,
+            gallery: galleryPhotos,
+          }));
+        }}
+        maxPhotos={5}
+        maxFileSizeMB={5}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -251,30 +266,10 @@ export default function CompanionProfileEditForm({
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1">Main Profile Photo URL</label>
-        <input
-          type="url"
-          value={formData.profilePhoto}
-          onChange={(e) => setFormData({ ...formData, profilePhoto: e.target.value })}
-          className="w-full px-3.5 py-2.5 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500"
-        />
-      </div>
-
-      <div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1">Gallery Image URLs (One URL per line)</label>
-        <textarea
-          value={formData.galleryInput}
-          onChange={(e) => setFormData({ ...formData, galleryInput: e.target.value })}
-          rows={3}
-          className="w-full px-3.5 py-2.5 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500 font-mono"
-        />
-      </div>
-
       <button
         type="submit"
         disabled={loading}
-        className="bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-md transition-colors flex items-center gap-2"
+        className="bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer"
       >
         <Save className="w-4 h-4" />
         {loading ? 'Saving Changes...' : 'Save Profile & Rates'}
@@ -282,4 +277,3 @@ export default function CompanionProfileEditForm({
     </form>
   );
 }
-

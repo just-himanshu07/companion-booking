@@ -107,6 +107,7 @@ model CustomerProfile {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name          String
   displayAvatar String?
+  gallery       String[] @default([])
   age           Int
   gender        String?
   city          String?

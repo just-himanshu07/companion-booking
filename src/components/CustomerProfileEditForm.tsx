@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { User, MapPin, Save, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import PhotoUploadGallery from '@/components/PhotoUploadGallery';
 
 interface CustomerProfileEditFormProps {
   initialProfile: {
@@ -13,6 +14,7 @@ interface CustomerProfileEditFormProps {
     interests: string[];
     languages: string[];
     displayAvatar?: string | null;
+    gallery?: string[];
   } | null;
 }
 
@@ -25,7 +27,8 @@ export default function CustomerProfileEditForm({ initialProfile }: CustomerProf
     bio: initialProfile?.bio || '',
     interestsInput: (initialProfile?.interests || []).join(', '),
     languagesInput: (initialProfile?.languages || []).join(', '),
-    displayAvatar: initialProfile?.displayAvatar || '',
+    displayAvatar: initialProfile?.displayAvatar || null,
+    gallery: initialProfile?.gallery || [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -52,6 +55,7 @@ export default function CustomerProfileEditForm({ initialProfile }: CustomerProf
           interests,
           languages,
           displayAvatar: formData.displayAvatar,
+          gallery: formData.gallery,
         }),
       });
 
@@ -81,6 +85,21 @@ export default function CustomerProfileEditForm({ initialProfile }: CustomerProf
           <span>{message.text}</span>
         </div>
       )}
+
+      {/* PHOTO UPLOAD & GALLERY SECTION */}
+      <PhotoUploadGallery
+        primaryPhoto={formData.displayAvatar}
+        galleryPhotos={formData.gallery}
+        onChange={({ primaryPhoto, galleryPhotos }) => {
+          setFormData((prev) => ({
+            ...prev,
+            displayAvatar: primaryPhoto,
+            gallery: galleryPhotos,
+          }));
+        }}
+        maxPhotos={5}
+        maxFileSizeMB={5}
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -168,21 +187,10 @@ export default function CustomerProfileEditForm({ initialProfile }: CustomerProf
         </div>
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1">Profile Photo URL</label>
-        <input
-          type="url"
-          value={formData.displayAvatar}
-          onChange={(e) => setFormData({ ...formData, displayAvatar: e.target.value })}
-          className="w-full px-3.5 py-2.5 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500"
-          placeholder="https://images.unsplash.com/photo-..."
-        />
-      </div>
-
       <button
         type="submit"
         disabled={loading}
-        className="bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-md transition-colors flex items-center gap-2"
+        className="bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-md transition-colors flex items-center gap-2 cursor-pointer"
       >
         <Save className="w-4 h-4" />
         {loading ? 'Saving Changes...' : 'Save Profile Changes'}
@@ -190,4 +198,3 @@ export default function CustomerProfileEditForm({ initialProfile }: CustomerProf
     </form>
   );
 }
-

@@ -11,7 +11,8 @@ const updateCustomerSchema = z.object({
   bio: z.string().optional(),
   interests: z.array(z.string()).optional(),
   languages: z.array(z.string()).optional(),
-  displayAvatar: z.string().optional(),
+  displayAvatar: z.string().nullable().optional(),
+  gallery: z.array(z.string()).max(4, 'Maximum 4 additional photos allowed').optional(),
 });
 
 export async function PATCH(req: Request) {
@@ -24,6 +25,16 @@ export async function PATCH(req: Request) {
     const body = await req.json();
     const validatedData = updateCustomerSchema.parse(body);
 
+    // Validate photo limits: total maximum 5 photos (1 primary + 4 gallery)
+    const galleryCount = validatedData.gallery ? validatedData.gallery.length : 0;
+    const hasPrimary = validatedData.displayAvatar ? 1 : 0;
+    if (hasPrimary + galleryCount > 5) {
+      return NextResponse.json(
+        { error: 'Maximum 5 photos total allowed (1 Profile Photo + 4 Gallery Photos).' },
+        { status: 400 }
+      );
+    }
+
     const updatedProfile = await prisma.customerProfile.update({
       where: { userId: user.id },
       data: {
@@ -35,6 +46,7 @@ export async function PATCH(req: Request) {
         ...(validatedData.interests && { interests: validatedData.interests }),
         ...(validatedData.languages && { languages: validatedData.languages }),
         ...(validatedData.displayAvatar !== undefined && { displayAvatar: validatedData.displayAvatar }),
+        ...(validatedData.gallery !== undefined && { gallery: validatedData.gallery }),
       },
     });
 
@@ -53,4 +65,3 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: error.message || 'Failed to update profile' }, { status: 500 });
   }
 }
-

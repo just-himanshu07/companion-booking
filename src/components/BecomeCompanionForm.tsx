@@ -349,14 +349,40 @@ export default function BecomeCompanionForm({ currentUser, cities, activities }:
           </div>
 
           <div>
-            <label className="block text-xs font-extrabold text-[#292126] mb-1.5">Profile Photo URL</label>
-            <input
-              type="url"
-              value={formData.profilePhoto}
-              onChange={(e) => setFormData({ ...formData, profilePhoto: e.target.value })}
-              className="w-full px-4 py-3 bg-[#FFF8F5] text-xs font-bold text-[#292126] rounded-xl border border-[#F47B8F]/30 focus:ring-2 focus:ring-[#E94B83]"
-              placeholder="https://images.unsplash.com/..."
-            />
+            <label className="block text-xs font-extrabold text-[#292126] mb-1.5">Profile Photo</label>
+            <div className="flex items-center gap-3">
+              {formData.profilePhoto ? (
+                <div className="w-12 h-12 rounded-xl overflow-hidden border border-[#F47B8F]/30 shrink-0">
+                  <img src={formData.profilePhoto} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              ) : null}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  if (file.size > 5 * 1024 * 1024) {
+                    alert('File size exceeds maximum limit of 5 MB.');
+                    return;
+                  }
+                  const formDataUpload = new FormData();
+                  formDataUpload.append('file', file);
+                  try {
+                    const res = await fetch('/api/upload', { method: 'POST', body: formDataUpload });
+                    const data = await res.json();
+                    if (data.success) {
+                      setFormData((prev) => ({ ...prev, profilePhoto: data.url }));
+                    } else {
+                      alert(data.error || 'Upload failed');
+                    }
+                  } catch (err: any) {
+                    alert('Upload failed: ' + err.message);
+                  }
+                }}
+                className="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#FFF0F3] file:text-[#6D315D] hover:file:bg-[#FCE4EC] cursor-pointer"
+              />
+            </div>
           </div>
         </div>
 
