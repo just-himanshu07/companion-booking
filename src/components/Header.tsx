@@ -233,6 +233,15 @@ export default function Header({ currentUser }: HeaderProps) {
                         Favorites
                       </Link>
 
+                      <Link
+                        href="/feedback"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-[#6D315D] hover:bg-[#FFF0F3]"
+                      >
+                        <MessageSquare className="w-4 h-4 text-[#E94B83]" />
+                        Share Feedback
+                      </Link>
+
                       <div className="border-t border-slate-100 my-1"></div>
 
                       <button
@@ -356,6 +365,13 @@ export default function Header({ currentUser }: HeaderProps) {
                 className="block text-sm font-bold text-[#6D315D] py-1"
               >
                 Messages
+              </Link>
+              <Link
+                href="/feedback"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block text-sm font-bold text-[#6D315D] py-1"
+              >
+                Share Feedback
               </Link>
               <button
                 onClick={handleLogout}

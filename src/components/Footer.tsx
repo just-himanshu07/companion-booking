@@ -113,6 +113,11 @@ export default function Footer() {
                   Contact Support
                 </Link>
               </li>
+              <li>
+                <Link href="/feedback" className="hover:text-white transition-colors">
+                  Share Feedback
+                </Link>
+              </li>
             </ul>
           </div>
 

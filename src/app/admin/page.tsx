@@ -4,10 +4,11 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import AdminCompanionControls from '@/components/AdminCompanionControls';
 import AdminSettingsForm from '@/components/AdminSettingsForm';
+import AdminFeedbackControls from '@/components/AdminFeedbackControls';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { getPlatformSettings } from '@/lib/razorpay';
-import { ShieldCheck, Users, Calendar, DollarSign, AlertTriangle, FileText, Settings, Activity } from 'lucide-react';
+import { ShieldCheck, Users, Calendar, DollarSign, AlertTriangle, FileText, Settings, Activity, MessageSquare } from 'lucide-react';
 
 export default async function AdminDashboardPage() {
   const currentUser = await getSessionUser();
@@ -30,6 +31,7 @@ export default async function AdminDashboardPage() {
     platformSettings,
     companionsList,
     auditLogs,
+    feedbacksList,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { role: 'CUSTOMER' } }),
@@ -54,6 +56,20 @@ export default async function AdminDashboardPage() {
       include: { admin: { select: { email: true } } },
       orderBy: { createdAt: 'desc' },
       take: 15,
+    }),
+    prisma.feedback.findMany({
+      include: {
+        user: {
+          select: {
+            email: true,
+            role: true,
+            customerProfile: { select: { name: true } },
+            companionProfile: { select: { displayName: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 30,
     }),
   ]);
 
@@ -139,10 +155,19 @@ export default async function AdminDashboardPage() {
         {/* COMPANION VERIFICATION APPROVAL TABLE */}
         <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
           <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-600" /> Companion Applications & Document Verification
+            <ShieldCheck className="w-5 h-5 text-emerald-600" /> Companion Applications &amp; Document Verification
           </h3>
 
           <AdminCompanionControls companions={companionsList} />
+        </div>
+
+        {/* USER FEEDBACK SUBMISSIONS SECTION */}
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-[#E94B83]" /> User Feedback Submissions ({feedbacksList.length})
+          </h3>
+
+          <AdminFeedbackControls initialFeedbacks={feedbacksList} />
         </div>
       </div>
 
