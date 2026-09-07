@@ -47,45 +47,9 @@ export default function Header({ currentUser }: HeaderProps) {
     }
   }, [currentUser]);
 
-  useEffect(() => {
-    const scrollToHash = () => {
-      const hash = window.location.hash;
-      if (hash) {
-        const targetId = hash.replace('#', '');
-        let attempts = 0;
-        const interval = setInterval(() => {
-          const element = document.getElementById(targetId);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-            clearInterval(interval);
-          } else if (attempts > 25) {
-            clearInterval(interval);
-          }
-          attempts++;
-        }, 100);
-      }
-    };
-
-    scrollToHash();
-    window.addEventListener('hashchange', scrollToHash);
-    return () => window.removeEventListener('hashchange', scrollToHash);
-  }, []);
-
-  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, hashTarget: string) => {
-    const [targetPath, targetHash] = hashTarget.split('#');
-    if (typeof window !== 'undefined' && window.location.pathname === targetPath && targetHash) {
-      const element = document.getElementById(targetHash);
-      if (element) {
-        e.preventDefault();
-        element.scrollIntoView({ behavior: 'smooth' });
-        window.history.pushState(null, '', hashTarget);
-      }
-    }
-  };
-
-  const discoverTarget = currentUser ? '/explore#discover' : '/#discover';
-  const howItWorksTarget = currentUser ? '/explore#how-it-works' : '/#how-it-works';
-  const faqsTarget = currentUser ? '/explore#faqs' : '/#faqs';
+  const discoverTarget = currentUser ? '/discover' : '/#discover';
+  const howItWorksTarget = currentUser ? '/how-it-works' : '/#how-it-works';
+  const faqsTarget = currentUser ? '/faqs' : '/#faqs';
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -126,7 +90,6 @@ export default function Header({ currentUser }: HeaderProps) {
             ) : (
               <Link
                 href={discoverTarget}
-                onClick={(e) => handleAnchorClick(e, discoverTarget)}
                 className="hover:text-[#E94B83] transition-colors"
               >
                 Discover
@@ -134,7 +97,6 @@ export default function Header({ currentUser }: HeaderProps) {
             )}
             <Link
               href={howItWorksTarget}
-              onClick={(e) => handleAnchorClick(e, howItWorksTarget)}
               className="hover:text-[#E94B83] transition-colors"
             >
               How It Works
@@ -148,7 +110,6 @@ export default function Header({ currentUser }: HeaderProps) {
             </Link>
             <Link
               href={faqsTarget}
-              onClick={(e) => handleAnchorClick(e, faqsTarget)}
               className="hover:text-[#E94B83] transition-colors"
             >
               FAQs
@@ -326,20 +287,14 @@ export default function Header({ currentUser }: HeaderProps) {
         <div className="md:hidden border-b border-[#F47B8F]/20 bg-white/98 backdrop-blur-2xl px-5 pt-3 pb-8 space-y-4 animate-in fade-in slide-in-from-top-2 shadow-xl">
           <Link
             href={discoverTarget}
-            onClick={(e) => {
-              setMobileMenuOpen(false);
-              handleAnchorClick(e, discoverTarget);
-            }}
+            onClick={() => setMobileMenuOpen(false)}
             className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
           >
             Discover
           </Link>
           <Link
             href={howItWorksTarget}
-            onClick={(e) => {
-              setMobileMenuOpen(false);
-              handleAnchorClick(e, howItWorksTarget);
-            }}
+            onClick={() => setMobileMenuOpen(false)}
             className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
           >
             How It Works
@@ -360,10 +315,7 @@ export default function Header({ currentUser }: HeaderProps) {
           </Link>
           <Link
             href={faqsTarget}
-            onClick={(e) => {
-              setMobileMenuOpen(false);
-              handleAnchorClick(e, faqsTarget);
-            }}
+            onClick={() => setMobileMenuOpen(false)}
             className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
           >
             FAQs
