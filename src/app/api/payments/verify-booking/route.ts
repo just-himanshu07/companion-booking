@@ -9,15 +9,11 @@ export async function POST(req: Request) {
     const user = await requireAuth();
     const { bookingId, razorpayOrderId, razorpayPaymentId, razorpaySignature } = await req.json();
 
-    if (!bookingId || !razorpayOrderId || !razorpayPaymentId) {
-      return NextResponse.json({ error: 'Missing payment verification tokens' }, { status: 400 });
+    if (!bookingId || !razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+      return NextResponse.json({ error: 'Missing required payment verification parameters' }, { status: 400 });
     }
 
-    const isSignatureValid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
-    if (!isSignatureValid) {
-      return NextResponse.json({ error: 'Payment signature verification failed' }, { status: 400 });
-    }
-
+    // 1. Fetch booking record with relations
     const booking = await prisma.booking.findUnique({
       where: { id: bookingId },
       include: {
@@ -30,24 +26,64 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Booking record not found' }, { status: 404 });
     }
 
+    // 2. Ownership verification
+    if (booking.customerId !== user.id) {
+      return NextResponse.json({ error: 'Unauthorized booking verification attempt' }, { status: 403 });
+    }
+
+    // 3. Fetch payment record
+    const payment = await prisma.payment.findUnique({
+      where: { razorpayOrderId },
+    });
+
+    if (!payment) {
+      return NextResponse.json({ error: 'Payment order record not found' }, { status: 404 });
+    }
+
+    if (payment.userId !== user.id || payment.bookingId !== bookingId) {
+      return NextResponse.json({ error: 'Payment record mismatch for this booking' }, { status: 400 });
+    }
+
+    // 4. Idempotency Check: if already processed, return clean response without re-mutating
+    if (payment.status === 'SUCCESS' && (booking.status === 'CONFIRMED' || booking.status === 'PAID')) {
+      return NextResponse.json({
+        success: true,
+        message: 'Booking already confirmed',
+        bookingId: booking.id,
+        amount: booking.totalAmount,
+      });
+    }
+
+    // 5. Verify Razorpay Signature
+    const isSignatureValid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
+    if (!isSignatureValid) {
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: { status: 'FAILED', errorReason: 'Signature verification failed' },
+      });
+      return NextResponse.json({ error: 'Payment signature verification failed' }, { status: 400 });
+    }
+
+    // 6. Transactional State Change
     await prisma.$transaction(async (tx) => {
-      // 1. Update Booking status to CONFIRMED
+      // Confirm Booking
       await tx.booking.update({
         where: { id: bookingId },
         data: { status: 'CONFIRMED' },
       });
 
-      // 2. Update Payment record
-      await tx.payment.updateMany({
-        where: { razorpayOrderId },
+      // Mark Payment Success
+      await tx.payment.update({
+        where: { id: payment.id },
         data: {
           razorpayPaymentId,
           razorpaySignature,
           status: 'SUCCESS',
+          errorReason: null,
         },
       });
 
-      // 3. Mark availability slot booked
+      // Mark availability slot booked
       await tx.availabilitySlot.updateMany({
         where: {
           companionId: booking.companionId,
@@ -57,7 +93,7 @@ export async function POST(req: Request) {
         data: { isBooked: true },
       });
 
-      // 4. Create internal conversation for customer <-> companion messaging
+      // Create internal conversation for messaging
       await tx.conversation.upsert({
         where: { bookingId: booking.id },
         update: {},
@@ -69,13 +105,13 @@ export async function POST(req: Request) {
       });
     });
 
-    // Send notifications
+    // Send Notifications
     await createNotification(
       user.id,
       'Booking Confirmed!',
       `Your booking #${booking.bookingNumber} with ${booking.companion.displayName} for ${booking.activity.name} on ${booking.date} at ${booking.startTime} is confirmed.`,
       'BOOKING',
-      '/profile'
+      '/profile?tab=bookings'
     );
 
     await createNotification(
@@ -90,12 +126,13 @@ export async function POST(req: Request) {
       success: true,
       message: 'Booking confirmed successfully',
       bookingId: booking.id,
+      amount: booking.totalAmount,
     });
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Please log in to proceed' }, { status: 401 });
     }
-    return NextResponse.json({ error: error.message || 'Verification failed' }, { status: 500 });
+    return NextResponse.json({ error: 'Booking verification processing failed' }, { status: 500 });
   }
 }
 

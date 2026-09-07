@@ -77,36 +77,55 @@ export default function BookingForm({ companion, currentUser }: BookingFormProps
       const options = {
         key: data.razorpayOrder.keyId,
         amount: data.razorpayOrder.amount * 100,
-        currency: 'INR',
-        name: 'Companion Booking',
+        currency: data.razorpayOrder.currency || 'INR',
+        name: 'Paireva',
         description: `Social booking with ${companion.displayName}`,
         order_id: data.razorpayOrder.id,
         handler: async function (response: any) {
-          // Verify payment on backend
-          const verifyRes = await fetch('/api/payments/verify-booking', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              bookingId: data.booking.id,
-              razorpayOrderId: response.razorpay_order_id,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature || `mock_sig_${response.razorpay_payment_id}`,
-            }),
-          });
+          try {
+            // Verify payment on backend
+            const verifyRes = await fetch('/api/payments/verify-booking', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                bookingId: data.booking.id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
 
-          const verifyData = await verifyRes.json();
-          if (verifyRes.ok) {
-            alert('Booking payment successful! Your booking is confirmed.');
-            router.push('/profile?tab=bookings');
-          } else {
-            setError(verifyData.error || 'Payment verification failed');
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.success) {
+              // Trigger Meta Pixel Purchase Conversion Event upon verified success
+              if (typeof window !== 'undefined' && (window as any).fbq) {
+                (window as any).fbq('track', 'Purchase', {
+                  value: verifyData.amount || data.razorpayOrder.amount,
+                  currency: 'INR',
+                });
+              }
+
+              alert('Booking payment successful! Your booking is confirmed.');
+              router.push('/profile?tab=bookings');
+            } else {
+              setError(verifyData.error || 'Payment verification failed');
+              setLoading(false);
+            }
+          } catch (verifyErr: any) {
+            setError(verifyErr.message || 'Payment verification failed');
+            setLoading(false);
           }
         },
         prefill: {
-          email: currentUser.email,
+          email: currentUser?.email || '',
         },
         theme: {
-          color: '#026fc7',
+          color: '#E94B83',
+        },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+          },
         },
       };
 
@@ -114,7 +133,7 @@ export default function BookingForm({ companion, currentUser }: BookingFormProps
         const rzp = new (window as any).Razorpay(options);
         rzp.open();
       } else {
-        // Fallback demo mock verification for dev testing
+        // Fallback for dev testing environment
         const verifyRes = await fetch('/api/payments/verify-booking', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -126,16 +145,23 @@ export default function BookingForm({ companion, currentUser }: BookingFormProps
           }),
         });
 
-        if (verifyRes.ok) {
-          alert('Booking confirmed! (Demo Checkout)');
-          router.push('/profile');
+        const verifyData = await verifyRes.json();
+        if (verifyRes.ok && verifyData.success) {
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'Purchase', {
+              value: verifyData.amount || data.razorpayOrder.amount,
+              currency: 'INR',
+            });
+          }
+          alert('Booking confirmed!');
+          router.push('/profile?tab=bookings');
         } else {
-          setError('Failed to confirm booking');
+          setError(verifyData.error || 'Failed to confirm booking');
         }
+        setLoading(false);
       }
     } catch (err: any) {
       setError(err.message || 'Something went wrong');
-    } finally {
       setLoading(false);
     }
   };
@@ -144,23 +170,81 @@ export default function BookingForm({ companion, currentUser }: BookingFormProps
     try {
       const res = await fetch('/api/payments/registration-order', { method: 'POST' });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) throw new Error(data.error || 'Failed to create registration order');
 
-      // Verify fee payment
-      const verifyRes = await fetch('/api/payments/verify-registration', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          razorpayOrderId: data.orderId,
-          razorpayPaymentId: `pay_reg_mock_${Date.now()}`,
-          razorpaySignature: `mock_sig_reg_${Date.now()}`,
-        }),
-      });
+      const options = {
+        key: data.keyId,
+        amount: data.amount * 100,
+        currency: data.currency || 'INR',
+        name: 'Paireva',
+        description: 'One-Time Platform Registration Fee',
+        order_id: data.orderId,
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await fetch('/api/payments/verify-registration', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
 
-      if (verifyRes.ok) {
-        alert('One-time ₹149 Registration fee paid successfully!');
-        setFeeModalOpen(false);
-        window.location.reload();
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.success) {
+              if (typeof window !== 'undefined' && (window as any).fbq) {
+                (window as any).fbq('track', 'CompleteRegistration', {
+                  value: verifyData.amount || data.amount,
+                  currency: 'INR',
+                });
+              }
+              alert('One-time ₹399 Registration fee paid successfully!');
+              setFeeModalOpen(false);
+              window.location.reload();
+            } else {
+              alert(verifyData.error || 'Registration fee verification failed');
+            }
+          } catch (verifyErr: any) {
+            alert(verifyErr.message || 'Verification failed');
+          }
+        },
+        prefill: {
+          email: currentUser?.email || '',
+        },
+        theme: {
+          color: '#E94B83',
+        },
+      };
+
+      if (typeof window !== 'undefined' && (window as any).Razorpay) {
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      } else {
+        const verifyRes = await fetch('/api/payments/verify-registration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpayOrderId: data.orderId,
+            razorpayPaymentId: `pay_mock_${Date.now()}`,
+            razorpaySignature: `mock_sig_pay_${Date.now()}`,
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+        if (verifyRes.ok && verifyData.success) {
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'CompleteRegistration', {
+              value: verifyData.amount || data.amount,
+              currency: 'INR',
+            });
+          }
+          alert('One-time ₹399 Registration fee paid successfully!');
+          setFeeModalOpen(false);
+          window.location.reload();
+        } else {
+          alert(verifyData.error || 'Registration fee verification failed');
+        }
       }
     } catch (err: any) {
       alert(err.message || 'Registration fee payment failed');
@@ -296,14 +380,14 @@ export default function BookingForm({ companion, currentUser }: BookingFormProps
             <div className="text-center space-y-2">
               <h3 className="text-xl font-extrabold text-slate-900">One-Time Registration Fee Required</h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                To maintain a verified and safe environment for companions, all clients must pay a mandatory one-time registration fee of <span className="font-bold text-slate-900">₹149</span>.
+                To maintain a verified and safe environment for companions, all clients must pay a mandatory one-time registration fee of <span className="font-bold text-slate-900">₹399</span>.
               </p>
             </div>
 
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2">
               <div className="flex justify-between font-bold text-slate-900">
                 <span>Account Verification Fee</span>
-                <span className="text-brand-600">₹149</span>
+                <span className="text-brand-600">₹399</span>
               </div>
               <p className="text-[11px] text-slate-500">Valid for lifetime access & bookings.</p>
             </div>
@@ -313,7 +397,7 @@ export default function BookingForm({ companion, currentUser }: BookingFormProps
                 onClick={handlePayRegistrationFee}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition-colors text-sm"
               >
-                Pay ₹149 Registration Fee
+                Pay ₹399 Registration Fee
               </button>
               <button
                 onClick={() => setFeeModalOpen(false)}

@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     // Check if customer registration fee paid
     if (!user.isRegistrationFeePaid) {
       return NextResponse.json(
-        { error: 'Please complete your ₹149 registration fee payment before booking a companion.' },
+        { error: 'Please complete your ₹399 registration fee payment before booking a companion.' },
         { status: 403 }
       );
     }

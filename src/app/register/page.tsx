@@ -62,28 +62,97 @@ function CustomerRegisterFormContent() {
     try {
       const orderRes = await fetch('/api/payments/registration-order', { method: 'POST' });
       const orderData = await orderRes.json();
-      if (!orderRes.ok) throw new Error(orderData.error);
+      if (!orderRes.ok) throw new Error(orderData.error || 'Failed to initialize payment order');
 
-      // Verify payment with backend
-      const verifyRes = await fetch('/api/payments/verify-registration', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          razorpayOrderId: orderData.orderId,
-          razorpayPaymentId: `pay_reg_${Date.now()}`,
-          razorpaySignature: `mock_sig_reg_${Date.now()}`,
-        }),
-      });
+      // Initialize Razorpay Checkout Modal
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount * 100,
+        currency: orderData.currency || 'INR',
+        name: 'Paireva',
+        description: 'One-Time Platform Registration Fee',
+        order_id: orderData.orderId,
+        handler: async function (response: any) {
+          try {
+            // Verify payment with backend
+            const verifyRes = await fetch('/api/payments/verify-registration', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              }),
+            });
 
-      if (verifyRes.ok) {
-        alert('One-time ₹399 Registration fee verified successfully! Welcome to Paireva.');
-        window.location.href = redirectTo || '/companions';
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.success) {
+              // Trigger Meta Pixel CompleteRegistration Conversion Event upon verified success
+              if (typeof window !== 'undefined' && (window as any).fbq) {
+                (window as any).fbq('track', 'CompleteRegistration', {
+                  value: verifyData.amount || orderData.amount,
+                  currency: 'INR',
+                });
+              }
+
+              alert('One-time ₹399 Registration fee verified successfully! Welcome to Paireva.');
+              window.location.href = redirectTo || '/companions';
+            } else {
+              setError(verifyData.error || 'Payment verification failed.');
+              setLoading(false);
+            }
+          } catch (verifyErr: any) {
+            setError(verifyErr.message || 'Verification failed. Please contact support.');
+            setLoading(false);
+          }
+        },
+        prefill: {
+          email: formData.email,
+          contact: formData.phone,
+          name: formData.name,
+        },
+        theme: {
+          color: '#E94B83',
+        },
+        modal: {
+          ondismiss: function () {
+            setLoading(false);
+          },
+        },
+      };
+
+      if (typeof window !== 'undefined' && (window as any).Razorpay) {
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
       } else {
-        setError('Payment verification failed.');
+        // Dev fallback if Razorpay script has not loaded
+        const verifyRes = await fetch('/api/payments/verify-registration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            razorpayOrderId: orderData.orderId,
+            razorpayPaymentId: `pay_mock_${Date.now()}`,
+            razorpaySignature: `mock_sig_pay_${Date.now()}`,
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+        if (verifyRes.ok && verifyData.success) {
+          if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'CompleteRegistration', {
+              value: verifyData.amount || orderData.amount,
+              currency: 'INR',
+            });
+          }
+          alert('Registration fee activated successfully!');
+          window.location.href = redirectTo || '/companions';
+        } else {
+          setError(verifyData.error || 'Payment verification failed.');
+        }
+        setLoading(false);
       }
     } catch (err: any) {
-      setError(err.message);
-    } finally {
+      setError(err.message || 'Payment initialization failed');
       setLoading(false);
     }
   };
@@ -154,16 +223,17 @@ function CustomerRegisterFormContent() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500"
-                  placeholder="At least 8 characters"
+                  placeholder="At least 6 characters"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Age (18+ Mandatory)</label>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Age (18+)</label>
                   <input
                     type="number"
-                    min={18}
+                    min="18"
+                    max="100"
                     required
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value, 10) })}
@@ -172,25 +242,40 @@ function CustomerRegisterFormContent() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">City</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Gender</label>
+                  <select
+                    value={formData.gender}
+                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500"
-                  />
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Non-Binary">Non-Binary</option>
+                  </select>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Phone Number (Optional)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">City</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500"
+                  placeholder="e.g. Mumbai"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Phone Number (Masked in Chat)</label>
                 <input
                   type="tel"
+                  required
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-3 py-2 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500"
-                  placeholder="+91 9876543210"
+                  placeholder="+91 98765 43210"
                 />
               </div>
 
@@ -211,17 +296,17 @@ function CustomerRegisterFormContent() {
                 </div>
                 <h3 className="text-lg font-extrabold text-slate-900">One-Time Registration Fee</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Pay the mandatory ₹149 one-time registration fee via Razorpay to activate your account and book verified companions.
+                  Pay the mandatory ₹399 one-time registration fee via Razorpay to activate your account and book verified companions.
                 </p>
-                <div className="text-3xl font-black text-slate-900 pt-2">₹149</div>
+                <div className="text-3xl font-black text-slate-900 pt-2">₹399</div>
               </div>
 
               <button
                 onClick={handlePayFee}
                 disabled={loading}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl text-sm shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                {loading ? 'Verifying Payment...' : 'Pay ₹149 & Activate Account'}
+                {loading ? 'Processing Payment...' : 'Pay ₹399 & Activate Account'}
               </button>
             </div>
           )}
