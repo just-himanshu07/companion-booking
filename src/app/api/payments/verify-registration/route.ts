@@ -47,7 +47,7 @@ export async function POST(req: Request) {
         where: { id: payment.id },
         data: { status: 'FAILED', errorReason: 'Signature verification failed' },
       });
-      return NextResponse.json({ error: 'Invalid payment signature verification failed' }, { status: 400 });
+      return NextResponse.json({ error: 'Payment verification failed. Your account has not been activated. Please try again.' }, { status: 400 });
     }
 
     // 5. Transactional update to activate account and mark payment success
