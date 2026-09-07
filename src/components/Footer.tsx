@@ -1,8 +1,21 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
 import { ShieldCheck, Heart, Sparkles, Lock, AlertTriangle, Instagram, Twitter, Facebook } from 'lucide-react';
 
 export default function Footer() {
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, hashTarget: string) => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+      const targetId = hashTarget.replace('/#', '').replace('#', '');
+      const element = document.getElementById(targetId);
+      if (element) {
+        e.preventDefault();
+        element.scrollIntoView({ behavior: 'smooth' });
+        window.history.pushState(null, '', hashTarget);
+      }
+    }
+  };
   return (
     <footer className="bg-[#6D315D] text-white border-t border-[#F47B8F]/20 pt-14 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,12 +76,20 @@ export default function Footer() {
             <h5 className="text-white font-extrabold text-xs uppercase tracking-wider mb-4 text-rose-200">Navigation</h5>
             <ul className="space-y-2.5 text-xs font-semibold text-rose-100/90">
               <li>
-                <Link href="/#discover" className="hover:text-white transition-colors">
+                <Link
+                  href="/#discover"
+                  onClick={(e) => handleAnchorClick(e, '/#discover')}
+                  className="hover:text-white transition-colors"
+                >
                   Discover Companions
                 </Link>
               </li>
               <li>
-                <Link href="/#how-it-works" className="hover:text-white transition-colors">
+                <Link
+                  href="/#how-it-works"
+                  onClick={(e) => handleAnchorClick(e, '/#how-it-works')}
+                  className="hover:text-white transition-colors"
+                >
                   How It Works
                 </Link>
               </li>
@@ -79,7 +100,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#faqs" className="hover:text-white transition-colors">
+                <Link
+                  href="/#faqs"
+                  onClick={(e) => handleAnchorClick(e, '/#faqs')}
+                  className="hover:text-white transition-colors"
+                >
                   FAQs
                 </Link>
               </li>

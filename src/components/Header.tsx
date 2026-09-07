@@ -47,6 +47,42 @@ export default function Header({ currentUser }: HeaderProps) {
     }
   }, [currentUser]);
 
+  useEffect(() => {
+    const scrollToHash = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const targetId = hash.replace('#', '');
+        let attempts = 0;
+        const interval = setInterval(() => {
+          const element = document.getElementById(targetId);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+            clearInterval(interval);
+          } else if (attempts > 25) {
+            clearInterval(interval);
+          }
+          attempts++;
+        }, 100);
+      }
+    };
+
+    scrollToHash();
+    window.addEventListener('hashchange', scrollToHash);
+    return () => window.removeEventListener('hashchange', scrollToHash);
+  }, []);
+
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, hashTarget: string) => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/') {
+      const targetId = hashTarget.replace('/#', '').replace('#', '');
+      const element = document.getElementById(targetId);
+      if (element) {
+        e.preventDefault();
+        element.scrollIntoView({ behavior: 'smooth' });
+        window.history.pushState(null, '', hashTarget);
+      }
+    }
+  };
+
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
     window.location.href = '/login';
@@ -84,11 +120,19 @@ export default function Header({ currentUser }: HeaderProps) {
                 Companion Dashboard
               </Link>
             ) : (
-              <Link href="/#discover" className="hover:text-[#E94B83] transition-colors">
+              <Link
+                href="/#discover"
+                onClick={(e) => handleAnchorClick(e, '/#discover')}
+                className="hover:text-[#E94B83] transition-colors"
+              >
                 Discover
               </Link>
             )}
-            <Link href="/#how-it-works" className="hover:text-[#E94B83] transition-colors">
+            <Link
+              href="/#how-it-works"
+              onClick={(e) => handleAnchorClick(e, '/#how-it-works')}
+              className="hover:text-[#E94B83] transition-colors"
+            >
               How It Works
             </Link>
             <Link href="/become-a-companion" className="hover:text-[#E94B83] transition-colors text-[#E94B83]">
@@ -98,7 +142,11 @@ export default function Header({ currentUser }: HeaderProps) {
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
               Safety
             </Link>
-            <Link href="/#faqs" className="hover:text-[#E94B83] transition-colors">
+            <Link
+              href="/#faqs"
+              onClick={(e) => handleAnchorClick(e, '/#faqs')}
+              className="hover:text-[#E94B83] transition-colors"
+            >
               FAQs
             </Link>
           </nav>
@@ -274,14 +322,20 @@ export default function Header({ currentUser }: HeaderProps) {
         <div className="md:hidden border-b border-[#F47B8F]/20 bg-white/98 backdrop-blur-2xl px-5 pt-3 pb-8 space-y-4 animate-in fade-in slide-in-from-top-2 shadow-xl">
           <Link
             href="/#discover"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(e) => {
+              setMobileMenuOpen(false);
+              handleAnchorClick(e, '/#discover');
+            }}
             className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
           >
             Discover
           </Link>
           <Link
             href="/#how-it-works"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(e) => {
+              setMobileMenuOpen(false);
+              handleAnchorClick(e, '/#how-it-works');
+            }}
             className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
           >
             How It Works
@@ -302,7 +356,10 @@ export default function Header({ currentUser }: HeaderProps) {
           </Link>
           <Link
             href="/#faqs"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(e) => {
+              setMobileMenuOpen(false);
+              handleAnchorClick(e, '/#faqs');
+            }}
             className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
           >
             FAQs
