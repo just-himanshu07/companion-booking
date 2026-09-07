@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     await createNotification(
       user.id,
       'Welcome to Companion Marketplace!',
-      'Please complete the one-time ₹149 registration fee to start booking verified companions.',
+      'Please complete the one-time ₹399 registration fee to start booking verified companions.',
       'SYSTEM',
       '/profile'
     );

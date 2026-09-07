@@ -82,11 +82,11 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
                 <div className="flex items-center gap-2 mt-2">
                   {currentUser.isRegistrationFeePaid ? (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                      <ShieldCheck className="w-3.5 h-3.5" /> ₹149 Registration Verified
+                      <ShieldCheck className="w-3.5 h-3.5" /> ₹399 Registration Verified
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                      Fee Pending (₹149)
+                      Fee Pending (₹399)
                     </span>
                   )}
                 </div>

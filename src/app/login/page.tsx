@@ -150,7 +150,7 @@ function LoginFormContent() {
       <div className="text-center text-xs text-slate-500 border-t border-slate-100 pt-4">
         Don't have an account?{' '}
         <Link href={redirectTo ? `/register?redirect=${encodeURIComponent(redirectTo)}` : '/register'} className="font-bold text-brand-600 hover:underline">
-          Register as Customer (₹149)
+          Register as Customer (₹399)
         </Link>
       </div>
     </div>
