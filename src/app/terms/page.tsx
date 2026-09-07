@@ -44,13 +44,16 @@ export default async function TermsPage() {
               <span>1. Introduction & Acceptance of Terms</span>
             </h2>
             <p className="text-[#756A70]">
-              Welcome to <strong>Paireva</strong> (accessible via <Link href="https://www.paireva.fun" className="text-[#E94B83] underline font-bold">www.paireva.fun</Link>). Paireva is owned and operated by <strong>[LEGAL_ENTITY_NAME]</strong> ("Paireva", "we", "us", or "our").
+              Welcome to <strong>Paireva</strong>, accessible at <Link href="https://www.paireva.fun/" className="text-[#E94B83] underline font-bold">https://www.paireva.fun/</Link>.
             </p>
             <p className="text-[#756A70]">
-              By accessing, registering for, or using the Paireva website, mobile applications, APIs, or services (collectively, the "Platform"), you confirm that you have read, understood, and agree to be bound by these Terms & Conditions ("Terms"). If you do not agree to all of these Terms, you must immediately cease accessing and using the Platform.
+              Paireva is a companionship marketplace that facilitates connections and bookings for lawful, non-sexual companionship activities.
             </p>
             <p className="text-[#756A70]">
-              <strong>Eligibility & Minimum Age (18+ Mandatory):</strong> The Platform is strictly reserved for adults who are at least eighteen (18) years of age or older (or theLegal legal age of majority in your jurisdiction). By registering an account or making any booking, you explicitly represent and warrant that you are at least 18 years old. Misrepresentation of age constitutes a material breach of these Terms.
+              By accessing, registering for, or using the Paireva website and its services (collectively, the "Platform"), you confirm that you have read, understood, and agree to be bound by these Terms & Conditions ("Terms"). If you do not agree with these Terms, you must not access or use the Platform.
+            </p>
+            <p className="text-[#756A70]">
+              These Terms govern your use of the Platform, including account registration, companion profiles, bookings, payments, communications, reviews, and other services made available through Paireva.
             </p>
           </section>
 

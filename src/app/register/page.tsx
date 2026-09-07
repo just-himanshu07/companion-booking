@@ -25,10 +25,16 @@ function CustomerRegisterFormContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [userId, setUserId] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!termsAccepted) {
+      setError('Please agree to the Terms & Conditions and Privacy Policy to continue.');
+      return;
+    }
 
     if (formData.age < 18) {
       setError('You must be at least 18 years old to register.');
@@ -41,7 +47,7 @@ function CustomerRegisterFormContent() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, termsAccepted }),
       });
 
       const data = await res.json();
@@ -277,6 +283,31 @@ function CustomerRegisterFormContent() {
                   className="w-full px-3 py-2 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500"
                   placeholder="+91 98765 43210"
                 />
+              </div>
+
+              <div className="flex items-start gap-2.5 pt-1">
+                <input
+                  type="checkbox"
+                  id="registerTermsAccepted"
+                  name="termsAccepted"
+                  required
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer shrink-0"
+                  aria-required="true"
+                  aria-describedby={error ? "register-error" : undefined}
+                />
+                <label htmlFor="registerTermsAccepted" className="text-xs text-slate-600 leading-normal cursor-pointer select-none">
+                  I agree to the{' '}
+                  <Link href="/terms" className="font-bold text-brand-600 hover:underline">
+                    Terms &amp; Conditions
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="font-bold text-brand-600 hover:underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </label>
               </div>
 
               <button

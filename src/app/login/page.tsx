@@ -15,10 +15,17 @@ function LoginFormContent() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!termsAccepted) {
+      setError('Please agree to the Terms & Conditions and Privacy Policy to continue.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -95,6 +102,31 @@ function LoginFormContent() {
             className="w-full px-3.5 py-2.5 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-500"
             placeholder="Your password"
           />
+        </div>
+
+        <div className="flex items-start gap-2.5 pt-1">
+          <input
+            type="checkbox"
+            id="loginTermsAccepted"
+            name="termsAccepted"
+            required
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 cursor-pointer shrink-0"
+            aria-required="true"
+            aria-describedby={error ? "login-error" : undefined}
+          />
+          <label htmlFor="loginTermsAccepted" className="text-xs text-slate-600 leading-normal cursor-pointer select-none">
+            I agree to the{' '}
+            <Link href="/terms" className="font-bold text-brand-600 hover:underline">
+              Terms &amp; Conditions
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="font-bold text-brand-600 hover:underline">
+              Privacy Policy
+            </Link>
+            .
+          </label>
         </div>
 
         <button

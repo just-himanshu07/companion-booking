@@ -44,10 +44,13 @@ export default async function PrivacyPage() {
               1. Platform Operator & Scope
             </h2>
             <p className="text-[#756A70]">
-              This Privacy Policy applies to the website, mobile applications, APIs, and services operated by <strong>[LEGAL_ENTITY_NAME]</strong> under the brand name <strong>Paireva</strong> ("Paireva", "we", "us", or "our"), accessible at <Link href="https://www.paireva.fun" className="text-[#E94B83] underline font-bold">www.paireva.fun</Link>.
+              This Privacy Policy applies to the website, mobile applications, APIs, and services operated under the brand name <strong>Paireva</strong> ("Paireva", "we", "us", or "our"), accessible at <Link href="https://www.paireva.fun/" className="text-[#E94B83] underline font-bold">https://www.paireva.fun/</Link>.
             </p>
             <p className="text-[#756A70]">
-              Paireva is committed to protecting your privacy and managing your personal data transparently and securely. This Privacy Policy describes the types of information we collect, why we collect it, how it is processed and shared, and your rights regarding your personal data.
+              Paireva is a companionship marketplace that facilitates connections and bookings for lawful, non-sexual companionship activities. This Privacy Policy explains what personal information we collect, why we collect it, how we use and protect it, when it may be shared with third-party service providers, and the rights and choices available to users regarding their personal information.
+            </p>
+            <p className="text-[#756A70]">
+              By using Paireva, you acknowledge that you have read and understood this Privacy Policy.
             </p>
           </section>
 

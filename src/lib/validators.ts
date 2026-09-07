@@ -8,6 +8,11 @@ export const customerRegisterSchema = z.object({
   gender: z.string().optional(),
   city: z.string().min(2, 'City is required'),
   phone: z.string().optional(),
+  termsAccepted: z.boolean({
+    required_error: 'Please agree to the Terms & Conditions and Privacy Policy to continue.',
+  }).refine((val) => val === true, {
+    message: 'Please agree to the Terms & Conditions and Privacy Policy to continue.',
+  }),
 });
 
 export const companionRegisterSchema = z.object({

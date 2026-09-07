@@ -8,6 +8,14 @@ import { createNotification } from '@/lib/notifications';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
+
+    if (!body.termsAccepted) {
+      return NextResponse.json(
+        { error: 'Please agree to the Terms & Conditions and Privacy Policy to continue.' },
+        { status: 400 }
+      );
+    }
+
     const validatedData = customerRegisterSchema.parse(body);
 
     // 18+ check
