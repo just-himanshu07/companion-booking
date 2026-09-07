@@ -162,19 +162,27 @@ export default async function RefundPolicyPage() {
           </section>
 
           {/* Section 6 */}
-          <section className="space-y-3 border-t border-[#F47B8F]/20 pt-6">
+          <section className="space-y-4 border-t border-[#F47B8F]/20 pt-6">
             <h2 className="text-base sm:text-lg font-extrabold text-[#6D315D]">
               6. Dispute Resolution & Customer Support
             </h2>
             <p className="text-[#756A70]">
-              If you experience any issue with a booking refund, duplicate charge, or payment dispute, please contact our support team:
+              If you experience any issue relating to a booking, payment, refund, duplicate charge, cancellation, or other platform-related matter, please contact Paireva through the email address below.
             </p>
-            <div className="bg-[#FFF8F5] p-5 rounded-2xl border border-[#F47B8F]/30 text-xs space-y-1 font-medium text-[#292126]">
-              <div><strong>Entity:</strong> [LEGAL_ENTITY_NAME]</div>
-              <div><strong>Support Email:</strong> [SUPPORT_EMAIL]</div>
-              <div><strong>Grievance Email:</strong> [GRIEVANCE_EMAIL]</div>
-              <div><strong>Website:</strong> https://www.paireva.fun</div>
+            <div className="bg-[#FFF8F5] p-5 rounded-2xl border border-[#F47B8F]/30 text-xs sm:text-sm space-y-1.5 font-medium text-[#292126]">
+              <div><strong>Platform:</strong> Paireva</div>
+              <div><strong>Support Email:</strong> <a href="mailto:contact.himanshuraj@gmail.com" className="text-[#E94B83] underline font-bold">contact.himanshuraj@gmail.com</a></div>
+              <div><strong>Website:</strong> <Link href="https://www.paireva.fun" className="text-[#E94B83] underline font-bold">https://www.paireva.fun</Link></div>
             </div>
+            <p className="text-[#756A70]">
+              We encourage users to contact us first so that we can review the issue and attempt to resolve the matter.
+            </p>
+            <p className="text-[#756A70]">
+              For payment-related issues, please provide your booking or payment reference number and a description of the issue. Do not share your password, OTP, UPI PIN, CVV, card number, or other sensitive authentication information with anyone claiming to represent Paireva.
+            </p>
+            <p className="text-[#756A70]">
+              For urgent safety or emergency situations, users should contact the appropriate local emergency services directly.
+            </p>
           </section>
         </div>
       </main>
