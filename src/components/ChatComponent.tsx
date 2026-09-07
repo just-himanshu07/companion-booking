@@ -12,6 +12,7 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
   const [messages, setMessages] = useState<any[]>([]);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [accessError, setAccessError] = useState<string | null>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef(true);
 
@@ -31,12 +32,16 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
       const data = await res.json();
       if (res.ok) {
         setMessages(data.messages || []);
+        setAccessError(null);
+      } else if (res.status === 403) {
+        setAccessError(data.error || 'Messaging is available only after your booking is confirmed.');
       }
     } catch (err) {}
   };
 
   useEffect(() => {
     isFirstLoad.current = true;
+    setAccessError(null);
     fetchMessages();
     const interval = setInterval(fetchMessages, 4000); // Poll every 4 seconds
     return () => clearInterval(interval);
@@ -61,7 +66,7 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!text.trim() || loading) return;
+    if (!text.trim() || loading || accessError) return;
 
     const content = text;
     setText('');
@@ -95,7 +100,11 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
         scrollToBottom();
       } else {
         const data = await res.json();
-        alert(data.error || 'Failed to send message');
+        if (res.status === 403) {
+          setAccessError(data.error || 'Messaging is available only after your booking is confirmed.');
+        } else {
+          alert(data.error || 'Failed to send message');
+        }
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
       }
     } catch (err) {
@@ -105,6 +114,25 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
       setLoading(false);
     }
   };
+
+  if (accessError) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white min-h-[550px]">
+        <div className="bg-amber-50 border border-amber-200 rounded-3xl p-8 max-w-md space-y-4 shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+            <Lock className="w-7 h-7" />
+          </div>
+          <h3 className="text-base font-extrabold text-amber-950">Messaging Restricted</h3>
+          <p className="text-xs text-amber-800 leading-relaxed font-medium">
+            {accessError}
+          </p>
+          <div className="text-[11px] text-amber-700 bg-white/80 p-3 rounded-xl border border-amber-200/60 font-semibold">
+            Complete your booking payment to confirm your booking and unlock in-platform chat.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col h-full min-h-[550px]">
@@ -149,11 +177,12 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type your message..."
-          className="flex-1 px-4 py-2.5 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
+          disabled={!!accessError}
+          className="flex-1 px-4 py-2.5 bg-slate-50 text-xs text-slate-900 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50"
         />
         <button
           type="submit"
-          disabled={loading || !text.trim()}
+          disabled={loading || !text.trim() || !!accessError}
           className="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-colors shadow-sm"
         >
           <Send className="w-4 h-4" />
@@ -163,4 +192,3 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
     </div>
   );
 }
-

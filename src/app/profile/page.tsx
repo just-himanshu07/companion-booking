@@ -8,7 +8,7 @@ import ReviewModalButton from '@/components/ReviewModalButton';
 import CustomerProfileEditForm from '@/components/CustomerProfileEditForm';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { ShieldCheck, Calendar, Heart, Bell, User, MapPin, MessageSquare, Star, Settings } from 'lucide-react';
+import { ShieldCheck, Calendar, Heart, Bell, User, MapPin, MessageSquare, Star, Settings, Lock } from 'lucide-react';
 
 interface ProfilePageProps {
   searchParams: {
@@ -37,6 +37,7 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
         },
         activity: true,
         review: true,
+        conversation: { select: { id: true } },
       },
       orderBy: { createdAt: 'desc' },
     }),
@@ -205,13 +206,23 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
                   </div>
 
                   <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-3">
-                    <Link
-                      href={`/messages`}
-                      className="inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs px-4 py-2 rounded-xl transition-colors"
-                    >
-                      <MessageSquare className="w-3.5 h-3.5 text-brand-600" />
-                      Chat with Companion
-                    </Link>
+                    {['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'].includes(booking.status) ? (
+                      <Link
+                        href={booking.conversation ? `/messages?conversationId=${booking.conversation.id}` : '/messages'}
+                        className="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors shadow-sm"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        Chat with Companion
+                      </Link>
+                    ) : (
+                      <span
+                        className="inline-flex items-center gap-1.5 bg-slate-100 text-slate-400 font-bold text-xs px-4 py-2 rounded-xl border border-slate-200 cursor-not-allowed"
+                        title="Messaging is available after your booking is confirmed."
+                      >
+                        <Lock className="w-3.5 h-3.5 text-amber-500" />
+                        Messaging Locked
+                      </span>
+                    )}
 
                     {booking.status === 'COMPLETED' && !booking.review && (
                       <ReviewModalButton bookingId={booking.id} companionName={booking.companion.displayName} />

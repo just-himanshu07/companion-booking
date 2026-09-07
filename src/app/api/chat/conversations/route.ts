@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { verifyConfirmedBookingBetweenUsers } from '@/lib/messagingAuth';
 
 export async function GET() {
   try {
     const user = await requireAuth();
 
-    const conversations = await prisma.conversation.findMany({
+    const rawConversations = await prisma.conversation.findMany({
       where: {
         OR: [{ customerId: user.id }, { companionUserId: user.id }],
       },
@@ -43,7 +44,24 @@ export async function GET() {
       orderBy: { lastMessageAt: 'desc' },
     });
 
-    return NextResponse.json({ conversations });
+    // Filter conversations so ONLY those with a CONFIRMED booking are returned
+    const confirmedConversations = [];
+    for (const conv of rawConversations) {
+      if (conv.booking && ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'].includes(conv.booking.status)) {
+        confirmedConversations.push(conv);
+      } else {
+        const { isConfirmed } = await verifyConfirmedBookingBetweenUsers(
+          conv.customerId,
+          conv.companionUserId,
+          conv.bookingId || undefined
+        );
+        if (isConfirmed) {
+          confirmedConversations.push(conv);
+        }
+      }
+    }
+
+    return NextResponse.json({ conversations: confirmedConversations });
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -74,7 +92,17 @@ export async function POST(req: Request) {
     const customerId = user.role === 'CUSTOMER' ? user.id : targetCompanionUserId;
     const compId = user.role === 'CUSTOMER' ? targetCompanionUserId : user.id;
 
-    // Check existing conversation
+    // Strict Authorization Verification: Require CONFIRMED booking
+    const { isConfirmed } = await verifyConfirmedBookingBetweenUsers(customerId, compId, bookingId);
+
+    if (!isConfirmed) {
+      return NextResponse.json(
+        { error: 'Messaging is available only after your booking is confirmed.' },
+        { status: 403 }
+      );
+    }
+
+    // Find or create conversation
     let conversation = await prisma.conversation.findFirst({
       where: {
         customerId,

@@ -8,6 +8,8 @@ import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { MessageSquare, ShieldCheck, Lock, ArrowLeft } from 'lucide-react';
 
+import { verifyConfirmedBookingBetweenUsers } from '@/lib/messagingAuth';
+
 interface MessagesPageProps {
   searchParams: {
     conversationId?: string;
@@ -21,7 +23,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
     redirect('/login');
   }
 
-  const conversations = await prisma.conversation.findMany({
+  const rawConversations = await prisma.conversation.findMany({
     where: {
       OR: [{ customerId: currentUser.id }, { companionUserId: currentUser.id }],
     },
@@ -57,6 +59,22 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
     },
     orderBy: { lastMessageAt: 'desc' },
   });
+
+  const conversations = [];
+  for (const conv of rawConversations) {
+    if (conv.booking && ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'].includes(conv.booking.status)) {
+      conversations.push(conv);
+    } else {
+      const { isConfirmed } = await verifyConfirmedBookingBetweenUsers(
+        conv.customerId,
+        conv.companionUserId,
+        conv.bookingId || undefined
+      );
+      if (isConfirmed) {
+        conversations.push(conv);
+      }
+    }
+  }
 
   const activeConversationId = searchParams.conversationId || (conversations[0]?.id ?? '');
 

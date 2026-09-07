@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { createNotification } from '@/lib/notifications';
+import { verifyConversationAccess } from '@/lib/messagingAuth';
 
 // Helper to mask sensitive contact details (phone numbers, emails, external links)
 function maskSensitiveContactInfo(text: string): string {
@@ -22,12 +23,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Conversation ID required' }, { status: 400 });
     }
 
-    const conversation = await prisma.conversation.findUnique({
-      where: { id: conversationId },
-    });
-
-    if (!conversation || (conversation.customerId !== user.id && conversation.companionUserId !== user.id)) {
-      return NextResponse.json({ error: 'Conversation not found or access denied' }, { status: 403 });
+    // Strict Authorization & Confirmed Booking Verification
+    const access = await verifyConversationAccess(user.id, conversationId);
+    if (!access.allowed) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
     }
 
     const messages = await prisma.message.findMany({
@@ -74,13 +73,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Conversation ID and message content are required' }, { status: 400 });
     }
 
-    const conversation = await prisma.conversation.findUnique({
-      where: { id: conversationId },
-    });
-
-    if (!conversation || (conversation.customerId !== user.id && conversation.companionUserId !== user.id)) {
-      return NextResponse.json({ error: 'Conversation not found or access denied' }, { status: 403 });
+    // Strict Authorization & Confirmed Booking Verification
+    const access = await verifyConversationAccess(user.id, conversationId);
+    if (!access.allowed || !access.conversation) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
     }
+
+    const conversation = access.conversation;
 
     // Check if user is blocked
     const recipientId = conversation.customerId === user.id ? conversation.companionUserId : conversation.customerId;
@@ -129,4 +128,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

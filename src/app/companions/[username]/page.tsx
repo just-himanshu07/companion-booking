@@ -59,6 +59,15 @@ export default async function CompanionProfilePage({ params }: CompanionProfileP
     take: 10,
   });
 
+  // Check if current user has a confirmed booking with this companion
+  const confirmedBooking = await prisma.booking.findFirst({
+    where: {
+      customerId: currentUser.id,
+      companionId: companion.id,
+      status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
+    },
+  });
+
   const displayPhoto = companion.profilePhoto || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
 
   return (
@@ -240,9 +249,13 @@ export default async function CompanionProfilePage({ params }: CompanionProfileP
               {/* BOOKING FORM CLIENT COMPONENT */}
               <BookingForm companion={companion} currentUser={currentUser} />
 
-              {/* DIRECT CHAT BUTTON */}
+              {/* DIRECT CHAT BUTTON (REQUIRES CONFIRMED BOOKING) */}
               <div className="border-t border-slate-100 pt-4">
-                <StartChatButton companionUserId={companion.userId} companionName={companion.displayName} />
+                <StartChatButton
+                  companionUserId={companion.userId}
+                  companionName={companion.displayName}
+                  isBookingConfirmed={!!confirmedBooking}
+                />
               </div>
 
               <div className="space-y-2 text-[11px] text-slate-500">

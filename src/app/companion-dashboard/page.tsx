@@ -7,7 +7,7 @@ import DocumentUploadForm from '@/components/DocumentUploadForm';
 import CompanionProfileEditForm from '@/components/CompanionProfileEditForm';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { ShieldCheck, Clock, Calendar, Star, DollarSign, AlertTriangle, CheckCircle2, MessageSquare, Plus, Settings } from 'lucide-react';
+import { ShieldCheck, Clock, Calendar, Star, DollarSign, AlertTriangle, CheckCircle2, MessageSquare, Plus, Settings, Lock } from 'lucide-react';
 
 export default async function CompanionDashboardPage() {
   const currentUser = await getSessionUser();
@@ -30,6 +30,7 @@ export default async function CompanionDashboardPage() {
           },
         },
         activity: true,
+        conversation: { select: { id: true } },
       },
       orderBy: { createdAt: 'desc' },
     }),
@@ -95,24 +96,24 @@ export default async function CompanionDashboardPage() {
         {/* OVERVIEW STATS CARDS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-1">
-            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Total Net Earnings</span>
+            <span className="text-xs text-[#756A70] font-semibold uppercase tracking-wider block">Total Net Earnings</span>
             <div className="text-3xl font-black text-slate-900">₹{totalEarnings}</div>
             <span className="text-[11px] text-emerald-600 font-medium">After 15% platform commission</span>
           </div>
 
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-1">
-            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Total Bookings</span>
+            <span className="text-xs text-[#756A70] font-semibold uppercase tracking-wider block">Total Bookings</span>
             <div className="text-3xl font-black text-slate-900">{bookings.length}</div>
-            <span className="text-[11px] text-slate-500 font-medium">Social engagements</span>
+            <span className="text-[11px] text-[#756A70] font-medium">Social engagements</span>
           </div>
 
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-1">
-            <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Average Rating</span>
+            <span className="text-xs text-[#756A70] font-semibold uppercase tracking-wider block">Average Rating</span>
             <div className="text-3xl font-black text-slate-900 flex items-center gap-2">
               {profile.averageRating > 0 ? profile.averageRating.toFixed(1) : 'New'}
               <Star className="w-6 h-6 text-amber-400 fill-amber-400" />
             </div>
-            <span className="text-[11px] text-slate-500 font-medium">From {profile.totalReviews} reviews</span>
+            <span className="text-[11px] text-[#756A70] font-medium">From {profile.totalReviews} reviews</span>
           </div>
         </div>
 
@@ -169,13 +170,23 @@ export default async function CompanionDashboardPage() {
                       </div>
 
                       <div className="flex items-center justify-end gap-2 border-t border-slate-200/60 pt-2">
-                        <Link
-                          href="/messages"
-                          className="text-xs font-bold text-brand-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl hover:bg-slate-50 flex items-center gap-1"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          Chat Center
-                        </Link>
+                        {['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'].includes(b.status) ? (
+                          <Link
+                            href={b.conversation ? `/messages?conversationId=${b.conversation.id}` : '/messages'}
+                            className="text-xs font-bold text-brand-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl hover:bg-slate-50 flex items-center gap-1 shadow-sm"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            Chat Center
+                          </Link>
+                        ) : (
+                          <span
+                            className="text-xs font-bold text-slate-400 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl flex items-center gap-1 cursor-not-allowed"
+                            title="Messaging is available after booking is confirmed."
+                          >
+                            <Lock className="w-3.5 h-3.5 text-amber-500" />
+                            Messaging Locked
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
