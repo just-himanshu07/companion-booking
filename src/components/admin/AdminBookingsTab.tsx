@@ -20,23 +20,33 @@ export default function AdminBookingsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<any>({ totalPages: 1, totalCount: 0 });
   const [selectedBooking, setSelectedBooking] = useState<any>(null);
 
-  const fetchBookings = async () => {
+  // Search Debouncing (300ms)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const fetchBookings = async (signal?: AbortSignal) => {
     setLoading(true);
     setError('');
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '15',
-        search,
+        search: debouncedSearch,
         status: statusFilter,
       });
 
-      const res = await fetch(`/api/admin/bookings?${params}`);
+      const res = await fetch(`/api/admin/bookings?${params}`, { signal });
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || 'Failed to fetch bookings');
@@ -44,6 +54,7 @@ export default function AdminBookingsTab() {
       setBookings(data.bookings || []);
       setPagination(data.pagination || { totalPages: 1, totalCount: 0 });
     } catch (err: any) {
+      if (err.name === 'AbortError') return;
       setError(err.message);
     } finally {
       setLoading(false);
@@ -51,8 +62,10 @@ export default function AdminBookingsTab() {
   };
 
   useEffect(() => {
-    fetchBookings();
-  }, [page, search, statusFilter]);
+    const controller = new AbortController();
+    fetchBookings(controller.signal);
+    return () => controller.abort();
+  }, [page, debouncedSearch, statusFilter]);
 
   return (
     <div className="space-y-6">
@@ -69,7 +82,7 @@ export default function AdminBookingsTab() {
           </div>
 
           <button
-            onClick={fetchBookings}
+            onClick={() => fetchBookings()}
             className="self-start sm:self-auto p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -135,11 +148,17 @@ export default function AdminBookingsTab() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    Loading bookings...
-                  </td>
-                </tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-24"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-32"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-32"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-28"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-20"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                    <td className="py-3.5 px-4 text-right"><div className="h-4 bg-slate-200 rounded w-8 ml-auto"></div></td>
+                  </tr>
+                ))
               ) : bookings.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">

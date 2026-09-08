@@ -5,6 +5,7 @@ import { logAdminAction } from '@/lib/audit';
 import { Role, AccountStatus } from '@prisma/client';
 
 export async function GET(req: Request) {
+  const startTime = Date.now();
   try {
     await requireRole(['ADMIN']);
 
@@ -106,15 +107,20 @@ export async function GET(req: Request) {
       prisma.user.count({ where }),
     ]);
 
-    return NextResponse.json({
-      users,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
+    const duration = Date.now() - startTime;
+    return NextResponse.json(
+      {
+        users,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+        },
+        queryDurationMs: duration,
       },
-    });
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });

@@ -8,20 +8,30 @@ export default function AdminAuditLogsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<any>({ totalPages: 1, totalCount: 0 });
 
-  const fetchAuditLogs = async () => {
+  // Search Debouncing (300ms)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const fetchAuditLogs = async (signal?: AbortSignal) => {
     setLoading(true);
     setError('');
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '20',
-        search,
+        search: debouncedSearch,
       });
 
-      const res = await fetch(`/api/admin/audit-logs?${params}`);
+      const res = await fetch(`/api/admin/audit-logs?${params}`, { signal });
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || 'Failed to fetch audit logs');
@@ -29,6 +39,7 @@ export default function AdminAuditLogsTab() {
       setLogs(data.logs || []);
       setPagination(data.pagination || { totalPages: 1, totalCount: 0 });
     } catch (err: any) {
+      if (err.name === 'AbortError') return;
       setError(err.message);
     } finally {
       setLoading(false);
@@ -36,8 +47,10 @@ export default function AdminAuditLogsTab() {
   };
 
   useEffect(() => {
-    fetchAuditLogs();
-  }, [page, search]);
+    const controller = new AbortController();
+    fetchAuditLogs(controller.signal);
+    return () => controller.abort();
+  }, [page, debouncedSearch]);
 
   return (
     <div className="space-y-6">
@@ -53,7 +66,7 @@ export default function AdminAuditLogsTab() {
           </div>
 
           <button
-            onClick={fetchAuditLogs}
+            onClick={() => fetchAuditLogs()}
             className="self-start sm:self-auto p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -97,9 +110,16 @@ export default function AdminAuditLogsTab() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">Loading audit logs...</td>
-                </tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-28"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-36"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-24"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-48"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-24"></div></td>
+                  </tr>
+                ))
               ) : logs.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">No audit logs recorded.</td>

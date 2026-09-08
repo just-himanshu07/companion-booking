@@ -8,29 +8,45 @@ export default function AdminReportsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState<any>({ totalPages: 1, totalCount: 0 });
 
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [updateStatus, setUpdateStatus] = useState<string>('RESOLVED');
   const [adminNotes, setAdminNotes] = useState<string>('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchReports = async () => {
+  // Search Debouncing (300ms)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const fetchReports = async (signal?: AbortSignal) => {
     setLoading(true);
     setError('');
     try {
       const params = new URLSearchParams({
-        search,
+        page: page.toString(),
+        limit: '15',
+        search: debouncedSearch,
         status: statusFilter,
       });
 
-      const res = await fetch(`/api/admin/reports?${params}`);
+      const res = await fetch(`/api/admin/reports?${params}`, { signal });
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || 'Failed to fetch reports');
 
       setReports(data.reports || []);
+      setPagination(data.pagination || { totalPages: 1, totalCount: 0 });
     } catch (err: any) {
+      if (err.name === 'AbortError') return;
       setError(err.message);
     } finally {
       setLoading(false);
@@ -38,8 +54,10 @@ export default function AdminReportsTab() {
   };
 
   useEffect(() => {
-    fetchReports();
-  }, [search, statusFilter]);
+    const controller = new AbortController();
+    fetchReports(controller.signal);
+    return () => controller.abort();
+  }, [page, debouncedSearch, statusFilter]);
 
   const handleResolveReport = async () => {
     if (!selectedReport) return;
@@ -85,7 +103,7 @@ export default function AdminReportsTab() {
           </div>
 
           <button
-            onClick={fetchReports}
+            onClick={() => fetchReports()}
             className="self-start sm:self-auto p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -140,9 +158,16 @@ export default function AdminReportsTab() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">Loading reports...</td>
-                </tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-32"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-32"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-44"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-20"></div></td>
+                    <td className="py-3.5 px-4 text-right"><div className="h-4 bg-slate-200 rounded w-16 ml-auto"></div></td>
+                  </tr>
+                ))
               ) : reports.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">No reports found.</td>
@@ -197,6 +222,30 @@ export default function AdminReportsTab() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+          <span>
+            Page {pagination.page} of {pagination.totalPages} ({pagination.totalCount} total)
+          </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage(page - 1)}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl font-bold disabled:opacity-50 cursor-pointer"
+            >
+              Previous
+            </button>
+            <button
+              disabled={page >= pagination.totalPages}
+              onClick={() => setPage(page + 1)}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-xl font-bold disabled:opacity-50 cursor-pointer"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 

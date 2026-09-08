@@ -3,6 +3,7 @@ import { requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
 export async function GET(req: Request) {
+  const startTime = Date.now();
   try {
     await requireRole(['ADMIN']);
 
@@ -32,7 +33,13 @@ export async function GET(req: Request) {
     const [logs, totalCount] = await Promise.all([
       prisma.auditLog.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          action: true,
+          targetType: true,
+          targetId: true,
+          details: true,
+          createdAt: true,
           admin: {
             select: {
               id: true,
@@ -48,15 +55,20 @@ export async function GET(req: Request) {
       prisma.auditLog.count({ where }),
     ]);
 
-    return NextResponse.json({
-      logs,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
+    const duration = Date.now() - startTime;
+    return NextResponse.json(
+      {
+        logs,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+        },
+        queryDurationMs: duration,
       },
-    });
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { BookingStatus } from '@prisma/client';
 
 export async function GET(req: Request) {
+  const startTime = Date.now();
   try {
     await requireRole(['ADMIN']);
 
@@ -33,7 +34,19 @@ export async function GET(req: Request) {
     const [bookings, totalCount] = await Promise.all([
       prisma.booking.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          bookingNumber: true,
+          date: true,
+          startTime: true,
+          endTime: true,
+          durationHours: true,
+          totalAmount: true,
+          commissionAmount: true,
+          companionEarnings: true,
+          status: true,
+          cancellationReason: true,
+          createdAt: true,
           customer: {
             select: {
               id: true,
@@ -52,7 +65,13 @@ export async function GET(req: Request) {
               user: { select: { email: true } },
             },
           },
-          activity: true,
+          activity: {
+            select: {
+              id: true,
+              name: true,
+              icon: true,
+            },
+          },
           payment: {
             select: {
               id: true,
@@ -62,7 +81,14 @@ export async function GET(req: Request) {
               razorpayOrderId: true,
             },
           },
-          refund: true,
+          refund: {
+            select: {
+              id: true,
+              amount: true,
+              reason: true,
+              status: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -71,15 +97,20 @@ export async function GET(req: Request) {
       prisma.booking.count({ where }),
     ]);
 
-    return NextResponse.json({
-      bookings,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
+    const duration = Date.now() - startTime;
+    return NextResponse.json(
+      {
+        bookings,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+        },
+        queryDurationMs: duration,
       },
-    });
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });

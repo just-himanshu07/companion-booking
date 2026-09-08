@@ -3,6 +3,7 @@ import { requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
 export async function GET() {
+  const startTime = Date.now();
   try {
     await requireRole(['ADMIN']);
 
@@ -136,7 +137,11 @@ export async function GET() {
 
     activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
-    return NextResponse.json({ activities: activities.slice(0, 15) });
+    const duration = Date.now() - startTime;
+    return NextResponse.json(
+      { activities: activities.slice(0, 15), queryDurationMs: duration },
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
@@ -144,4 +149,3 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db';
 import { PaymentStatus, PaymentType } from '@prisma/client';
 
 export async function GET(req: Request) {
+  const startTime = Date.now();
   try {
     await requireRole(['ADMIN']);
 
@@ -38,7 +39,18 @@ export async function GET(req: Request) {
     const [payments, totalCount] = await Promise.all([
       prisma.payment.findMany({
         where,
-        include: {
+        select: {
+          id: true,
+          paymentNumber: true,
+          paymentType: true,
+          amount: true,
+          currency: true,
+          razorpayOrderId: true,
+          razorpayPaymentId: true,
+          status: true,
+          paymentMethod: true,
+          errorReason: true,
+          createdAt: true,
           user: {
             select: {
               id: true,
@@ -57,7 +69,13 @@ export async function GET(req: Request) {
               status: true,
             },
           },
-          refunds: true,
+          refunds: {
+            select: {
+              id: true,
+              amount: true,
+              status: true,
+            },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -66,15 +84,20 @@ export async function GET(req: Request) {
       prisma.payment.count({ where }),
     ]);
 
-    return NextResponse.json({
-      payments,
-      pagination: {
-        page,
-        limit,
-        totalCount,
-        totalPages: Math.ceil(totalCount / limit),
+    const duration = Date.now() - startTime;
+    return NextResponse.json(
+      {
+        payments,
+        pagination: {
+          page,
+          limit,
+          totalCount,
+          totalPages: Math.ceil(totalCount / limit),
+        },
+        queryDurationMs: duration,
       },
-    });
+      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+    );
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });

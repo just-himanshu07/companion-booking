@@ -19,25 +19,35 @@ export default function AdminPaymentsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [paymentType, setPaymentType] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<any>({ totalPages: 1, totalCount: 0 });
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
 
-  const fetchPayments = async () => {
+  // Search Debouncing (300ms)
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  const fetchPayments = async (signal?: AbortSignal) => {
     setLoading(true);
     setError('');
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: '15',
-        search,
+        search: debouncedSearch,
         paymentType,
         status,
       });
 
-      const res = await fetch(`/api/admin/payments?${params}`);
+      const res = await fetch(`/api/admin/payments?${params}`, { signal });
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || 'Failed to fetch payments');
@@ -45,6 +55,7 @@ export default function AdminPaymentsTab() {
       setPayments(data.payments || []);
       setPagination(data.pagination || { totalPages: 1, totalCount: 0 });
     } catch (err: any) {
+      if (err.name === 'AbortError') return;
       setError(err.message);
     } finally {
       setLoading(false);
@@ -52,8 +63,10 @@ export default function AdminPaymentsTab() {
   };
 
   useEffect(() => {
-    fetchPayments();
-  }, [page, search, paymentType, status]);
+    const controller = new AbortController();
+    fetchPayments(controller.signal);
+    return () => controller.abort();
+  }, [page, debouncedSearch, paymentType, status]);
 
   return (
     <div className="space-y-6">
@@ -70,7 +83,7 @@ export default function AdminPaymentsTab() {
           </div>
 
           <button
-            onClick={fetchPayments}
+            onClick={() => fetchPayments()}
             className="self-start sm:self-auto p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -147,11 +160,17 @@ export default function AdminPaymentsTab() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    Loading payment records...
-                  </td>
-                </tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-24"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-36"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-24"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-32"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 bg-slate-200 rounded w-16"></div></td>
+                    <td className="py-3.5 px-4 text-right"><div className="h-4 bg-slate-200 rounded w-8 ml-auto"></div></td>
+                  </tr>
+                ))
               ) : payments.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">
