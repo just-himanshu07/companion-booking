@@ -8,6 +8,7 @@ const getResendFromEmail = () => process.env.RESEND_FROM_EMAIL || 'Paireva <nore
 /**
  * Sends a 6-digit email verification OTP to a user using the published Resend Template.
  * Template ID: 895469d4-ae07-4ae6-80f3-41400549ddca (Paireva Otp / paireva-otp)
+ * Pass variable OTP as a numeric JS number (e.g., 482913) as required by Resend template schema.
  */
 export async function sendVerificationOTP(
   toEmail: string,
@@ -24,6 +25,12 @@ export async function sendVerificationOTP(
       return { success: true };
     }
 
+    const numericOtp = Number(otp);
+    if (isNaN(numericOtp)) {
+      console.error('[EmailService Error] Provided OTP is not a valid number.');
+      return { success: false, error: 'Invalid OTP format' };
+    }
+
     const resend = new Resend(apiKey);
 
     const data = await resend.emails.send({
@@ -33,7 +40,7 @@ export async function sendVerificationOTP(
       template: {
         id: RESEND_OTP_TEMPLATE_ID,
         variables: {
-          OTP: otp,
+          OTP: numericOtp,
         },
       },
     });
