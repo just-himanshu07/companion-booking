@@ -71,6 +71,8 @@ export async function GET(req: Request) {
               gender: true,
               city: true,
               age: true,
+              displayAvatar: true,
+              gallery: true,
             },
           },
           companionProfile: {
@@ -79,6 +81,8 @@ export async function GET(req: Request) {
               username: true,
               displayName: true,
               fullName: true,
+              profilePhoto: true,
+              gallery: true,
               verificationStatus: true,
               hourlyPrice: true,
               averageRating: true,

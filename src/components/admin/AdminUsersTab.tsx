@@ -21,6 +21,7 @@ import {
   Calendar,
   Lock,
 } from 'lucide-react';
+import AdminPhotoManager from '@/components/admin/AdminPhotoManager';
 
 export default function AdminUsersTab() {
   const [users, setUsers] = useState<any[]>([]);
@@ -123,7 +124,7 @@ export default function AdminUsersTab() {
               <Users className="w-5 h-5 text-brand-600" /> Platform User Directory
             </h2>
             <p className="text-xs text-slate-500">
-              Manage accounts, moderate status, update roles, and review verification state. Total ({pagination.totalCount})
+              Manage accounts, moderate status, update roles, review verification, and manage profile photos. Total ({pagination.totalCount})
             </p>
           </div>
 
@@ -233,13 +234,28 @@ export default function AdminUsersTab() {
               ) : (
                 users.map((u) => {
                   const name = u.customerProfile?.name || u.companionProfile?.displayName || 'User';
+                  const avatarUrl = u.customerProfile?.displayAvatar || u.companionProfile?.profilePhoto;
+
                   return (
                     <tr key={u.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3.5 px-4">
-                        <div>
-                          <span className="font-bold text-slate-900 block">{name}</span>
-                          <span className="text-[11px] text-slate-500 block font-mono">{u.email}</span>
-                          {u.phone && <span className="text-[10px] text-slate-400 font-mono block">{u.phone}</span>}
+                        <div className="flex items-center gap-3">
+                          {avatarUrl ? (
+                            <img
+                              src={avatarUrl}
+                              alt={name}
+                              className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center text-xs border border-slate-200 shrink-0">
+                              {name?.[0] || 'U'}
+                            </div>
+                          )}
+                          <div>
+                            <span className="font-bold text-slate-900 block">{name}</span>
+                            <span className="text-[11px] text-slate-500 block font-mono">{u.email}</span>
+                            {u.phone && <span className="text-[10px] text-slate-400 font-mono block">{u.phone}</span>}
+                          </div>
                         </div>
                       </td>
 
@@ -304,7 +320,7 @@ export default function AdminUsersTab() {
                           <button
                             onClick={() => setSelectedUser(u)}
                             className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors cursor-pointer"
-                            title="Inspect Profile"
+                            title="Inspect Profile & Manage Photos"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
@@ -387,13 +403,13 @@ export default function AdminUsersTab() {
         </div>
       </div>
 
-      {/* USER DETAIL INSPECTOR MODAL */}
+      {/* USER DETAIL INSPECTOR & PHOTO MANAGEMENT MODAL */}
       {selectedUser && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h3 className="text-lg font-black text-slate-900">User Profile Inspection</h3>
+                <h3 className="text-lg font-black text-slate-900">User Inspection &amp; Photo Management</h3>
                 <span className="text-xs text-slate-400 font-mono">ID: {selectedUser.id}</span>
               </div>
               <button
@@ -404,7 +420,70 @@ export default function AdminUsersTab() {
               </button>
             </div>
 
-            <div className="space-y-4 text-xs">
+            <div className="space-y-6 text-xs">
+              {/* ADMIN 5-PHOTO MANAGER */}
+              {(selectedUser.customerProfile || selectedUser.companionProfile) && (
+                <AdminPhotoManager
+                  userId={selectedUser.id}
+                  userRole={selectedUser.role}
+                  initialPrimaryPhoto={
+                    selectedUser.customerProfile?.displayAvatar ||
+                    selectedUser.companionProfile?.profilePhoto ||
+                    null
+                  }
+                  initialGalleryPhotos={
+                    selectedUser.customerProfile?.gallery ||
+                    selectedUser.companionProfile?.gallery ||
+                    []
+                  }
+                  onPhotosChange={({ primaryPhoto, galleryPhotos }) => {
+                    setSelectedUser((prev: any) => {
+                      if (!prev) return null;
+                      if (prev.customerProfile) {
+                        return {
+                          ...prev,
+                          customerProfile: {
+                            ...prev.customerProfile,
+                            displayAvatar: primaryPhoto,
+                            gallery: galleryPhotos,
+                          },
+                        };
+                      }
+                      if (prev.companionProfile) {
+                        return {
+                          ...prev,
+                          companionProfile: {
+                            ...prev.companionProfile,
+                            profilePhoto: primaryPhoto,
+                            gallery: galleryPhotos,
+                          },
+                        };
+                      }
+                      return prev;
+                    });
+
+                    setUsers((prev) =>
+                      prev.map((u) => {
+                        if (u.id !== selectedUser.id) return u;
+                        if (u.customerProfile) {
+                          return {
+                            ...u,
+                            customerProfile: { ...u.customerProfile, displayAvatar: primaryPhoto, gallery: galleryPhotos },
+                          };
+                        }
+                        if (u.companionProfile) {
+                          return {
+                            ...u,
+                            companionProfile: { ...u.companionProfile, profilePhoto: primaryPhoto, gallery: galleryPhotos },
+                          };
+                        }
+                        return u;
+                      })
+                    );
+                  }}
+                />
+              )}
+
               <div className="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                 <div>
                   <span className="text-slate-400 font-bold block">Email</span>

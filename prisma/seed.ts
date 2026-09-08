@@ -841,14 +841,15 @@ async function main() {
         where: { userId: user.id },
       });
 
-      // Preserve admin-uploaded photos (e.g., uploaded via Vercel blob, data URL, or custom upload)
-      const isCustomPhoto =
-        existingProfile?.profilePhoto &&
-        !existingProfile.profilePhoto.includes('images.unsplash.com');
-
-      const photoToUse = isCustomPhoto
+      // Preserve admin-managed primary & gallery photos on re-seed
+      const photoToUse = existingProfile?.profilePhoto
         ? existingProfile.profilePhoto
         : comp.profilePhoto;
+
+      const galleryToUse =
+        existingProfile?.gallery && existingProfile.gallery.length > 0
+          ? existingProfile.gallery
+          : comp.gallery;
 
       const profile = await prisma.companionProfile.upsert({
         where: { userId: user.id },
@@ -864,7 +865,7 @@ async function main() {
           languages: comp.languages,
           interests: comp.interests,
           profilePhoto: photoToUse,
-          gallery: comp.gallery,
+          gallery: galleryToUse,
           verificationStatus: comp.verificationStatus,
           isFeatured: comp.isFeatured,
           averageRating: comp.averageRating,
@@ -883,7 +884,7 @@ async function main() {
           languages: comp.languages,
           interests: comp.interests,
           profilePhoto: photoToUse,
-          gallery: comp.gallery,
+          gallery: galleryToUse,
           verificationStatus: comp.verificationStatus,
           isFeatured: comp.isFeatured,
           averageRating: comp.averageRating,
