@@ -120,6 +120,8 @@ model CompanionProfile {
   @@index([verificationStatus])
   @@index([hourlyPrice])
   @@index([averageRating])
+  @@index([createdAt])
+  @@index([verificationStatus, createdAt])
 }
 
 model CompanionActivity {

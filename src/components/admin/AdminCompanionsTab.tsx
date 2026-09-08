@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   Search,
@@ -9,6 +9,9 @@ import {
   AlertCircle,
   RefreshCw,
   Eye,
+  ChevronLeft,
+  ChevronRight,
+  User,
 } from 'lucide-react';
 import AdminPhotoManager from '@/components/admin/AdminPhotoManager';
 
@@ -16,8 +19,17 @@ export default function AdminCompanionsTab() {
   const [companions, setCompanions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
+
+  // Pagination & Filtering States
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+
   const [selectedCompanion, setSelectedCompanion] = useState<any>(null);
 
   // Verification Review Modal State
@@ -30,26 +42,61 @@ export default function AdminCompanionsTab() {
   const [reason, setReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchCompanions = async () => {
+  // Debounce search input (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1); // Reset to page 1 on new search
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Handle status filter change
+  const handleStatusFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusFilter(e.target.value);
+    setPage(1); // Reset to page 1 on filter change
+  };
+
+  /**
+   * Fetch Companions with AbortController Cancellation
+   */
+  const fetchCompanions = async (signal?: AbortSignal) => {
     setLoading(true);
     setError('');
+
     try {
-      const res = await fetch('/api/admin/companions');
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+
+      if (debouncedSearch.trim()) params.set('search', debouncedSearch.trim());
+      if (statusFilter) params.set('status', statusFilter);
+
+      const res = await fetch(`/api/admin/companions?${params.toString()}`, { signal });
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.error || 'Failed to fetch companions');
 
       setCompanions(data.companions || []);
+      if (data.pagination) {
+        setTotal(data.pagination.total || 0);
+        setTotalPages(data.pagination.totalPages || 1);
+      }
     } catch (err: any) {
-      setError(err.message);
+      if (err.name === 'AbortError') return; // Ignore stale aborted requests
+      setError(err.message || 'Unable to load companion applications.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Fetch data whenever page, limit, search, or status filter changes
   useEffect(() => {
-    fetchCompanions();
-  }, []);
+    const controller = new AbortController();
+    fetchCompanions(controller.signal);
+    return () => controller.abort();
+  }, [page, limit, debouncedSearch, statusFilter]);
 
   const handleUpdateStatus = async () => {
     if (!reviewModal) return;
@@ -74,23 +121,14 @@ export default function AdminCompanionsTab() {
       setReason('');
       fetchCompanions();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to update verification status');
     } finally {
       setActionLoading(false);
     }
   };
 
-  const filteredCompanions = companions.filter((c) => {
-    const matchesSearch =
-      !search ||
-      c.displayName.toLowerCase().includes(search.toLowerCase()) ||
-      c.username.toLowerCase().includes(search.toLowerCase()) ||
-      c.user.email.toLowerCase().includes(search.toLowerCase());
-
-    const matchesStatus = !statusFilter || c.verificationStatus === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
+  const startRecord = total > 0 ? (page - 1) * limit + 1 : 0;
+  const endRecord = Math.min(page * limit, total);
 
   return (
     <div className="space-y-6">
@@ -107,8 +145,10 @@ export default function AdminCompanionsTab() {
           </div>
 
           <button
-            onClick={fetchCompanions}
-            className="self-start sm:self-auto p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors cursor-pointer"
+            onClick={() => fetchCompanions()}
+            disabled={loading}
+            className="self-start sm:self-auto p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+            title="Refresh list"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -121,15 +161,15 @@ export default function AdminCompanionsTab() {
             <input
               type="text"
               placeholder="Search companion by display name, username, or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={handleStatusFilterChange}
             className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
           >
             <option value="">All Statuses</option>
@@ -138,18 +178,29 @@ export default function AdminCompanionsTab() {
             <option value="VERIFIED">Verified</option>
             <option value="REJECTED">Rejected</option>
             <option value="SUSPENDED">Suspended</option>
+            <option value="BANNED">Banned</option>
           </select>
         </div>
       </div>
 
+      {/* ERROR ALERT WITH RETRY */}
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-2xl">
-          {error}
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-2xl flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <span>{error}</span>
+          </div>
+          <button
+            onClick={() => fetchCompanions()}
+            className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shrink-0"
+          >
+            Retry
+          </button>
         </div>
       )}
 
       {/* Companions Data Grid */}
-      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden space-y-4">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
@@ -164,19 +215,64 @@ export default function AdminCompanionsTab() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
+                // SKELETON LOADING ROWS (6 ROWS)
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <tr key={`skeleton-${idx}`} className="animate-pulse">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0" />
+                        <div className="space-y-1.5 flex-1">
+                          <div className="h-3 bg-slate-200 rounded w-28" />
+                          <div className="h-2.5 bg-slate-200 rounded w-20" />
+                          <div className="h-2 bg-slate-100 rounded w-36" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 space-y-1">
+                      <div className="h-3 bg-slate-200 rounded w-20" />
+                      <div className="h-2.5 bg-slate-200 rounded w-14" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="h-5 bg-slate-200 rounded-md w-16" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="h-5 bg-slate-200 rounded-md w-20" />
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="h-3 bg-slate-200 rounded w-16" />
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <div className="w-7 h-7 bg-slate-200 rounded-lg" />
+                        <div className="w-14 h-7 bg-slate-200 rounded-lg" />
+                        <div className="w-14 h-7 bg-slate-200 rounded-lg" />
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : error ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
-                    Loading companion applications...
+                    <div className="space-y-2">
+                      <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
+                      <p className="font-bold text-slate-700 text-xs">Unable to load companion applications.</p>
+                      <button
+                        onClick={() => fetchCompanions()}
+                        className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl cursor-pointer"
+                      >
+                        Retry Loading
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ) : filteredCompanions.length === 0 ? (
+              ) : companions.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">
                     No matching companion profiles found.
                   </td>
                 </tr>
               ) : (
-                filteredCompanions.map((c) => (
+                companions.map((c) => (
                   <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
@@ -194,7 +290,7 @@ export default function AdminCompanionsTab() {
                         <div>
                           <span className="font-bold text-slate-900 block">{c.displayName}</span>
                           <span className="text-[11px] text-purple-600 font-bold block">@{c.username}</span>
-                          <span className="text-[10px] text-slate-400 font-mono block">{c.user.email}</span>
+                          <span className="text-[10px] text-slate-400 font-mono block">{c.user?.email}</span>
                         </div>
                       </div>
                     </td>
@@ -228,7 +324,7 @@ export default function AdminCompanionsTab() {
                     </td>
 
                     <td className="py-3.5 px-4 font-semibold text-slate-700">
-                      ★ {c.averageRating.toFixed(1)} ({c.totalReviews})
+                      ★ {c.averageRating ? c.averageRating.toFixed(1) : '0.0'} ({c.totalReviews || 0})
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
@@ -262,6 +358,39 @@ export default function AdminCompanionsTab() {
             </tbody>
           </table>
         </div>
+
+        {/* SERVER-SIDE PAGINATION FOOTER */}
+        {total > 0 && (
+          <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+            <span className="text-slate-500 font-medium">
+              Showing <span className="font-bold text-slate-900">{startRecord}</span> to{' '}
+              <span className="font-bold text-slate-900">{endRecord}</span> of{' '}
+              <span className="font-bold text-slate-900">{total}</span> companion applications
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                disabled={page <= 1 || loading}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ChevronLeft className="w-4 h-4" /> Previous
+              </button>
+
+              <span className="px-3 py-1.5 font-bold text-slate-900 bg-slate-50 border border-slate-200 rounded-xl">
+                Page {page} of {totalPages}
+              </span>
+
+              <button
+                onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={page >= totalPages || loading}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl flex items-center gap-1 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* COMPANION INSPECTION & PHOTO MANAGEMENT MODAL */}
@@ -347,7 +476,7 @@ export default function AdminCompanionsTab() {
                   <p className="text-slate-400 text-[11px] italic">No identity documents submitted yet.</p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {selectedCompanion.verificationDocs.map((doc: any) => (
+                    {selectedCompanion.verificationDocs?.map((doc: any) => (
                       <div key={doc.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
                         <div>
                           <span className="font-bold text-slate-900 block">{doc.documentType}</span>
