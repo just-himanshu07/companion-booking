@@ -46,7 +46,8 @@ export async function POST(req: Request) {
         passwordHash,
         phone: validatedData.phone,
         role: 'CUSTOMER',
-        isEmailVerified: true, // Auto-verify for streamlined demo
+        accountStatus: 'PENDING',
+        isEmailVerified: false,
         isRegistrationFeePaid: false,
         customerProfile: {
           create: {
@@ -75,6 +76,8 @@ export async function POST(req: Request) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      accountStatus: user.accountStatus,
+      isEmailVerified: user.isEmailVerified,
     });
 
     setAuthCookie(token);
@@ -85,6 +88,8 @@ export async function POST(req: Request) {
         id: user.id,
         email: user.email,
         role: user.role,
+        accountStatus: user.accountStatus,
+        isEmailVerified: user.isEmailVerified,
         isRegistrationFeePaid: user.isRegistrationFeePaid,
         customerProfile: user.customerProfile,
       },

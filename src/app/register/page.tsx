@@ -132,8 +132,8 @@ function CustomerRegisterFormContent() {
                 });
               }
 
-              // Hard redirect to dashboard ONLY after server verification success
-              window.location.href = redirectTo || '/dashboard';
+              // Hard redirect to email verification screen after payment confirmation
+              window.location.href = verifyData.redirectTo || '/verify-email';
             } else {
               setPaymentStatus('FAILURE');
               setError(verifyData.error || 'Payment verification failed. Your account has not been activated. Please try again.');

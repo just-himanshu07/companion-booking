@@ -33,10 +33,22 @@ export async function POST(req: Request) {
 
     // 3. Idempotency Check: return success if already captured
     if (payment.status === 'SUCCESS' && user.isRegistrationFeePaid) {
+      if (!user.isEmailVerified || user.accountStatus === 'PENDING') {
+        return NextResponse.json({
+          success: true,
+          message: 'Registration fee already verified. Please complete email verification.',
+          amount: payment.amount,
+          verificationRequired: true,
+          redirectTo: '/verify-email',
+        });
+      }
+
       return NextResponse.json({
         success: true,
         message: 'Registration fee already verified',
         amount: payment.amount,
+        verificationRequired: false,
+        redirectTo: '/dashboard',
       });
     }
 
@@ -50,11 +62,26 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Payment verification failed. Your account has not been activated. Please try again.' }, { status: 400 });
     }
 
-    // 5. Transactional update to activate account and mark payment success
+    // 5. Generate 6-digit OTP and store hash/expiration
+    const { generateNumericOTP, hashOTP } = await import('@/lib/otp');
+    const { sendVerificationOTP } = await import('@/lib/emailService');
+
+    const otp = generateNumericOTP();
+    const otpHash = await hashOTP(otp);
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // 6. Transactional update to mark payment success and store OTP credentials
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: user.id },
-        data: { isRegistrationFeePaid: true },
+        data: {
+          isRegistrationFeePaid: true,
+          accountStatus: 'PENDING',
+          emailVerificationOtpHash: otpHash,
+          emailVerificationOtpExpiresAt: otpExpiresAt,
+          emailVerificationAttempts: 0,
+          emailVerificationLastSentAt: new Date(),
+        },
       });
 
       await tx.payment.update({
@@ -76,18 +103,27 @@ export async function POST(req: Request) {
       });
     });
 
+    // Send email using Resend
+    const name = user.customerProfile?.name || 'Valued User';
+    await sendVerificationOTP(user.email, otp, name);
+
     await createNotification(
       user.id,
       'Registration Fee Verified',
-      `Your ₹${payment.amount} one-time registration fee has been successfully processed. You can now discover and book verified companions.`,
+      `Your ₹${payment.amount} one-time registration fee has been successfully processed. Please verify your email to unlock platform access.`,
       'PAYMENT',
-      '/dashboard'
+      '/verify-email'
     );
 
     return NextResponse.json({
       success: true,
-      message: 'Registration fee verified successfully',
+      message: 'Registration fee verified. Email verification code sent.',
       amount: payment.amount,
+      paymentSuccessful: true,
+      isEmailVerified: false,
+      accountStatus: 'PENDING',
+      verificationRequired: true,
+      redirectTo: '/verify-email',
     });
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED') {

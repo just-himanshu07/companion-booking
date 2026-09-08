@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { prisma } from './db';
-import { Role } from '@prisma/client';
+import { Role, AccountStatus } from '@prisma/client';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'companion_super_secret_jwt_key_2026_production';
 const AUTH_COOKIE_NAME = 'companion_auth_token';
@@ -10,6 +10,8 @@ export interface JwtPayload {
   userId: string;
   email: string;
   role: Role;
+  accountStatus?: AccountStatus;
+  isEmailVerified?: boolean;
 }
 
 export function signToken(payload: JwtPayload): string {
@@ -53,6 +55,7 @@ export async function getSessionUser() {
       id: user.id,
       email: user.email,
       role: user.role,
+      accountStatus: user.accountStatus,
       isRegistrationFeePaid: user.isRegistrationFeePaid,
       isEmailVerified: user.isEmailVerified,
       isPhoneVerified: user.isPhoneVerified,
@@ -86,6 +89,14 @@ export async function requireAuth() {
   const user = await getSessionUser();
   if (!user) {
     throw new Error('UNAUTHORIZED');
+  }
+  return user;
+}
+
+export async function requireVerifiedAuth() {
+  const user = await requireAuth();
+  if (!user.isEmailVerified || user.accountStatus !== 'ACTIVE') {
+    throw new Error('VERIFICATION_REQUIRED');
   }
   return user;
 }

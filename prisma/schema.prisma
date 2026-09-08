@@ -67,17 +67,29 @@ enum ReportStatus {
   DISMISSED
 }
 
+enum AccountStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
 model User {
-  id                    String            @id @default(uuid())
-  email                 String            @unique
-  passwordHash          String
-  phone                 String?
-  role                  Role              @default(CUSTOMER)
-  isEmailVerified       Boolean           @default(false)
-  isPhoneVerified       Boolean           @default(false)
-  isRegistrationFeePaid Boolean           @default(false)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
+  id                            String            @id @default(uuid())
+  email                         String            @unique
+  passwordHash                  String
+  phone                         String?
+  role                          Role              @default(CUSTOMER)
+  accountStatus                 AccountStatus     @default(ACTIVE)
+  isEmailVerified               Boolean           @default(false)
+  isPhoneVerified               Boolean           @default(false)
+  isRegistrationFeePaid         Boolean           @default(false)
+  emailVerificationOtpHash      String?
+  emailVerificationOtpExpiresAt DateTime?
+  emailVerificationAttempts     Int               @default(0)
+  emailVerificationLastSentAt   DateTime?
+  createdAt                     DateTime          @default(now())
+  updatedAt                     DateTime          @updatedAt
 
   customerProfile       CustomerProfile?
   companionProfile      CompanionProfile?

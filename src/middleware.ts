@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 
 const AUTH_COOKIE_NAME = 'companion_auth_token';
 
-// Routes requiring authentication
+// Routes requiring authentication and email verification
 const PROTECTED_ROUTES = [
   '/dashboard',
   '/discover',
@@ -17,10 +17,27 @@ const PROTECTED_ROUTES = [
   '/admin',
 ];
 
+function decodeJwtPayload(token: string): any {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Check if pathname matches any protected route
   const isProtectedRoute = PROTECTED_ROUTES.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
@@ -32,6 +49,14 @@ export function middleware(request: NextRequest) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirectTo', pathname);
       return NextResponse.redirect(loginUrl);
+    }
+
+    const payload = decodeJwtPayload(token);
+
+    // Enforce email verification check for protected platform access
+    if (payload && (payload.isEmailVerified === false || payload.accountStatus === 'PENDING')) {
+      const verifyUrl = new URL('/verify-email', request.url);
+      return NextResponse.redirect(verifyUrl);
     }
   }
 

@@ -43,16 +43,25 @@ export async function POST(req: Request) {
       userId: user.id,
       email: user.email,
       role: user.role,
+      accountStatus: user.accountStatus,
+      isEmailVerified: user.isEmailVerified,
     });
 
     setAuthCookie(token);
 
+    // If user paid fee but email is not verified, require email verification
+    const isUnverified = user.isRegistrationFeePaid && (!user.isEmailVerified || user.accountStatus === 'PENDING');
+
     return NextResponse.json({
       success: true,
+      verificationRequired: isUnverified,
+      redirectTo: isUnverified ? '/verify-email' : '/dashboard',
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
+        accountStatus: user.accountStatus,
+        isEmailVerified: user.isEmailVerified,
         isRegistrationFeePaid: user.isRegistrationFeePaid,
         customerProfile: user.customerProfile,
         companionProfile: user.companionProfile,
@@ -65,4 +74,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message || 'Login failed' }, { status: 500 });
   }
 }
-
