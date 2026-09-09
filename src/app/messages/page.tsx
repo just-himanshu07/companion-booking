@@ -6,8 +6,7 @@ import Footer from '@/components/Footer';
 import ChatComponent from '@/components/ChatComponent';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { MessageSquare, ShieldCheck, Lock, ArrowLeft } from 'lucide-react';
-
+import { MessageSquare, Lock, ArrowLeft } from 'lucide-react';
 import { verifyConfirmedBookingBetweenUsers } from '@/lib/messagingAuth';
 
 interface MessagesPageProps {
@@ -42,16 +41,6 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
           companionProfile: { select: { displayName: true, profilePhoto: true } },
         },
       },
-      booking: {
-        select: {
-          id: true,
-          bookingNumber: true,
-          date: true,
-          startTime: true,
-          status: true,
-          activity: { select: { name: true } },
-        },
-      },
       messages: {
         take: 1,
         orderBy: { createdAt: 'desc' },
@@ -62,17 +51,26 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
 
   const conversations = [];
   for (const conv of rawConversations) {
-    if (conv.booking && ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'].includes(conv.booking.status)) {
-      conversations.push(conv);
-    } else {
-      const { isConfirmed } = await verifyConfirmedBookingBetweenUsers(
-        conv.customerId,
-        conv.companionUserId,
-        conv.bookingId || undefined
-      );
-      if (isConfirmed) {
-        conversations.push(conv);
-      }
+    const { isConfirmed, booking } = await verifyConfirmedBookingBetweenUsers(
+      conv.customerId,
+      conv.companionUserId
+    );
+
+    if (isConfirmed && booking) {
+      const latestBooking = await prisma.booking.findFirst({
+        where: {
+          customerId: conv.customerId,
+          companion: { userId: conv.companionUserId },
+          status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
+        },
+        include: { activity: { select: { name: true } } },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      conversations.push({
+        ...conv,
+        booking: latestBooking,
+      });
     }
   }
 
@@ -95,7 +93,7 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
               <h2 className="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-brand-600" /> In-Platform Messages
               </h2>
-              <p className="text-[11px] text-slate-500 mt-0.5">Secure, monitored communications</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">1-on-1 direct conversation threads</p>
             </div>
 
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100 max-h-[600px]">
@@ -123,9 +121,9 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
                           {new Date(conv.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </span>
                       </div>
-                      {conv.booking && (
+                      {conv.booking?.activity?.name && (
                         <span className="inline-block text-[10px] font-semibold bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full mb-1">
-                          {conv.booking.activity.name} (#{conv.booking.bookingNumber})
+                          {conv.booking.activity.name}
                         </span>
                       )}
                       <p className="text-xs text-slate-500 line-clamp-1">
@@ -178,4 +176,3 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
     </div>
   );
 }
-

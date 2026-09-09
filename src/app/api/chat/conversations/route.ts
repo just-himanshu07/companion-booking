@@ -26,16 +26,6 @@ export async function GET() {
             companionProfile: { select: { displayName: true, profilePhoto: true } },
           },
         },
-        booking: {
-          select: {
-            id: true,
-            bookingNumber: true,
-            date: true,
-            startTime: true,
-            status: true,
-            activity: { select: { name: true } },
-          },
-        },
         messages: {
           take: 1,
           orderBy: { createdAt: 'desc' },
@@ -44,20 +34,29 @@ export async function GET() {
       orderBy: { lastMessageAt: 'desc' },
     });
 
-    // Filter conversations so ONLY those with a CONFIRMED booking are returned
     const confirmedConversations = [];
     for (const conv of rawConversations) {
-      if (conv.booking && ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'].includes(conv.booking.status)) {
-        confirmedConversations.push(conv);
-      } else {
-        const { isConfirmed } = await verifyConfirmedBookingBetweenUsers(
-          conv.customerId,
-          conv.companionUserId,
-          conv.bookingId || undefined
-        );
-        if (isConfirmed) {
-          confirmedConversations.push(conv);
-        }
+      const { isConfirmed, booking } = await verifyConfirmedBookingBetweenUsers(
+        conv.customerId,
+        conv.companionUserId
+      );
+
+      if (isConfirmed && booking) {
+        // Attach the primary/latest booking context for sidebar display badge
+        const latestBooking = await prisma.booking.findFirst({
+          where: {
+            customerId: conv.customerId,
+            companion: { userId: conv.companionUserId },
+            status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
+          },
+          include: { activity: { select: { name: true } } },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        confirmedConversations.push({
+          ...conv,
+          booking: latestBooking,
+        });
       }
     }
 
@@ -73,7 +72,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const user = await requireAuth();
-    const { companionUserId, companionProfileId, bookingId } = await req.json();
+    const { companionUserId, companionProfileId } = await req.json();
 
     let targetCompanionUserId = companionUserId;
 
@@ -93,7 +92,7 @@ export async function POST(req: Request) {
     const compId = user.role === 'CUSTOMER' ? targetCompanionUserId : user.id;
 
     // Strict Authorization Verification: Require CONFIRMED booking
-    const { isConfirmed } = await verifyConfirmedBookingBetweenUsers(customerId, compId, bookingId);
+    const { isConfirmed } = await verifyConfirmedBookingBetweenUsers(customerId, compId);
 
     if (!isConfirmed) {
       return NextResponse.json(
@@ -102,12 +101,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // Find or create conversation
-    let conversation = await prisma.conversation.findFirst({
+    // Find or create single conversation for participant pair
+    let conversation = await prisma.conversation.findUnique({
       where: {
-        customerId,
-        companionUserId: compId,
-        ...(bookingId ? { bookingId } : {}),
+        customerId_companionUserId: {
+          customerId,
+          companionUserId: compId,
+        },
       },
     });
 
@@ -116,7 +116,6 @@ export async function POST(req: Request) {
         data: {
           customerId,
           companionUserId: compId,
-          bookingId: bookingId || undefined,
         },
       });
     }

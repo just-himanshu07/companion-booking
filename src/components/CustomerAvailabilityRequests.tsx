@@ -35,7 +35,6 @@ interface CustomerRequestItem {
     id: string;
     bookingNumber: string;
     status: string;
-    conversation?: { id: string } | null;
   } | null;
 }
 
@@ -296,15 +295,13 @@ export default function CustomerAvailabilityRequests({
                     <span className="font-bold text-purple-900 block text-sm">Booking Confirmed! #{r.booking.bookingNumber}</span>
                     <p className="text-purple-700">Your social engagement is locked and confirmed.</p>
                   </div>
-                  {r.booking.conversation && (
-                    <Link
-                      href={`/messages?conversationId=${r.booking.conversation.id}`}
-                      className="bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 shrink-0"
-                    >
-                      <MessageSquare className="w-4 h-4" />
-                      Open Booking Chat →
-                    </Link>
-                  )}
+                  <Link
+                    href="/messages"
+                    className="bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 shrink-0"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    Open Booking Chat →
+                  </Link>
                 </div>
               )}
             </div>

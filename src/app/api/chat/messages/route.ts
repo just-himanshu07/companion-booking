@@ -17,10 +17,13 @@ export async function GET(req: Request) {
 
     // Strict Authorization & Confirmed Booking Verification
     const access = await verifyConversationAccess(user.id, conversationId);
-    if (!access.allowed) {
+    if (!access.allowed || !access.conversation) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }
 
+    const conversation = access.conversation;
+
+    // Fetch messages for this unified conversation thread
     const messages = await prisma.message.findMany({
       where: { conversationId },
       orderBy: { createdAt: 'asc' },
@@ -37,6 +40,19 @@ export async function GET(req: Request) {
       },
     });
 
+    // Fetch all bookings between this customer and companion to render as timeline events
+    const bookings = await prisma.booking.findMany({
+      where: {
+        customerId: conversation.customerId,
+        companion: { userId: conversation.companionUserId },
+        status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
+      },
+      include: {
+        activity: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
     // Mark unread messages as read
     await prisma.message.updateMany({
       where: {
@@ -47,7 +63,11 @@ export async function GET(req: Request) {
       data: { isRead: true },
     });
 
-    return NextResponse.json({ messages });
+    return NextResponse.json({
+      messages,
+      bookings,
+      conversation,
+    });
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

@@ -76,7 +76,6 @@ export async function GET(req: Request) {
               id: true,
               bookingNumber: true,
               status: true,
-              conversation: { select: { id: true } },
             },
           },
         },

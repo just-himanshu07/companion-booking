@@ -112,15 +112,28 @@ export async function POST(req: Request) {
         },
       });
 
-      // Create internal conversation for messaging
-      await tx.conversation.upsert({
-        where: { bookingId: booking.id },
-        update: {},
-        create: {
-          bookingId: booking.id,
-          customerId: booking.customerId,
-          companionUserId: booking.companion.userId,
+      // Ensure single conversation exists for participant pair
+      let conversation = await tx.conversation.findUnique({
+        where: {
+          customerId_companionUserId: {
+            customerId: booking.customerId,
+            companionUserId: booking.companion.userId,
+          },
         },
+      });
+
+      if (!conversation) {
+        conversation = await tx.conversation.create({
+          data: {
+            customerId: booking.customerId,
+            companionUserId: booking.companion.userId,
+          },
+        });
+      }
+
+      await tx.conversation.update({
+        where: { id: conversation.id },
+        data: { lastMessageAt: new Date() },
       });
     });
 

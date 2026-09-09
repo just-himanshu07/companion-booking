@@ -26,7 +26,7 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
 
   const activeTab = searchParams.tab || 'bookings';
 
-  const [bookings, favorites, notifications, availabilityRequests] = await Promise.all([
+  const [bookings, favorites, notifications, availabilityRequests, conversations] = await Promise.all([
     prisma.booking.findMany({
       where: { customerId: currentUser.id },
       include: {
@@ -38,7 +38,6 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
         },
         activity: true,
         review: true,
-        conversation: { select: { id: true } },
       },
       orderBy: { createdAt: 'desc' },
     }),
@@ -86,13 +85,18 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
             id: true,
             bookingNumber: true,
             status: true,
-            conversation: { select: { id: true } },
           },
         },
       },
       orderBy: { createdAt: 'desc' },
     }),
+    prisma.conversation.findMany({
+      where: { customerId: currentUser.id },
+      select: { id: true, companionUserId: true },
+    }),
   ]);
+
+  const convMap = new Map(conversations.map((c) => [c.companionUserId, c.id]));
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
@@ -252,7 +256,11 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
                   <div className="flex flex-wrap items-center justify-end gap-3 border-t border-slate-100 pt-3">
                     {['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'].includes(booking.status) ? (
                       <Link
-                        href={booking.conversation ? `/messages?conversationId=${booking.conversation.id}` : '/messages'}
+                        href={
+                          convMap.get(booking.companion.user.id)
+                            ? `/messages?conversationId=${convMap.get(booking.companion.user.id)}`
+                            : '/messages'
+                        }
                         className="inline-flex items-center gap-1.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors shadow-sm"
                       >
                         <MessageSquare className="w-3.5 h-3.5" />

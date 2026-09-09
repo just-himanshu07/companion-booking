@@ -36,6 +36,7 @@ export async function verifyConfirmedBookingBetweenUsers(
       companion: { userId: companionUserId },
       status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
     },
+    orderBy: { createdAt: 'desc' },
   });
 
   return { isConfirmed: !!booking, booking };
@@ -51,7 +52,6 @@ export async function verifyConversationAccess(userId: string, conversationId: s
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
     include: {
-      booking: true,
       customer: { select: { id: true } },
       companionUser: { select: { id: true } },
     },
@@ -66,16 +66,10 @@ export async function verifyConversationAccess(userId: string, conversationId: s
     return { allowed: false, status: 403, error: 'Access denied to this conversation', conversation: null };
   }
 
-  // 2. Check if conversation's attached booking is confirmed
-  if (conversation.booking && CONFIRMED_BOOKING_STATUSES.includes(conversation.booking.status)) {
-    return { allowed: true, status: 200, conversation };
-  }
-
-  // 3. Check if any confirmed booking exists between conversation participants
-  const { isConfirmed } = await verifyConfirmedBookingBetweenUsers(
+  // 2. Check if any confirmed booking exists between conversation participants
+  const { isConfirmed, booking } = await verifyConfirmedBookingBetweenUsers(
     conversation.customerId,
-    conversation.companionUserId,
-    conversation.bookingId || undefined
+    conversation.companionUserId
   );
 
   if (!isConfirmed) {
@@ -87,6 +81,5 @@ export async function verifyConversationAccess(userId: string, conversationId: s
     };
   }
 
-  return { allowed: true, status: 200, conversation };
+  return { allowed: true, status: 200, conversation, activeBooking: booking };
 }
-

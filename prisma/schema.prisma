@@ -192,7 +192,6 @@ model Booking {
   activity               Activity         @relation(fields: [activityId], references: [id])
   companion              CompanionProfile @relation("CompanionBookings", fields: [companionId], references: [id])
   customer               User             @relation("CustomerBookings", fields: [customerId], references: [id])
-  conversation           Conversation?
   payment                Payment?
   refund                 Refund?
   review                 Review?
@@ -267,17 +266,15 @@ model Review {
 
 model Conversation {
   id              String    @id @default(uuid())
-  bookingId       String?   @unique
   customerId      String
   companionUserId String
   lastMessageAt   DateTime  @default(now())
   createdAt       DateTime  @default(now())
-  booking         Booking?  @relation(fields: [bookingId], references: [id])
   companionUser   User      @relation("CompanionConversations", fields: [companionUserId], references: [id])
   customer        User      @relation("CustomerConversations", fields: [customerId], references: [id])
   messages        Message[]
 
-  @@unique([customerId, companionUserId, bookingId])
+  @@unique([customerId, companionUserId])
 }
 
 model Message {

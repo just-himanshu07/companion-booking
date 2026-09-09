@@ -31,7 +31,6 @@ interface AvailabilityRequestItem {
     id: string;
     bookingNumber: string;
     status: string;
-    conversation?: { id: string } | null;
   } | null;
 }
 
@@ -88,7 +87,7 @@ export default function CompanionAvailabilityRequests({
       await fetchLatestRequests();
     } catch (err: any) {
       setError(err.message);
-    } finally {
+    } font-bold {
       setActionLoading(null);
     }
   };
@@ -317,15 +316,13 @@ export default function CompanionAvailabilityRequests({
                 {r.status === 'BOOKED' && r.booking && (
                   <div className="flex items-center justify-between border-t border-slate-200/60 pt-3 text-xs">
                     <span className="font-bold text-purple-700">Booking Confirmed #{r.booking.bookingNumber}</span>
-                    {r.booking.conversation && (
-                      <Link
-                        href={`/messages?conversationId=${r.booking.conversation.id}`}
-                        className="px-3.5 py-1.5 bg-brand-600 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-sm hover:bg-brand-700"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        Chat Center
-                      </Link>
-                    )}
+                    <Link
+                      href="/messages"
+                      className="px-3.5 py-1.5 bg-brand-600 text-white font-bold rounded-xl flex items-center gap-1.5 shadow-sm hover:bg-brand-700"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      Chat Center
+                    </Link>
                   </div>
                 )}
               </div>
