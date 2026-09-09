@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Clock, MapPin, Sparkles, AlertCircle, ShieldCheck, X } from 'lucide-react';
+import { Sparkles, AlertCircle, ShieldCheck, X } from 'lucide-react';
+import { validateOffPlatformContent } from '@/lib/offPlatformFilter';
 
 interface AskAvailabilityModalProps {
   companion: {
@@ -48,6 +49,7 @@ export default function AskAvailabilityModal({
   const [isCustomMessage, setIsCustomMessage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [offPlatformError, setOffPlatformError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState('');
 
   // Auto-generate suggested message
@@ -56,10 +58,29 @@ export default function AskAvailabilityModal({
       const formattedDate = date ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : date;
       const suggested = `Hi ${companion.displayName}! I'm interested in booking you on ${formattedDate} around ${time} for ${experience}. Are you available?`;
       setMessage(suggested);
+      setOffPlatformError(null);
     }
   }, [date, time, experience, companion.displayName, isCustomMessage]);
 
   if (!isOpen) return null;
+
+  const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    setMessage(val);
+    setIsCustomMessage(true);
+
+    if (!val.trim()) {
+      setOffPlatformError(null);
+      return;
+    }
+
+    const validation = validateOffPlatformContent(val);
+    if (!validation.isValid) {
+      setOffPlatformError(validation.errorMessage || null);
+    } else {
+      setOffPlatformError(null);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +97,15 @@ export default function AskAvailabilityModal({
       return;
     }
 
+    if (message.trim()) {
+      const validation = validateOffPlatformContent(message);
+      if (!validation.isValid) {
+        setOffPlatformError(validation.errorMessage || 'Prohibited contact or off-platform payment details detected.');
+        return;
+      }
+    }
+
+    setOffPlatformError(null);
     setLoading(true);
 
     try {
@@ -96,7 +126,12 @@ export default function AskAvailabilityModal({
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to send availability request.');
+        if (res.status === 400 && data.error) {
+          setOffPlatformError(data.error);
+        } else {
+          throw new Error(data.error || 'Failed to send availability request.');
+        }
+        return;
       }
 
       setSuccessMsg('Availability request sent successfully! Redirecting to your dashboard...');
@@ -239,28 +274,29 @@ export default function AskAvailabilityModal({
             </div>
             <textarea
               value={message}
-              onChange={(e) => {
-                setMessage(e.target.value);
-                setIsCustomMessage(true);
-              }}
+              onChange={handleMessageChange}
               rows={3}
-              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:ring-2 focus:ring-brand-500 resize-none"
+              className={`w-full p-3 bg-slate-50 border rounded-xl text-slate-900 focus:ring-2 resize-none transition-colors ${
+                offPlatformError
+                  ? 'border-amber-400 focus:ring-amber-500 bg-amber-50/20'
+                  : 'border-slate-200 focus:ring-brand-500'
+              }`}
             />
-          </div>
-
-          {/* Safety Notice */}
-          <div className="p-3 bg-amber-50/90 border border-amber-200/80 rounded-xl text-[11px] text-amber-900 flex items-start gap-2">
-            <ShieldCheck className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
-            <p className="leading-tight">
-              <strong>Safety Rules:</strong> For your security, contact information (phone, WhatsApp, Instagram, email, UPI) cannot be shared before booking.
-            </p>
+            {offPlatformError && (
+              <div className="mt-2 p-3 bg-amber-50 border border-amber-200/90 rounded-xl text-xs text-amber-900 flex items-start gap-2 animate-in fade-in zoom-in-95">
+                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="leading-snug font-medium">
+                  <p className="font-semibold text-amber-950">⚠️ {offPlatformError}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-brand-600 hover:bg-brand-700 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-brand-600/20 transition-all text-xs cursor-pointer flex items-center justify-center gap-2"
+            disabled={loading || !!offPlatformError}
+            className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-extrabold py-3.5 rounded-xl shadow-lg shadow-brand-600/20 transition-all text-xs cursor-pointer flex items-center justify-center gap-2"
           >
             {loading ? 'Sending Request...' : 'Send Availability Request →'}
           </button>
@@ -269,4 +305,3 @@ export default function AskAvailabilityModal({
     </div>
   );
 }
-

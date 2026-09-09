@@ -3,15 +3,7 @@ import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { createNotification } from '@/lib/notifications';
 import { verifyConversationAccess } from '@/lib/messagingAuth';
-
-// Helper to mask sensitive contact details (phone numbers, emails, external links)
-function maskSensitiveContactInfo(text: string): string {
-  // Mask emails
-  let sanitized = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[contact info hidden for safety]');
-  // Mask 10-digit phone numbers or numbers with spaces/dashes
-  sanitized = sanitized.replace(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, '[phone number hidden for safety]');
-  return sanitized;
-}
+import { validateOffPlatformContent } from '@/lib/offPlatformFilter';
 
 export async function GET(req: Request) {
   try {
@@ -96,13 +88,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Messaging is disabled due to a block constraint.' }, { status: 403 });
     }
 
-    const sanitizedText = maskSensitiveContactInfo(text.trim());
+    // Server-side Off-Platform Security Validation
+    const validation = validateOffPlatformContent(text.trim());
+    if (!validation.isValid) {
+      return NextResponse.json({ error: validation.errorMessage }, { status: 400 });
+    }
 
     const message = await prisma.message.create({
       data: {
         conversationId,
         senderId: user.id,
-        text: sanitizedText,
+        text: text.trim(),
       },
     });
 
