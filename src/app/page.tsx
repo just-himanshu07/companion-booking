@@ -1,6 +1,8 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+
+export const dynamic = 'force-dynamic';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import CompanionCard from '@/components/CompanionCard';

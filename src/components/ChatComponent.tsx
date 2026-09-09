@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Lock, AlertTriangle, CheckCircle2, Calendar, Clock } from 'lucide-react';
+import { Send, Lock, AlertTriangle, CheckCircle2, Calendar, Clock, Shield } from 'lucide-react';
 import { validateOffPlatformContent } from '@/lib/offPlatformFilter';
 
 interface ChatComponentProps {
@@ -223,6 +223,14 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
 
   return (
     <div className="flex-1 flex flex-col h-full min-h-[550px]">
+      {/* Top Static Safety Notice Banner */}
+      <div className="bg-slate-50/90 border-b border-slate-150 px-4 py-2 sm:px-6 sm:py-2.5 flex items-start sm:items-center gap-2 text-slate-500 shrink-0 select-none border-slate-100">
+        <Shield className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5 sm:mt-0" />
+        <p className="text-[11px] leading-snug text-slate-500">
+          <span className="font-semibold text-slate-700">Safety Notice:</span> Chats may be monitored for safety. Please don’t share personal contact or payment details or arrange off-platform payments.
+        </p>
+      </div>
+
       {/* Unified Timeline Feed */}
       <div ref={chatContainerRef} className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 max-h-[500px]">
         {timelineItems.length > 0 ? (
