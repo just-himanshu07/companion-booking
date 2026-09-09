@@ -139,14 +139,6 @@ function LoginFormContent() {
         </button>
       </form>
 
-      {/* Quick Demo Credentials */}
-      <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-[11px] text-slate-600">
-        <p className="font-bold text-slate-800">Quick Test Credentials:</p>
-        <div><span className="font-semibold text-slate-700">Customer:</span> customer@example.com | Password123!</div>
-        <div><span className="font-semibold text-slate-700">Companion:</span> aria@companion.com | Password123!</div>
-        <div><span className="font-semibold text-slate-700">Admin:</span> admin@companion.com | Password123!</div>
-      </div>
-
       <div className="text-center text-xs text-slate-500 border-t border-slate-100 pt-4">
         Don't have an account?{' '}
         <Link href={redirectTo ? `/register?redirect=${encodeURIComponent(redirectTo)}` : '/register'} className="font-bold text-brand-600 hover:underline">
