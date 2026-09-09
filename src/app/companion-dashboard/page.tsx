@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import DocumentUploadForm from '@/components/DocumentUploadForm';
 import CompanionProfileEditForm from '@/components/CompanionProfileEditForm';
+import CompanionAvailabilityRequests from '@/components/CompanionAvailabilityRequests';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { ShieldCheck, Clock, Calendar, Star, DollarSign, AlertTriangle, CheckCircle2, MessageSquare, Plus, Settings, Lock } from 'lucide-react';
@@ -18,7 +19,7 @@ export default async function CompanionDashboardPage() {
 
   const profile = currentUser.companionProfile;
 
-  const [bookings, docs, citiesList, activitiesList] = await Promise.all([
+  const [bookings, docs, citiesList, activitiesList, availabilityRequests] = await Promise.all([
     prisma.booking.findMany({
       where: { companionId: profile.id },
       include: {
@@ -39,6 +40,27 @@ export default async function CompanionDashboardPage() {
     }),
     prisma.city.findMany({ orderBy: { name: 'asc' } }),
     prisma.activity.findMany({ orderBy: { name: 'asc' } }),
+    prisma.availabilityRequest.findMany({
+      where: { companionId: profile.id },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            email: true,
+            customerProfile: { select: { name: true, displayAvatar: true } },
+          },
+        },
+        booking: {
+          select: {
+            id: true,
+            bookingNumber: true,
+            status: true,
+            conversation: { select: { id: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
   ]);
 
   const totalEarnings = bookings
@@ -131,6 +153,12 @@ export default async function CompanionDashboardPage() {
                 activitiesList={activitiesList}
               />
             </div>
+
+            {/* AVAILABILITY REQUESTS SECTION */}
+            <CompanionAvailabilityRequests
+              initialRequests={availabilityRequests}
+              companionId={profile.id}
+            />
 
             {/* CLIENT BOOKINGS */}
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">

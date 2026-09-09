@@ -91,6 +91,20 @@ export async function POST(req: Request) {
         },
       });
 
+      if (validatedData.availabilityRequestId) {
+        await tx.availabilityRequest.updateMany({
+          where: {
+            id: validatedData.availabilityRequestId,
+            customerId: user.id,
+            companionId: companion.id,
+            status: 'ACCEPTED',
+          },
+          data: {
+            bookingId: booking.id,
+          },
+        });
+      }
+
       return booking;
     });
 

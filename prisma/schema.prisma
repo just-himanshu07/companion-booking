@@ -41,6 +41,8 @@ model User {
   reportsFiled                  Report[]          @relation("ReportsFiled")
   reviewsReceived               Review[]          @relation("ReviewsReceived")
   reviewsGiven                  Review[]          @relation("ReviewsGiven")
+  availabilityRequestsAsCustomer AvailabilityRequest[] @relation("CustomerAvailabilityRequests")
+
 
   @@index([email])
   @@index([role])
@@ -118,6 +120,8 @@ model CompanionProfile {
   user               User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   favoritedBy        Favorite[]
   verificationDocs   VerificationDocument[]
+  availabilityRequests AvailabilityRequest[] @relation("CompanionAvailabilityRequests")
+
 
   @@index([cityId])
   @@index([verificationStatus])
@@ -192,6 +196,8 @@ model Booking {
   payment                Payment?
   refund                 Refund?
   review                 Review?
+  availabilityRequest    AvailabilityRequest?
+
 
   @@index([customerId])
   @@index([companionId])
@@ -454,3 +460,44 @@ enum FeedbackStatus {
   IN_PROGRESS
   RESOLVED
 }
+
+enum AvailabilityRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COUNTER_PROPOSED
+  EXPIRED
+  CANCELLED
+  BOOKED
+}
+
+model AvailabilityRequest {
+  id                 String                    @id @default(uuid())
+  customerId         String
+  companionId        String
+  requestedDate      String
+  requestedStartTime String
+  requestedDuration  Float
+  experienceType     String
+  generalArea        String?
+  customerMessage    String?
+  counterDate        String?
+  counterStartTime   String?
+  counterDuration    Float?
+  companionMessage   String?
+  status             AvailabilityRequestStatus @default(PENDING)
+  expiresAt          DateTime
+  bookingId          String?                   @unique
+  createdAt          DateTime                  @default(now())
+  updatedAt          DateTime                  @updatedAt
+
+  customer           User                      @relation("CustomerAvailabilityRequests", fields: [customerId], references: [id], onDelete: Cascade)
+  companion          CompanionProfile          @relation("CompanionAvailabilityRequests", fields: [companionId], references: [id], onDelete: Cascade)
+  booking            Booking?                  @relation(fields: [bookingId], references: [id])
+
+  @@index([customerId])
+  @@index([companionId])
+  @@index([status])
+  @@index([createdAt])
+}
+

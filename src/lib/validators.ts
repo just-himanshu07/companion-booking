@@ -43,6 +43,7 @@ export const bookingSchema = z.object({
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Start time must be in HH:MM format'),
   durationHours: z.number().min(1, 'Minimum booking duration is 1 hour').max(12, 'Maximum duration is 12 hours'),
   notes: z.string().optional(),
+  availabilityRequestId: z.string().optional(),
 });
 
 export const reviewSchema = z.object({

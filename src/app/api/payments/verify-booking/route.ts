@@ -93,6 +93,25 @@ export async function POST(req: Request) {
         data: { isBooked: true },
       });
 
+      // Update linked availability request status to BOOKED
+      await tx.availabilityRequest.updateMany({
+        where: {
+          OR: [
+            { bookingId: booking.id },
+            {
+              customerId: booking.customerId,
+              companionId: booking.companionId,
+              requestedDate: booking.date,
+              status: 'ACCEPTED',
+            },
+          ],
+        },
+        data: {
+          status: 'BOOKED',
+          bookingId: booking.id,
+        },
+      });
+
       // Create internal conversation for messaging
       await tx.conversation.upsert({
         where: { bookingId: booking.id },

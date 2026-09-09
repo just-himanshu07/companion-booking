@@ -6,9 +6,10 @@ import Footer from '@/components/Footer';
 import CompanionCard from '@/components/CompanionCard';
 import ReviewModalButton from '@/components/ReviewModalButton';
 import CustomerProfileEditForm from '@/components/CustomerProfileEditForm';
+import CustomerAvailabilityRequests from '@/components/CustomerAvailabilityRequests';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { ShieldCheck, Calendar, Heart, Bell, User, MapPin, MessageSquare, Star, Settings, Lock } from 'lucide-react';
+import { ShieldCheck, Calendar, Heart, Bell, User, MapPin, MessageSquare, Star, Settings, Lock, Sparkles } from 'lucide-react';
 
 interface ProfilePageProps {
   searchParams: {
@@ -25,7 +26,7 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
 
   const activeTab = searchParams.tab || 'bookings';
 
-  const [bookings, favorites, notifications] = await Promise.all([
+  const [bookings, favorites, notifications, availabilityRequests] = await Promise.all([
     prisma.booking.findMany({
       where: { customerId: currentUser.id },
       include: {
@@ -65,6 +66,31 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
       },
       orderBy: { createdAt: 'desc' },
       take: 20,
+    }),
+    prisma.availabilityRequest.findMany({
+      where: { customerId: currentUser.id },
+      include: {
+        companion: {
+          select: {
+            id: true,
+            displayName: true,
+            username: true,
+            profilePhoto: true,
+            hourlyPrice: true,
+            city: { select: { name: true } },
+            activities: { include: { activity: true } },
+          },
+        },
+        booking: {
+          select: {
+            id: true,
+            bookingNumber: true,
+            status: true,
+            conversation: { select: { id: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
     }),
   ]);
 
@@ -115,6 +141,16 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
         {/* TABS NAVIGATION */}
         <div className="flex items-center gap-2 border-b border-slate-200 mb-8 overflow-x-auto pb-1">
           <Link
+            href="/profile?tab=requests"
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-colors whitespace-nowrap ${
+              activeTab === 'requests' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-brand-500" />
+            Availability Requests ({availabilityRequests.length})
+          </Link>
+
+          <Link
             href="/profile?tab=bookings"
             className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-xl transition-colors whitespace-nowrap ${
               activeTab === 'bookings' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-100'
@@ -154,6 +190,14 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
             Notifications ({notifications.filter((n) => !n.isRead).length})
           </Link>
         </div>
+
+        {/* TAB 0: REQUESTS */}
+        {activeTab === 'requests' && (
+          <CustomerAvailabilityRequests
+            initialRequests={availabilityRequests}
+            currentUser={currentUser}
+          />
+        )}
 
         {/* TAB 1: BOOKINGS */}
         {activeTab === 'bookings' && (

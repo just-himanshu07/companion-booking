@@ -3,9 +3,8 @@ import { notFound, redirect } from 'next/navigation';
 import Image from 'next/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import BookingForm from '@/components/BookingForm';
+import CompanionBookingSidebar from '@/components/CompanionBookingSidebar';
 import ReportButton from '@/components/ReportButton';
-import StartChatButton from '@/components/StartChatButton';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { ShieldCheck, Star, MapPin, Globe, Heart, Sparkles, Calendar, CheckCircle2, Clock, MessageSquare, AlertCircle } from 'lucide-react';
@@ -14,9 +13,12 @@ interface CompanionProfilePageProps {
   params: {
     username: string;
   };
+  searchParams?: {
+    action?: string;
+  };
 }
 
-export default async function CompanionProfilePage({ params }: CompanionProfilePageProps) {
+export default async function CompanionProfilePage({ params, searchParams }: CompanionProfilePageProps) {
   const currentUser = await getSessionUser();
 
   // REQUIREMENT: Users MUST be logged in to view companion profile
@@ -30,10 +32,6 @@ export default async function CompanionProfilePage({ params }: CompanionProfileP
       city: true,
       activities: {
         include: { activity: true },
-      },
-      availabilitySlots: {
-        where: { isBooked: false },
-        orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
       },
     },
   });
@@ -235,39 +233,14 @@ export default async function CompanionProfilePage({ params }: CompanionProfileP
             </div>
           </div>
 
-          {/* RIGHT SIDE BOOKING & MESSAGING WIDGET */}
+          {/* RIGHT SIDE AVAILABILITY & MESSAGING SIDEBAR */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="sticky top-24 bg-white p-6 rounded-3xl border border-slate-200 shadow-xl space-y-6">
-              <div className="border-b border-slate-100 pb-4">
-                <span className="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Social Booking</span>
-                <div className="flex items-baseline gap-1 mt-1">
-                  <span className="text-3xl font-black text-slate-900">₹{companion.hourlyPrice}</span>
-                  <span className="text-xs text-slate-500"> / hour</span>
-                </div>
-              </div>
-
-              {/* BOOKING FORM CLIENT COMPONENT */}
-              <BookingForm companion={companion} currentUser={currentUser} />
-
-              {/* DIRECT CHAT BUTTON (REQUIRES CONFIRMED BOOKING) */}
-              <div className="border-t border-slate-100 pt-4">
-                <StartChatButton
-                  companionUserId={companion.userId}
-                  companionName={companion.displayName}
-                  isBookingConfirmed={!!confirmedBooking}
-                />
-              </div>
-
-              <div className="space-y-2 text-[11px] text-slate-500">
-                <div className="flex items-center gap-2 text-emerald-700 font-semibold">
-                  <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
-                  <span>Public Locations Only</span>
-                </div>
-                <p className="text-slate-400 leading-normal">
-                  Strict non-sexual social activities policy. Personal contact info hidden for safety.
-                </p>
-              </div>
-            </div>
+            <CompanionBookingSidebar
+              companion={companion}
+              currentUser={currentUser}
+              confirmedBooking={confirmedBooking}
+              autoOpenAskAvailability={searchParams?.action === 'ask_availability'}
+            />
           </div>
         </div>
       </div>

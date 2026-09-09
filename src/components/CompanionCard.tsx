@@ -140,7 +140,7 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
           className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-[#E94B83] hover:bg-[#D43770] text-white text-xs font-extrabold py-3 rounded-xl transition-all shadow-md shadow-[#E94B83]/20"
         >
           <Calendar className="w-4 h-4" />
-          View Profile & Availability →
+          Ask Availability →
         </Link>
       </div>
     </div>
