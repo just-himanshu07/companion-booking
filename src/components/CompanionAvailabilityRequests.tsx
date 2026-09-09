@@ -87,7 +87,7 @@ export default function CompanionAvailabilityRequests({
       await fetchLatestRequests();
     } catch (err: any) {
       setError(err.message);
-    } font-bold {
+    } finally {
       setActionLoading(null);
     }
   };
