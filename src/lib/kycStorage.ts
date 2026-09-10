@@ -92,8 +92,13 @@ export async function saveSecureKYCFile(
 }
 
 export async function readSecureKYCFile(fileName: string): Promise<{ buffer: Buffer; mimeType: string } | null> {
-  // Prevent path traversal attacks
-  const safeName = path.basename(fileName);
+  // Prevent path traversal attacks and query parameter issues
+  const decoded = decodeURIComponent(fileName || '').split('?')[0];
+  const safeName = path.basename(decoded);
+  
+  if (!safeName || safeName === '.' || safeName === '..') {
+    return null;
+  }
   
   let filePath = path.join(PRIMARY_DIR, safeName);
   if (!fs.existsSync(filePath)) {

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import path from 'path';
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { readSecureKYCFile } from '@/lib/kycStorage';
@@ -9,9 +10,10 @@ export async function GET(
 ) {
   try {
     const user = await requireAuth();
-    const fileName = params.filename;
+    const rawFileName = params.filename || '';
+    const cleanFileName = path.basename(decodeURIComponent(rawFileName)).split('?')[0];
 
-    if (!fileName) {
+    if (!cleanFileName) {
       return NextResponse.json({ error: 'File name parameter required' }, { status: 400 });
     }
 
@@ -30,11 +32,11 @@ export async function GET(
       });
 
       if (verification) {
-        const fileUrl = `/api/verification/document/${fileName}`;
+        const fileUrl = `/api/verification/document/${cleanFileName}`;
         if (
-          verification.documentFrontUrl === fileUrl ||
-          verification.documentBackUrl === fileUrl ||
-          verification.selfieUrl === fileUrl
+          verification.documentFrontUrl?.includes(cleanFileName) ||
+          verification.documentBackUrl?.includes(cleanFileName) ||
+          verification.selfieUrl?.includes(cleanFileName)
         ) {
           isAuthorized = true;
         }
@@ -48,7 +50,7 @@ export async function GET(
       );
     }
 
-    const fileData = await readSecureKYCFile(fileName);
+    const fileData = await readSecureKYCFile(cleanFileName);
     if (!fileData) {
       return NextResponse.json({ error: 'Requested document not found' }, { status: 404 });
     }
@@ -57,6 +59,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': fileData.mimeType,
+        'Content-Disposition': 'inline',
         'Cache-Control': 'private, max-age=3600',
         'X-Content-Type-Options': 'nosniff',
       },

@@ -13,7 +13,147 @@ import {
   Eye,
   Camera,
   X,
+  ExternalLink,
+  ZoomIn,
+  ZoomOut,
+  RotateCw,
+  Maximize2,
+  Download,
+  Loader2,
 } from 'lucide-react';
+
+interface KYCDocumentCardProps {
+  url: string;
+  title: string;
+  onInspect: (url: string, title: string, isPdf: boolean) => void;
+}
+
+function KYCDocumentCard({ url, title, onInspect }: KYCDocumentCardProps) {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [key, setKey] = useState(0);
+
+  const isPdf = Boolean(url && (url.toLowerCase().endsWith('.pdf') || url.includes('.pdf?')));
+
+  const handleRetry = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setError(false);
+    setLoading(true);
+    setKey((prev) => prev + 1);
+  };
+
+  if (!url) {
+    return (
+      <div className="border border-slate-200 rounded-2xl bg-slate-900/90 p-4 h-60 flex flex-col items-center justify-center text-center text-slate-400 text-xs">
+        <AlertTriangle className="w-6 h-6 text-amber-500 mb-2" />
+        <span>No document attached</span>
+      </div>
+    );
+  }
+
+  if (isPdf) {
+    return (
+      <div className="border border-slate-200 rounded-2xl bg-slate-950 p-4 h-60 flex flex-col items-center justify-center text-center space-y-3 relative group shadow-inner">
+        <div className="w-12 h-12 bg-rose-500/10 text-rose-400 rounded-2xl flex items-center justify-center border border-rose-500/20">
+          <FileText className="w-6 h-6" />
+        </div>
+        <div className="space-y-1 max-w-[80%]">
+          <span className="text-xs font-bold text-slate-200 block truncate">{title}</span>
+          <span className="text-[10px] text-slate-400 block font-mono">PDF Document Format</span>
+        </div>
+        <div className="flex items-center gap-2 pt-1">
+          <button
+            onClick={() => onInspect(url, title, true)}
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border border-slate-700"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>Inspect PDF</span>
+          </button>
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="p-1.5 bg-brand-600/20 hover:bg-brand-600/30 text-brand-300 rounded-xl transition-all cursor-pointer border border-brand-500/30"
+            title="Open PDF in New Tab"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      onClick={() => !error && onInspect(url, title, false)}
+      className="border border-slate-200 rounded-2xl bg-slate-950 p-2 h-60 flex items-center justify-center relative overflow-hidden group cursor-pointer shadow-inner transition-all hover:border-brand-500/60"
+    >
+      {/* Loading Skeleton */}
+      {loading && !error && (
+        <div className="absolute inset-0 bg-slate-900 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
+          <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
+          <span className="font-semibold text-[11px]">Loading document image...</span>
+        </div>
+      )}
+
+      {/* Error Fallback State */}
+      {error && (
+        <div className="p-4 text-center space-y-3 z-10">
+          <div className="w-10 h-10 bg-amber-500/10 text-amber-400 rounded-full flex items-center justify-center mx-auto border border-amber-500/20">
+            <AlertTriangle className="w-5 h-5" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-bold text-slate-200">Unable to load document image</p>
+            <p className="text-[10px] text-slate-400">File link may be broken or unaccessible.</p>
+          </div>
+          <div className="flex items-center justify-center gap-2 pt-1">
+            <button
+              onClick={handleRetry}
+              className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <RefreshCw className="w-3 h-3" />
+              <span>Retry</span>
+            </button>
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="px-3 py-1 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer"
+            >
+              <ExternalLink className="w-3 h-3" />
+              <span>Open Link</span>
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* Main Image View */}
+      <img
+        key={key}
+        src={url}
+        alt={title}
+        onLoad={() => setLoading(false)}
+        onError={() => {
+          setLoading(false);
+          setError(true);
+        }}
+        className={`max-h-full max-w-full object-contain rounded-xl transition-all duration-300 ${
+          loading || error ? 'opacity-0' : 'opacity-100 group-hover:scale-105'
+        }`}
+      />
+
+      {/* Click-to-Zoom Hover Banner */}
+      {!loading && !error && (
+        <div className="absolute inset-x-0 bottom-0 bg-slate-900/90 backdrop-blur-sm p-2 text-center text-[11px] font-extrabold text-brand-300 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5">
+          <ZoomIn className="w-3.5 h-3.5 text-brand-400" />
+          <span>Click to Inspect / Zoom Full Resolution</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function AdminVerificationTab() {
   const [verifications, setVerifications] = useState<any[]>([]);
@@ -21,19 +161,25 @@ export default function AdminVerificationTab() {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState<'UNDER_REVIEW' | 'APPROVED' | 'REJECTED' | 'ALL'>('UNDER_REVIEW');
 
-  // Document Preview Modal State
+  // Document Review Modal State
   const [selectedVerification, setSelectedVerification] = useState<any | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectionReasonInput, setRejectionReasonInput] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
 
+  // High Resolution Lightbox / Zoom Modal State
+  const [zoomedDoc, setZoomedDoc] = useState<{ url: string; title: string; isPdf: boolean } | null>(null);
+  const [zoomScale, setZoomScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
+
   const fetchVerifications = async () => {
     setLoading(true);
     setError('');
     try {
-      const url = statusFilter === 'ALL'
-        ? '/api/admin/verifications'
-        : `/api/admin/verifications?status=${statusFilter}`;
+      const url =
+        statusFilter === 'ALL'
+          ? '/api/admin/verifications'
+          : `/api/admin/verifications?status=${statusFilter}`;
 
       const res = await fetch(url);
       const json = await res.json();
@@ -51,6 +197,25 @@ export default function AdminVerificationTab() {
   useEffect(() => {
     fetchVerifications();
   }, [statusFilter]);
+
+  // Handle ESC key for Lightbox closing
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (zoomedDoc) {
+          setZoomedDoc(null);
+          setZoomScale(1);
+          setRotation(0);
+        } else if (showRejectModal) {
+          setShowRejectModal(false);
+        } else if (selectedVerification) {
+          setSelectedVerification(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [zoomedDoc, showRejectModal, selectedVerification]);
 
   const handleApprove = async (id: string) => {
     setActionLoading(true);
@@ -101,6 +266,12 @@ export default function AdminVerificationTab() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleOpenInspect = (url: string, title: string, isPdf: boolean) => {
+    setZoomScale(1);
+    setRotation(0);
+    setZoomedDoc({ url, title, isPdf });
   };
 
   return (
@@ -253,32 +424,30 @@ export default function AdminVerificationTab() {
               <div>
                 <h3 className="text-lg font-black text-slate-900">Review Identity Verification</h3>
                 <span className="text-xs text-slate-500 font-medium">
-                  Submitted by {selectedVerification.user.customerProfile?.name} ({selectedVerification.user.email})
+                  Submitted by {selectedVerification.user.customerProfile?.name || 'Customer'} ({selectedVerification.user.email})
                 </span>
               </div>
               <button
                 onClick={() => setSelectedVerification(null)}
-                className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 cursor-pointer"
+                className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full text-slate-500 cursor-pointer transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Document Snapshot */}
+            {/* Document Snapshot Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Front Document */}
               <div className="space-y-2">
                 <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
                   <FileText className="w-4 h-4 text-brand-600" />
-                  {selectedVerification.documentType} (Front)
+                  {selectedVerification.documentType} (Front Side)
                 </span>
-                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-950 p-2 h-60 flex items-center justify-center">
-                  <img
-                    src={selectedVerification.documentFrontUrl}
-                    alt="Front ID Document"
-                    className="max-h-full max-w-full object-contain rounded-xl"
-                  />
-                </div>
+                <KYCDocumentCard
+                  url={selectedVerification.documentFrontUrl}
+                  title={`${selectedVerification.documentType} Front`}
+                  onInspect={handleOpenInspect}
+                />
               </div>
 
               {/* Back Document (if present) */}
@@ -286,15 +455,13 @@ export default function AdminVerificationTab() {
                 <div className="space-y-2">
                   <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
                     <FileText className="w-4 h-4 text-brand-600" />
-                    {selectedVerification.documentType} (Back)
+                    {selectedVerification.documentType} (Back Side)
                   </span>
-                  <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-950 p-2 h-60 flex items-center justify-center">
-                    <img
-                      src={selectedVerification.documentBackUrl}
-                      alt="Back ID Document"
-                      className="max-h-full max-w-full object-contain rounded-xl"
-                    />
-                  </div>
+                  <KYCDocumentCard
+                    url={selectedVerification.documentBackUrl}
+                    title={`${selectedVerification.documentType} Back`}
+                    onInspect={handleOpenInspect}
+                  />
                 </div>
               )}
 
@@ -304,13 +471,11 @@ export default function AdminVerificationTab() {
                   <Camera className="w-4 h-4 text-emerald-600" />
                   Live Selfie Capture
                 </span>
-                <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-950 p-2 h-64 flex items-center justify-center">
-                  <img
-                    src={selectedVerification.selfieUrl}
-                    alt="Live Camera Selfie"
-                    className="max-h-full max-w-full object-contain rounded-xl"
-                  />
-                </div>
+                <KYCDocumentCard
+                  url={selectedVerification.selfieUrl}
+                  title="Live Camera Selfie"
+                  onInspect={handleOpenInspect}
+                />
               </div>
             </div>
 
@@ -338,13 +503,120 @@ export default function AdminVerificationTab() {
         </div>
       )}
 
+      {/* FULL SCREEN LIGHTBOX / ZOOM INSPECTION MODAL */}
+      {zoomedDoc && (
+        <div className="fixed inset-0 z-[60] bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-between p-4 sm:p-6 animate-in fade-in">
+          {/* Lightbox Header Bar */}
+          <div className="w-full max-w-5xl flex items-center justify-between bg-slate-900/80 p-4 rounded-2xl border border-slate-800 backdrop-blur-md">
+            <div>
+              <h4 className="text-sm font-extrabold text-white">{zoomedDoc.title}</h4>
+              <p className="text-[11px] text-slate-400">
+                High-Resolution Identity Inspection Mode • Scroll or use controls to zoom
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {!zoomedDoc.isPdf && (
+                <>
+                  <button
+                    onClick={() => setZoomScale((s) => Math.min(s + 0.5, 3.5))}
+                    className="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all cursor-pointer"
+                    title="Zoom In"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setZoomScale((s) => Math.max(s - 0.5, 0.5))}
+                    className="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all cursor-pointer"
+                    title="Zoom Out"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setRotation((r) => (r + 90) % 360)}
+                    className="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl transition-all cursor-pointer"
+                    title="Rotate 90°"
+                  >
+                    <RotateCw className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setZoomScale(1);
+                      setRotation(0);
+                    }}
+                    className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-xl transition-all cursor-pointer"
+                    title="Reset Zoom & Rotation"
+                  >
+                    <Maximize2 className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+
+              <a
+                href={zoomedDoc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 bg-brand-600/30 hover:bg-brand-600/50 text-brand-300 rounded-xl transition-all cursor-pointer border border-brand-500/40"
+                title="Open Original Document File"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+
+              <button
+                onClick={() => {
+                  setZoomedDoc(null);
+                  setZoomScale(1);
+                  setRotation(0);
+                }}
+                className="p-2 bg-slate-800 hover:bg-rose-600/30 text-slate-300 hover:text-rose-300 rounded-xl transition-all cursor-pointer ml-2"
+                title="Close Viewer (ESC)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Lightbox Content Viewer Area */}
+          <div className="flex-1 w-full max-w-5xl flex items-center justify-center overflow-auto my-4 p-4 rounded-3xl border border-slate-800/80 bg-slate-900/40 relative">
+            {zoomedDoc.isPdf ? (
+              <div className="w-full h-full min-h-[600px] flex flex-col items-center justify-center">
+                <iframe
+                  src={zoomedDoc.url}
+                  className="w-full h-full rounded-2xl border border-slate-700 bg-white"
+                  title={zoomedDoc.title}
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center overflow-auto">
+                <img
+                  src={zoomedDoc.url}
+                  alt={zoomedDoc.title}
+                  style={{
+                    transform: `scale(${zoomScale}) rotate(${rotation}deg)`,
+                    transition: 'transform 0.2s ease-out',
+                  }}
+                  className="max-h-full max-w-full object-contain rounded-2xl shadow-2xl origin-center"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Lightbox Footer Bar */}
+          <div className="text-[11px] text-slate-500 font-mono flex items-center gap-4">
+            <span>Scale: {Math.round(zoomScale * 100)}%</span>
+            <span>Rotation: {rotation}°</span>
+            <span>Press ESC or click X to return</span>
+          </div>
+        </div>
+      )}
+
       {/* REJECTION REASON PROMPT MODAL */}
       {showRejectModal && selectedVerification && (
         <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-slate-200">
             <div className="flex justify-between items-center">
               <h4 className="font-extrabold text-slate-900 text-sm">Reject Identity Verification</h4>
-              <button onClick={() => setShowRejectModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowRejectModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -357,20 +629,20 @@ export default function AdminVerificationTab() {
               value={rejectionReasonInput}
               onChange={(e) => setRejectionReasonInput(e.target.value)}
               placeholder="e.g. The uploaded document is blurry and the selfie face does not match."
-              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs resize-none h-24 focus:ring-2 focus:ring-rose-500"
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs resize-none h-24 focus:ring-2 focus:ring-rose-500 text-slate-900"
             />
 
             <div className="flex gap-2 pt-2">
               <button
                 onClick={() => setShowRejectModal(false)}
-                className="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs"
+                className="w-1/2 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl text-xs cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleReject(selectedVerification.id)}
                 disabled={actionLoading || !rejectionReasonInput.trim()}
-                className="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs disabled:opacity-50"
+                className="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs disabled:opacity-50 cursor-pointer"
               >
                 {actionLoading ? 'Rejecting...' : 'Confirm Rejection'}
               </button>
