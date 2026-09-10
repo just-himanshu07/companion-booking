@@ -1,12 +1,30 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+import os from 'os';
 
-const SECURE_KYC_DIR = path.join(process.cwd(), 'private_storage', 'kyc');
+const PRIMARY_DIR = path.join(process.cwd(), 'private_storage', 'kyc');
+const FALLBACK_DIR = path.join(os.tmpdir(), 'private_storage', 'kyc');
 
-// Ensure directory exists
-if (!fs.existsSync(SECURE_KYC_DIR)) {
-  fs.mkdirSync(SECURE_KYC_DIR, { recursive: true });
+function getWritableDir(): string {
+  try {
+    if (!fs.existsSync(PRIMARY_DIR)) {
+      fs.mkdirSync(PRIMARY_DIR, { recursive: true });
+    }
+    const testFile = path.join(PRIMARY_DIR, `.write_test_${Date.now()}`);
+    fs.writeFileSync(testFile, 'test');
+    fs.unlinkSync(testFile);
+    return PRIMARY_DIR;
+  } catch (err) {
+    try {
+      if (!fs.existsSync(FALLBACK_DIR)) {
+        fs.mkdirSync(FALLBACK_DIR, { recursive: true });
+      }
+      return FALLBACK_DIR;
+    } catch (fallbackErr) {
+      return FALLBACK_DIR;
+    }
+  }
 }
 
 export const ALLOWED_KYC_MIME_TYPES = [
@@ -44,7 +62,12 @@ export async function saveSecureKYCFile(
     }
   }
 
-  if (!mimeType || !ALLOWED_KYC_MIME_TYPES.includes(mimeType)) {
+  // Default selfie or fallback images to image/jpeg if type still missing
+  if (!mimeType) {
+    mimeType = 'image/jpeg';
+  }
+
+  if (!ALLOWED_KYC_MIME_TYPES.includes(mimeType)) {
     throw new Error('Unsupported file format. Please upload JPG, PNG, WEBP, or PDF files only.');
   }
 
@@ -57,7 +80,9 @@ export async function saveSecureKYCFile(
   // 3. Generate random secure filename (prevents path traversal & filename guessing)
   const randomUUID = crypto.randomUUID();
   const fileName = `${prefix}_${Date.now()}_${randomUUID}${ext}`;
-  const filePath = path.join(SECURE_KYC_DIR, fileName);
+  
+  const targetDir = getWritableDir();
+  const filePath = path.join(targetDir, fileName);
 
   await fs.promises.writeFile(filePath, buffer);
 
@@ -69,10 +94,13 @@ export async function saveSecureKYCFile(
 export async function readSecureKYCFile(fileName: string): Promise<{ buffer: Buffer; mimeType: string } | null> {
   // Prevent path traversal attacks
   const safeName = path.basename(fileName);
-  const filePath = path.join(SECURE_KYC_DIR, safeName);
-
+  
+  let filePath = path.join(PRIMARY_DIR, safeName);
   if (!fs.existsSync(filePath)) {
-    return null;
+    filePath = path.join(FALLBACK_DIR, safeName);
+    if (!fs.existsSync(filePath)) {
+      return null;
+    }
   }
 
   const buffer = await fs.promises.readFile(filePath);
@@ -84,4 +112,5 @@ export async function readSecureKYCFile(fileName: string): Promise<{ buffer: Buf
 
   return { buffer, mimeType };
 }
+
 
