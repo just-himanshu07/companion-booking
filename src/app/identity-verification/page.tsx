@@ -216,10 +216,25 @@ export default function IdentityVerificationPage() {
         body: formData,
       });
 
-      const data = await res.json();
+      const contentType = res.headers.get('content-type') || '';
+      let data: any = {};
+
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const rawText = await res.text();
+        console.error('[Server Non-JSON Response]', res.status, rawText);
+        if (res.status === 413) {
+          throw new Error('Uploaded file size is too large. Please compress your document/selfie images to under 4MB each.');
+        }
+        if (res.status === 404) {
+          throw new Error('Verification submission API endpoint was not found (404). Please try again.');
+        }
+        throw new Error(`Server returned error (${res.status}). Please try again.`);
+      }
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to submit identity verification');
+        throw new Error(data.error || data.message || 'Failed to submit identity verification');
       }
 
       setSuccess(true);

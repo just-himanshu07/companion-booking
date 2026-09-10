@@ -29,8 +29,21 @@ export async function saveSecureKYCFile(
     throw new Error('File size exceeds the 5MB limit.');
   }
 
-  // 2. MIME Type Validation
-  const mimeType = file.type?.toLowerCase();
+  // 2. MIME Type Validation & Fallback Detection
+  let mimeType = file.type ? file.type.toLowerCase() : '';
+
+  if (!mimeType || mimeType === 'application/octet-stream') {
+    if (prefix === 'selfie') {
+      mimeType = 'image/jpeg';
+    } else if ('name' in file && typeof (file as any).name === 'string') {
+      const fileNameLower = (file as any).name.toLowerCase();
+      if (fileNameLower.endsWith('.png')) mimeType = 'image/png';
+      else if (fileNameLower.endsWith('.webp')) mimeType = 'image/webp';
+      else if (fileNameLower.endsWith('.pdf')) mimeType = 'application/pdf';
+      else if (fileNameLower.endsWith('.jpg') || fileNameLower.endsWith('.jpeg')) mimeType = 'image/jpeg';
+    }
+  }
+
   if (!mimeType || !ALLOWED_KYC_MIME_TYPES.includes(mimeType)) {
     throw new Error('Unsupported file format. Please upload JPG, PNG, WEBP, or PDF files only.');
   }
