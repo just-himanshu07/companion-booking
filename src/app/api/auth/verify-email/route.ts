@@ -1,32 +1,37 @@
 import { NextResponse } from 'next/server';
-import { requireAuth, signToken, setAuthCookie } from '@/lib/auth';
+import { getSessionUser, signToken, setAuthCookie } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { verifyOTPHash } from '@/lib/otp';
 
 export async function POST(req: Request) {
   try {
-    const sessionUser = await requireAuth();
+    const body = await req.json().catch(() => ({}));
+    const { otp, userId, email } = body;
 
-    const dbUser = await prisma.user.findUnique({
-      where: { id: sessionUser.id },
-    });
+    const sessionUser = await getSessionUser();
+    let targetUserId = sessionUser?.id || userId;
+    let dbUser = null;
+
+    if (targetUserId) {
+      dbUser = await prisma.user.findUnique({ where: { id: targetUserId } });
+    } else if (email) {
+      dbUser = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    }
 
     if (!dbUser) {
       return NextResponse.json({ error: 'User account not found' }, { status: 404 });
     }
 
     // Check if already verified
-    if (dbUser.isEmailVerified && dbUser.accountStatus === 'ACTIVE') {
+    if (dbUser.isEmailVerified && dbUser.accountStatus === 'ACTIVE' && dbUser.isRegistrationFeePaid) {
       return NextResponse.json({
         success: true,
         message: 'Account is already verified.',
         isEmailVerified: true,
         accountStatus: 'ACTIVE',
+        redirectTo: '/dashboard',
       });
     }
-
-    const body = await req.json().catch(() => ({}));
-    const { otp } = body;
 
     // Validate 6-digit numeric input format
     if (!otp || typeof otp !== 'string' || !/^\d{6}$/.test(otp.trim())) {
@@ -35,6 +40,7 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
 
     const cleanOtp = otp.trim();
 
@@ -101,35 +107,38 @@ export async function POST(req: Request) {
       },
     });
 
-    // Re-issue updated JWT token with computed accountStatus and isEmailVerified: true
-    const updatedToken = signToken({
-      userId: updatedUser.id,
-      email: updatedUser.email,
-      role: updatedUser.role,
-      accountStatus: updatedUser.accountStatus,
-      isEmailVerified: true,
-    });
-
-    setAuthCookie(updatedToken);
-
     if (dbUser.role === 'CUSTOMER' && !dbUser.isRegistrationFeePaid) {
       return NextResponse.json({
-        success: true,
+        success: false,
+        error: 'PAYMENT_REQUIRED',
+        code: 'PAYMENT_REQUIRED',
         message: 'Email verified successfully! Please complete the ₹399 registration fee to activate platform access.',
         isEmailVerified: true,
         isRegistrationFeePaid: false,
         accountStatus: 'PENDING',
         paymentRequired: true,
+        userId: dbUser.id,
         redirectTo: '/register?step=2',
-      });
+      }, { status: 403 });
     }
+
+    // Both payment AND email OTP are verified! Issue session JWT and set auth cookie now!
+    const updatedToken = signToken({
+      userId: updatedUser.id,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      accountStatus: 'ACTIVE',
+      isEmailVerified: true,
+    });
+
+    setAuthCookie(updatedToken);
 
     return NextResponse.json({
       success: true,
       message: 'Email verified successfully! Welcome to Paireva.',
       isEmailVerified: true,
       isRegistrationFeePaid: updatedUser.isRegistrationFeePaid,
-      accountStatus: updatedUser.accountStatus,
+      accountStatus: 'ACTIVE',
       paymentRequired: false,
       redirectTo: '/dashboard',
     });
@@ -141,4 +150,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Failed to verify email code. Please try again.' }, { status: 500 });
   }
 }
+
 

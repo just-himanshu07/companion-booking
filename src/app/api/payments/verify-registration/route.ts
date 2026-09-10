@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { verifyRazorpaySignature } from '@/lib/razorpay';
 import { createNotification } from '@/lib/notifications';
 
 export async function POST(req: Request) {
   try {
-    const user = await requireAuth();
-    const { razorpayOrderId, razorpayPaymentId, razorpaySignature } = await req.json();
+    const { razorpayOrderId, razorpayPaymentId, razorpaySignature, userId } = await req.json();
 
     if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
       return NextResponse.json({ error: 'Missing required payment verification parameters' }, { status: 400 });
@@ -22,14 +21,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Payment order record not found' }, { status: 404 });
     }
 
-    // 2. Validate ownership & payment type
-    if (payment.userId !== user.id) {
+    const sessionUser = await getSessionUser();
+    const targetUserId = sessionUser?.id || userId || payment.userId;
+
+    const user = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      include: { customerProfile: true },
+    });
+
+    if (!user || user.id !== payment.userId) {
       return NextResponse.json({ error: 'Unauthorized payment verification attempt' }, { status: 403 });
     }
 
     if (payment.paymentType !== 'REGISTRATION_FEE') {
       return NextResponse.json({ error: 'Invalid payment type for registration verification' }, { status: 400 });
     }
+
 
     // 3. Idempotency Check: return success if already captured
     if (payment.status === 'SUCCESS' && user.isRegistrationFeePaid) {

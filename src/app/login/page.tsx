@@ -36,15 +36,32 @@ function LoginFormContent() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Login failed');
+
+      if (!res.ok) {
+        if (data.code === 'PAYMENT_REQUIRED') {
+          const targetUserId = data.userId || '';
+          const targetEmail = data.email || email;
+          window.location.href = `/register?step=2&userId=${targetUserId}&email=${encodeURIComponent(targetEmail)}`;
+          return;
+        }
+
+        if (data.code === 'VERIFICATION_REQUIRED') {
+          const targetUserId = data.userId || '';
+          const targetEmail = data.email || email;
+          window.location.href = `/verify-email?userId=${targetUserId}&email=${encodeURIComponent(targetEmail)}`;
+          return;
+        }
+
+        throw new Error(data.message || data.error || 'Login failed');
+      }
 
       // Determine redirect destination
       let target = '/dashboard';
       if (redirectTo) {
         target = redirectTo;
-      } else if (data.user.role === 'ADMIN') {
+      } else if (data.user?.role === 'ADMIN') {
         target = '/admin';
-      } else if (data.user.role === 'COMPANION') {
+      } else if (data.user?.role === 'COMPANION') {
         target = '/companion-dashboard';
       }
 
@@ -56,6 +73,7 @@ function LoginFormContent() {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl space-y-6">

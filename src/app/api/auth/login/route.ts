@@ -39,34 +39,104 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    // CUSTOMER ONBOARDING CHECKS
+    if (user.role === 'CUSTOMER') {
+      // 1. Unpaid registration fee check: DO NOT create session cookie
+      if (!user.isRegistrationFeePaid) {
+        return NextResponse.json(
+          {
+            error: 'PAYMENT_REQUIRED',
+            code: 'PAYMENT_REQUIRED',
+            message: 'Your registration is incomplete. Please complete the ₹399 registration fee payment to activate your account.',
+            userId: user.id,
+            email: user.email,
+            isRegistrationFeePaid: false,
+            isEmailVerified: user.isEmailVerified,
+            redirectTo: '/register?step=2',
+          },
+          { status: 403 }
+        );
+      }
+
+      // 2. Unverified email check: Dispatch new OTP code and DO NOT create session cookie
+      if (!user.isEmailVerified || user.accountStatus === 'PENDING') {
+        const { generateNumericOTP, hashOTP } = await import('@/lib/otp');
+        const { sendVerificationOTP } = await import('@/lib/emailService');
+
+        const otp = generateNumericOTP();
+        const otpHash = await hashOTP(otp);
+        const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        await prisma.user.update({
+          where: { id: user.id },
+          data: {
+            emailVerificationOtpHash: otpHash,
+            emailVerificationOtpExpiresAt: otpExpiresAt,
+            emailVerificationAttempts: 0,
+            emailVerificationLastSentAt: new Date(),
+          },
+        });
+
+        const userName = user.customerProfile?.name || 'Valued Customer';
+        await sendVerificationOTP(user.email, otp, userName);
+
+        return NextResponse.json(
+          {
+            error: 'VERIFICATION_REQUIRED',
+            code: 'VERIFICATION_REQUIRED',
+            message: 'Your email address is not verified yet. A 6-digit verification code has been sent to your email.',
+            userId: user.id,
+            email: user.email,
+            isRegistrationFeePaid: true,
+            isEmailVerified: false,
+            redirectTo: '/verify-email',
+          },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Fully verified customer (or companion/admin): Create session cookie now
+    if (user.accountStatus !== 'ACTIVE') {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { accountStatus: 'ACTIVE' },
+      });
+    }
+
     const token = signToken({
       userId: user.id,
       email: user.email,
       role: user.role,
-      accountStatus: user.accountStatus,
-      isEmailVerified: user.isEmailVerified,
+      accountStatus: 'ACTIVE',
+      isEmailVerified: true,
     });
 
     setAuthCookie(token);
 
-    // If user paid fee but email is not verified, require email verification
-    const isUnverified = user.isRegistrationFeePaid && (!user.isEmailVerified || user.accountStatus === 'PENDING');
+    let targetRedirect = '/dashboard';
+    if (user.role === 'ADMIN') {
+      targetRedirect = '/admin';
+    } else if (user.role === 'COMPANION') {
+      targetRedirect = '/companion-dashboard';
+    }
 
     return NextResponse.json({
       success: true,
-      verificationRequired: isUnverified,
-      redirectTo: isUnverified ? '/verify-email' : '/dashboard',
+      verificationRequired: false,
+      redirectTo: targetRedirect,
       user: {
         id: user.id,
         email: user.email,
         role: user.role,
-        accountStatus: user.accountStatus,
+        accountStatus: 'ACTIVE',
         isEmailVerified: user.isEmailVerified,
         isRegistrationFeePaid: user.isRegistrationFeePaid,
         customerProfile: user.customerProfile,
         companionProfile: user.companionProfile,
       },
     });
+
   } catch (error: any) {
     if (error.name === 'ZodError') {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });

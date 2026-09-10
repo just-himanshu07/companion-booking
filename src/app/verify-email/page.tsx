@@ -1,15 +1,20 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ShieldCheck, Mail, ArrowRight, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { maskEmail } from '@/lib/otp';
 
-export default function VerifyEmailPage() {
+function VerifyEmailFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const paramUserId = searchParams.get('userId') || '';
+  const paramEmail = searchParams.get('email') || '';
+
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''));
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -17,17 +22,19 @@ export default function VerifyEmailPage() {
   const [resending, setResending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [userEmail, setUserEmail] = useState('');
+  const [userEmail, setUserEmail] = useState(paramEmail);
+  const [userId, setUserId] = useState(paramUserId);
   const [cooldown, setCooldown] = useState(45);
 
-  // Fetch session user email on load
+  // Fetch session user email on load if not provided in URL
   useEffect(() => {
     async function fetchUser() {
       try {
         const res = await fetch('/api/auth/me');
         const data = await res.json();
         if (res.ok && data.user) {
-          setUserEmail(data.user.email);
+          if (!userEmail) setUserEmail(data.user.email);
+          if (!userId) setUserId(data.user.id);
           if (data.user.isEmailVerified && data.user.accountStatus === 'ACTIVE') {
             router.replace('/dashboard');
           }
@@ -37,7 +44,8 @@ export default function VerifyEmailPage() {
       }
     }
     fetchUser();
-  }, [router]);
+  }, [router, userEmail, userId]);
+
 
   // Cooldown countdown timer
   useEffect(() => {
@@ -95,18 +103,22 @@ export default function VerifyEmailPage() {
       const res = await fetch('/api/auth/verify-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ otp: code }),
+        body: JSON.stringify({ otp: code, userId, email: userEmail }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.code === 'PAYMENT_REQUIRED') {
+          window.location.href = `/register?step=2&userId=${data.userId || userId}&email=${encodeURIComponent(data.email || userEmail)}`;
+          return;
+        }
         throw new Error(data.error || 'Verification failed. Please check your code.');
       }
 
       setSuccess('Email verified successfully! Activating your account...');
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        window.location.href = data.redirectTo || '/dashboard';
       }, 1200);
     } catch (err: any) {
       setError(err.message);
@@ -125,6 +137,8 @@ export default function VerifyEmailPage() {
     try {
       const res = await fetch('/api/auth/resend-email-otp', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, email: userEmail }),
       });
 
       const data = await res.json();
@@ -138,6 +152,7 @@ export default function VerifyEmailPage() {
       setOtp(Array(6).fill(''));
       inputRefs.current[0]?.focus();
     } catch (err: any) {
+
       setError(err.message);
     } finally {
       setResending(false);
@@ -248,4 +263,13 @@ export default function VerifyEmailPage() {
     </div>
   );
 }
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-50 text-xs text-slate-500">Loading verification...</div>}>
+      <VerifyEmailFormContent />
+    </Suspense>
+  );
+}
+
 

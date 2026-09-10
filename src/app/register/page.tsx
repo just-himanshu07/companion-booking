@@ -13,8 +13,12 @@ function CustomerRegisterFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirect') || searchParams.get('redirectTo') || '';
+  const initialStep = searchParams.get('step') === '2' ? 2 : 1;
+  const initialUserId = searchParams.get('userId') || '';
+  const initialEmail = searchParams.get('email') || '';
+
   const [formData, setFormData] = useState({
-    email: '',
+    email: initialEmail,
     password: '',
     name: '',
     age: 21,
@@ -23,11 +27,11 @@ function CustomerRegisterFormContent() {
     phone: '',
   });
 
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(initialStep);
   const [loading, setLoading] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<PaymentStepStatus>('IDLE');
   const [error, setError] = useState('');
-  const [userId, setUserId] = useState('');
+  const [userId, setUserId] = useState(initialUserId);
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -82,8 +86,13 @@ function CustomerRegisterFormContent() {
   const handlePayFee = async () => {
     setPaymentStatus('CREATING_ORDER');
     setError('');
+    const targetId = userId || initialUserId;
     try {
-      const orderRes = await fetch('/api/payments/registration-order', { method: 'POST' });
+      const orderRes = await fetch('/api/payments/registration-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: targetId, email: formData.email }),
+      });
       const orderData = await orderRes.json();
       if (!orderRes.ok) {
         setPaymentStatus('FAILURE');
@@ -114,6 +123,7 @@ function CustomerRegisterFormContent() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
+                userId: targetId,
                 razorpayOrderId: response.razorpay_order_id,
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
@@ -132,8 +142,10 @@ function CustomerRegisterFormContent() {
                 });
               }
 
-              // Hard redirect to email verification screen after payment confirmation
-              window.location.href = verifyData.redirectTo || '/verify-email';
+              const targetUserId = verifyData.userId || targetId;
+              const targetEmail = formData.email || initialEmail;
+              const targetRedirect = `/verify-email?userId=${targetUserId}&email=${encodeURIComponent(targetEmail)}`;
+              window.location.href = verifyData.redirectTo ? `${verifyData.redirectTo}?userId=${targetUserId}&email=${encodeURIComponent(targetEmail)}` : targetRedirect;
             } else {
               setPaymentStatus('FAILURE');
               setError(verifyData.error || 'Payment verification failed. Your account has not been activated. Please try again.');
@@ -177,6 +189,7 @@ function CustomerRegisterFormContent() {
       setError(err.message || 'Unable to start payment. Please try again.');
     }
   };
+
 
   const getPayButtonText = () => {
     switch (paymentStatus) {

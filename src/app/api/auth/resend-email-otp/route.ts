@@ -1,20 +1,40 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+
 import { generateNumericOTP, hashOTP } from '@/lib/otp';
 import { sendVerificationOTP } from '@/lib/emailService';
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
-    const sessionUser = await requireAuth();
+    const body = await req.json().catch(() => ({}));
+    const { userId, email } = body;
 
-    const dbUser = await prisma.user.findUnique({
-      where: { id: sessionUser.id },
-      include: { customerProfile: true },
-    });
+    const sessionUser = await getSessionUser();
+    let targetUserId = sessionUser?.id || userId;
+    let dbUser = null;
+
+    if (targetUserId) {
+      dbUser = await prisma.user.findUnique({
+        where: { id: targetUserId },
+        include: { customerProfile: true },
+      });
+    } else if (email) {
+      dbUser = await prisma.user.findUnique({
+        where: { email: email.toLowerCase() },
+        include: { customerProfile: true },
+      });
+    }
 
     if (!dbUser) {
       return NextResponse.json({ error: 'User account not found' }, { status: 404 });
+    }
+
+    if (dbUser.role === 'CUSTOMER' && !dbUser.isRegistrationFeePaid) {
+      return NextResponse.json(
+        { error: 'Please complete your ₹399 registration fee payment before requesting a verification code.' },
+        { status: 403 }
+      );
     }
 
     if (dbUser.isEmailVerified && dbUser.accountStatus === 'ACTIVE') {
@@ -23,6 +43,7 @@ export async function POST() {
         { status: 400 }
       );
     }
+
 
     const now = Date.now();
 

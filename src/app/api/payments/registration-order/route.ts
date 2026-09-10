@@ -1,13 +1,26 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { createRazorpayOrder, getPlatformSettings } from '@/lib/razorpay';
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
-    const user = await requireAuth();
+    const body = await req.json().catch(() => ({}));
+    const sessionUser = await getSessionUser();
+    let targetUserId = sessionUser?.id || body.userId;
+    let targetUser = null;
 
-    if (user.isRegistrationFeePaid) {
+    if (targetUserId) {
+      targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
+    } else if (body.email) {
+      targetUser = await prisma.user.findUnique({ where: { email: body.email.toLowerCase() } });
+    }
+
+    if (!targetUser) {
+      return NextResponse.json({ error: 'User account not found. Please register first.' }, { status: 404 });
+    }
+
+    if (targetUser.isRegistrationFeePaid) {
       return NextResponse.json(
         { error: 'Registration fee has already been paid for this account.' },
         { status: 400 }
@@ -15,10 +28,10 @@ export async function POST() {
     }
 
     const { registrationFee } = await getPlatformSettings();
-    const receipt = `reg_${user.id}_${Date.now()}`;
+    const receipt = `reg_${targetUser.id}_${Date.now()}`;
 
     const order = await createRazorpayOrder(registrationFee, receipt, {
-      userId: user.id,
+      userId: targetUser.id,
       paymentType: 'REGISTRATION_FEE',
     });
 
@@ -28,10 +41,11 @@ export async function POST() {
       update: {
         amount: registrationFee,
         status: 'PENDING',
+        userId: targetUser.id,
       },
       create: {
         paymentNumber: `REG-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`,
-        userId: user.id,
+        userId: targetUser.id,
         paymentType: 'REGISTRATION_FEE',
         amount: registrationFee,
         currency: 'INR',
@@ -39,6 +53,7 @@ export async function POST() {
         status: 'PENDING',
       },
     });
+
 
     return NextResponse.json({
       success: true,

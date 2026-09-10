@@ -29,9 +29,30 @@ export async function POST(req: Request) {
     // Check existing email
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email.toLowerCase() },
+      include: { customerProfile: true },
     });
 
     if (existingUser) {
+      if (existingUser.role === 'CUSTOMER' && !existingUser.isRegistrationFeePaid) {
+        const isPasswordMatch = await bcrypt.compare(validatedData.password, existingUser.passwordHash);
+        if (isPasswordMatch) {
+          return NextResponse.json({
+            success: true,
+            resumed: true,
+            message: 'Existing registration found. Please complete the ₹399 payment.',
+            user: {
+              id: existingUser.id,
+              email: existingUser.email,
+              role: existingUser.role,
+              accountStatus: existingUser.accountStatus,
+              isEmailVerified: existingUser.isEmailVerified,
+              isRegistrationFeePaid: existingUser.isRegistrationFeePaid,
+              customerProfile: existingUser.customerProfile,
+            },
+            step: 2,
+          });
+        }
+      }
       return NextResponse.json(
         { error: 'An account with this email already exists.' },
         { status: 400 }
@@ -72,18 +93,10 @@ export async function POST(req: Request) {
       '/profile'
     );
 
-    const token = signToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      accountStatus: user.accountStatus,
-      isEmailVerified: user.isEmailVerified,
-    });
-
-    setAuthCookie(token);
-
+    // NOTE: DO NOT set auth cookie yet. Auth session is created ONLY after verified payment + verified OTP.
     return NextResponse.json({
       success: true,
+      message: 'Account created. Please complete the ₹399 registration fee payment.',
       user: {
         id: user.id,
         email: user.email,
@@ -93,7 +106,9 @@ export async function POST(req: Request) {
         isRegistrationFeePaid: user.isRegistrationFeePaid,
         customerProfile: user.customerProfile,
       },
+      step: 2,
     });
+
   } catch (error: any) {
     if (error.name === 'ZodError') {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
