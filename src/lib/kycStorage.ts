@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import os from 'os';
+import { prisma } from './db';
 
 const PRIMARY_DIR = path.join(process.cwd(), 'private_storage', 'kyc');
 const FALLBACK_DIR = path.join(os.tmpdir(), 'private_storage', 'kyc');
@@ -80,11 +81,36 @@ export async function saveSecureKYCFile(
   // 3. Generate random secure filename (prevents path traversal & filename guessing)
   const randomUUID = crypto.randomUUID();
   const fileName = `${prefix}_${Date.now()}_${randomUUID}${ext}`;
-  
-  const targetDir = getWritableDir();
-  const filePath = path.join(targetDir, fileName);
+  const base64Data = buffer.toString('base64');
 
-  await fs.promises.writeFile(filePath, buffer);
+  // 4. Save to persistent PostgreSQL database storage (ensures files survive serverless restarts & Vercel redeploys)
+  try {
+    await prisma.storedKYCFile.upsert({
+      where: { fileName },
+      create: {
+        fileName,
+        mimeType,
+        fileData: base64Data,
+        size: buffer.length,
+      },
+      update: {
+        mimeType,
+        fileData: base64Data,
+        size: buffer.length,
+      },
+    });
+  } catch (dbErr) {
+    console.error('[KYC Storage] Failed to persist file in Database:', dbErr);
+  }
+
+  // 5. Save copy to local filesystem cache for rapid local read operations
+  try {
+    const targetDir = getWritableDir();
+    const filePath = path.join(targetDir, fileName);
+    await fs.promises.writeFile(filePath, buffer);
+  } catch (fsErr) {
+    // Ignore local filesystem write failure if disk is read-only
+  }
 
   // Secure URL reference served through authenticated API
   const fileUrl = `/api/verification/document/${fileName}`;
@@ -100,22 +126,59 @@ export async function readSecureKYCFile(fileName: string): Promise<{ buffer: Buf
     return null;
   }
   
-  let filePath = path.join(PRIMARY_DIR, safeName);
-  if (!fs.existsSync(filePath)) {
-    filePath = path.join(FALLBACK_DIR, safeName);
-    if (!fs.existsSync(filePath)) {
-      return null;
+  // 1. Try reading from local disk cache
+  try {
+    let filePath = path.join(PRIMARY_DIR, safeName);
+    if (fs.existsSync(filePath)) {
+      const buffer = await fs.promises.readFile(filePath);
+      let mimeType = 'image/jpeg';
+      if (safeName.endsWith('.png')) mimeType = 'image/png';
+      if (safeName.endsWith('.webp')) mimeType = 'image/webp';
+      if (safeName.endsWith('.pdf')) mimeType = 'application/pdf';
+      return { buffer, mimeType };
     }
+
+    filePath = path.join(FALLBACK_DIR, safeName);
+    if (fs.existsSync(filePath)) {
+      const buffer = await fs.promises.readFile(filePath);
+      let mimeType = 'image/jpeg';
+      if (safeName.endsWith('.png')) mimeType = 'image/png';
+      if (safeName.endsWith('.webp')) mimeType = 'image/webp';
+      if (safeName.endsWith('.pdf')) mimeType = 'application/pdf';
+      return { buffer, mimeType };
+    }
+  } catch (fsReadErr) {
+    // Fall back to database lookup
   }
 
-  const buffer = await fs.promises.readFile(filePath);
+  // 2. Fall back to persistent PostgreSQL database lookup
+  try {
+    const storedFile = await prisma.storedKYCFile.findFirst({
+      where: {
+        OR: [
+          { fileName: safeName },
+          { id: safeName },
+        ],
+      },
+    });
 
-  let mimeType = 'image/jpeg';
-  if (safeName.endsWith('.png')) mimeType = 'image/png';
-  if (safeName.endsWith('.webp')) mimeType = 'image/webp';
-  if (safeName.endsWith('.pdf')) mimeType = 'application/pdf';
+    if (storedFile && storedFile.fileData) {
+      const buffer = Buffer.from(storedFile.fileData, 'base64');
+      
+      // Cache back to local /tmp directory for rapid subsequent reads
+      try {
+        const targetDir = getWritableDir();
+        const cachePath = path.join(targetDir, storedFile.fileName);
+        await fs.promises.writeFile(cachePath, buffer);
+      } catch (cacheErr) {
+        // ignore cache write error
+      }
 
-  return { buffer, mimeType };
+      return { buffer, mimeType: storedFile.mimeType };
+    }
+  } catch (dbReadErr) {
+    console.error('[KYC Storage] Failed to read file from Database:', dbReadErr);
+  }
+
+  return null;
 }
-
-

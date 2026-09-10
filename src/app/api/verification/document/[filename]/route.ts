@@ -25,6 +25,7 @@ export async function GET(
       const verification = await prisma.identityVerification.findUnique({
         where: { userId: user.id },
         select: {
+          id: true,
           documentFrontUrl: true,
           documentBackUrl: true,
           selfieUrl: true,
@@ -32,8 +33,8 @@ export async function GET(
       });
 
       if (verification) {
-        const fileUrl = `/api/verification/document/${cleanFileName}`;
         if (
+          verification.id === cleanFileName ||
           verification.documentFrontUrl?.includes(cleanFileName) ||
           verification.documentBackUrl?.includes(cleanFileName) ||
           verification.selfieUrl?.includes(cleanFileName)
@@ -50,7 +51,29 @@ export async function GET(
       );
     }
 
-    const fileData = await readSecureKYCFile(cleanFileName);
+    // Strategy 1: Direct lookup by filename or ID
+    let fileData = await readSecureKYCFile(cleanFileName);
+
+    // Strategy 2: If passed an IdentityVerification record ID or user ID directly
+    if (!fileData) {
+      const verificationRecord = await prisma.identityVerification.findFirst({
+        where: {
+          OR: [
+            { id: cleanFileName },
+            { userId: cleanFileName },
+          ],
+        },
+        select: {
+          documentFrontUrl: true,
+        },
+      });
+
+      if (verificationRecord && verificationRecord.documentFrontUrl) {
+        const frontName = path.basename(verificationRecord.documentFrontUrl);
+        fileData = await readSecureKYCFile(frontName);
+      }
+    }
+
     if (!fileData) {
       return NextResponse.json({ error: 'Requested document not found' }, { status: 404 });
     }
@@ -71,4 +94,3 @@ export async function GET(
     return NextResponse.json({ error: 'Failed to retrieve document' }, { status: 500 });
   }
 }
-

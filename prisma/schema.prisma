@@ -564,3 +564,15 @@ model IdentityVerification {
   @@index([createdAt])
 }
 
+model StoredKYCFile {
+  id        String   @id @default(uuid())
+  fileName  String   @unique
+  mimeType  String
+  fileData  String   @db.Text
+  size      Int
+  createdAt DateTime @default(now())
+
+  @@index([fileName])
+  @@index([createdAt])
+}
+
