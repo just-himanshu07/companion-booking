@@ -85,6 +85,16 @@ export const getSessionUser = cache(async () => {
         isEmailVerified: true,
         isPhoneVerified: true,
         customerProfile: true,
+        identityVerification: {
+          select: {
+            id: true,
+            documentType: true,
+            status: true,
+            rejectionReason: true,
+            createdAt: true,
+            reviewedAt: true,
+          },
+        },
         companionProfile: {
           select: {
             id: true,
@@ -123,6 +133,7 @@ export const getSessionUser = cache(async () => {
       isPhoneVerified: user.isPhoneVerified,
       customerProfile: user.customerProfile,
       companionProfile: user.companionProfile,
+      identityVerification: user.identityVerification,
     };
   } catch (err) {
     return null;
@@ -179,6 +190,44 @@ export async function requirePaidCustomer() {
   if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
     throw new Error('PAYMENT_REQUIRED');
   }
+  return user;
+}
+
+export async function requireActiveAccount() {
+  const user = await requireAuth();
+
+  if (user.role === 'ADMIN') {
+    return user;
+  }
+
+  if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
+    throw new Error('PAYMENT_REQUIRED');
+  }
+
+  if (!user.isEmailVerified) {
+    throw new Error('VERIFICATION_REQUIRED');
+  }
+
+  if (user.accountStatus === 'UNDER_REVIEW') {
+    throw new Error('ACCOUNT_UNDER_REVIEW');
+  }
+
+  if (user.accountStatus === 'REJECTED') {
+    throw new Error('KYC_REJECTED');
+  }
+
+  if (
+    user.accountStatus === 'PENDING_IDENTITY_VERIFICATION' ||
+    user.accountStatus === 'PENDING_EMAIL_VERIFICATION' ||
+    user.accountStatus === 'PENDING_PAYMENT'
+  ) {
+    throw new Error('IDENTITY_VERIFICATION_REQUIRED');
+  }
+
+  if (user.accountStatus !== 'ACTIVE') {
+    throw new Error('ACCOUNT_NOT_ACTIVE');
+  }
+
   return user;
 }
 

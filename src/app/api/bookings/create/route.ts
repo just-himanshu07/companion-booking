@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireActiveAccount } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { bookingSchema } from '@/lib/validators';
 import { createRazorpayOrder, getPlatformSettings } from '@/lib/razorpay';
@@ -7,15 +7,7 @@ import { createNotification } from '@/lib/notifications';
 
 export async function POST(req: Request) {
   try {
-    const user = await requireAuth();
-
-    // Check if customer registration fee paid
-    if (!user.isRegistrationFeePaid) {
-      return NextResponse.json(
-        { error: 'PAYMENT_REQUIRED', message: 'Please complete your ₹399 registration fee payment before booking a companion.' },
-        { status: 403 }
-      );
-    }
+    const user = await requireActiveAccount();
 
 
     const body = await req.json();
@@ -196,6 +188,24 @@ export async function POST(req: Request) {
       },
     });
   } catch (error: any) {
+    if (error.message === 'ACCOUNT_UNDER_REVIEW') {
+      return NextResponse.json(
+        { error: 'ACCOUNT_UNDER_REVIEW', message: 'Your account is under review. You will receive access once approved by an admin.' },
+        { status: 403 }
+      );
+    }
+    if (error.message === 'IDENTITY_VERIFICATION_REQUIRED' || error.message === 'KYC_REJECTED') {
+      return NextResponse.json(
+        { error: 'IDENTITY_VERIFICATION_REQUIRED', message: 'Please complete identity verification to continue.' },
+        { status: 403 }
+      );
+    }
+    if (error.message === 'PAYMENT_REQUIRED') {
+      return NextResponse.json(
+        { error: 'PAYMENT_REQUIRED', message: 'Please complete your ₹399 registration fee payment before booking a companion.' },
+        { status: 403 }
+      );
+    }
     if (error.message === 'SLOT_ALREADY_BOOKED') {
       return NextResponse.json(
         { error: 'This time slot has just been booked by another customer. Please select another time.' },

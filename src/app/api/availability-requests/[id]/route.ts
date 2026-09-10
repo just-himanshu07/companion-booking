@@ -9,11 +9,19 @@ export async function PATCH(
 ) {
   try {
     const currentUser = await requireRole(['CUSTOMER', 'COMPANION']);
-    if (currentUser.role === 'CUSTOMER' && !currentUser.isRegistrationFeePaid) {
-      return NextResponse.json(
-        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
-        { status: 403 }
-      );
+    if (currentUser.role === 'CUSTOMER') {
+      if (currentUser.accountStatus === 'UNDER_REVIEW') {
+        return NextResponse.json(
+          { error: 'ACCOUNT_UNDER_REVIEW', message: 'Your account is under identity verification review.' },
+          { status: 403 }
+        );
+      }
+      if (currentUser.accountStatus !== 'ACTIVE') {
+        return NextResponse.json(
+          { error: 'IDENTITY_VERIFICATION_REQUIRED', message: 'Please complete identity verification to continue.' },
+          { status: 403 }
+        );
+      }
     }
     const requestId = params.id;
 

@@ -92,9 +92,8 @@ export async function POST(req: Request) {
     }
 
     // OTP is valid! Mark email as verified and clear OTP secrets
-    // Account becomes ACTIVE only if registration fee is paid (or for non-customer roles)
-    const shouldActivate = dbUser.role !== 'CUSTOMER' || dbUser.isRegistrationFeePaid;
-    const nextAccountStatus = shouldActivate ? 'ACTIVE' : 'PENDING';
+    // Account moves to PENDING_IDENTITY_VERIFICATION for CUSTOMER role (or ACTIVE for non-customers)
+    const nextAccountStatus = dbUser.role === 'CUSTOMER' ? 'PENDING_IDENTITY_VERIFICATION' : 'ACTIVE';
 
     const updatedUser = await prisma.user.update({
       where: { id: dbUser.id },
@@ -115,7 +114,7 @@ export async function POST(req: Request) {
         message: 'Email verified successfully! Please complete the ₹399 registration fee to activate platform access.',
         isEmailVerified: true,
         isRegistrationFeePaid: false,
-        accountStatus: 'PENDING',
+        accountStatus: 'PENDING_PAYMENT',
         paymentRequired: true,
         userId: dbUser.id,
         redirectTo: '/register?step=2',
@@ -127,20 +126,22 @@ export async function POST(req: Request) {
       userId: updatedUser.id,
       email: updatedUser.email,
       role: updatedUser.role,
-      accountStatus: 'ACTIVE',
+      accountStatus: updatedUser.accountStatus,
       isEmailVerified: true,
     });
 
     setAuthCookie(updatedToken);
 
+    const redirectPath = updatedUser.role === 'CUSTOMER' ? '/identity-verification' : '/dashboard';
+
     return NextResponse.json({
       success: true,
-      message: 'Email verified successfully! Welcome to Paireva.',
+      message: 'Email verified successfully! Please complete identity verification to proceed.',
       isEmailVerified: true,
       isRegistrationFeePaid: updatedUser.isRegistrationFeePaid,
-      accountStatus: 'ACTIVE',
+      accountStatus: updatedUser.accountStatus,
       paymentRequired: false,
-      redirectTo: '/dashboard',
+      redirectTo: redirectPath,
     });
 
   } catch (error: any) {

@@ -2,106 +2,64 @@ import { NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
-export async function GET() {
-  const startTime = Date.now();
+export async function GET(req: Request) {
   try {
-    await requireRole(['ADMIN']);
+    const admin = await requireRole(['ADMIN']);
+    const { searchParams } = new URL(req.url);
 
-    const [
-      emailVerificationStats,
-      pendingCompanionProfiles,
-      pendingVerificationDocs,
-    ] = await Promise.all([
-      prisma.user.findMany({
-        where: {
-          OR: [
-            { isEmailVerified: false },
-            { emailVerificationAttempts: { gt: 0 } },
-            { accountStatus: 'PENDING' },
-          ],
-        },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          accountStatus: true,
-          isEmailVerified: true,
-          isRegistrationFeePaid: true,
-          emailVerificationAttempts: true,
-          emailVerificationLastSentAt: true,
-          emailVerificationOtpExpiresAt: true,
-          createdAt: true,
-        },
-        orderBy: { updatedAt: 'desc' },
-        take: 50,
-      }),
-      prisma.companionProfile.findMany({
-        where: { verificationStatus: { in: ['PENDING', 'UNDER_REVIEW'] } },
-        select: {
-          id: true,
-          fullName: true,
-          displayName: true,
-          username: true,
-          verificationStatus: true,
-          createdAt: true,
-          user: { select: { email: true, createdAt: true } },
-          city: { select: { name: true } },
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 50,
-      }),
-      prisma.verificationDocument.findMany({
-        where: { status: 'PENDING' },
-        select: {
-          id: true,
-          documentType: true,
-          fileUrl: true,
-          status: true,
-          createdAt: true,
-          companion: {
+    const statusFilter = searchParams.get('status')?.trim();
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (statusFilter && ['PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED'].includes(statusFilter)) {
+      where.status = statusFilter;
+    }
+
+    const [verifications, totalCount] = await Promise.all([
+      prisma.identityVerification.findMany({
+        where,
+        include: {
+          user: {
             select: {
               id: true,
-              displayName: true,
-              username: true,
-              user: { select: { email: true } },
+              email: true,
+              phone: true,
+              role: true,
+              accountStatus: true,
+              isRegistrationFeePaid: true,
+              isEmailVerified: true,
+              createdAt: true,
+              customerProfile: {
+                select: {
+                  name: true,
+                  city: true,
+                },
+              },
             },
           },
         },
         orderBy: { createdAt: 'desc' },
-        take: 50,
+        skip,
+        take: limit,
       }),
+      prisma.identityVerification.count({ where }),
     ]);
 
-    // Sanitize stats: Exclude secrets completely
-    const sanitizedEmailStats = emailVerificationStats.map((u) => ({
-      id: u.id,
-      email: u.email,
-      role: u.role,
-      accountStatus: u.accountStatus,
-      isEmailVerified: u.isEmailVerified,
-      isRegistrationFeePaid: u.isRegistrationFeePaid,
-      attemptsCount: u.emailVerificationAttempts,
-      lastSentAt: u.emailVerificationLastSentAt,
-      isExpired: u.emailVerificationOtpExpiresAt ? new Date() > new Date(u.emailVerificationOtpExpiresAt) : true,
-      createdAt: u.createdAt,
-    }));
-
-    const duration = Date.now() - startTime;
-    return NextResponse.json(
-      {
-        verifications: {
-          emailOtpStats: sanitizedEmailStats,
-          pendingCompanions: pendingCompanionProfiles,
-          pendingDocuments: pendingVerificationDocs,
-        },
-        queryDurationMs: duration,
+    return NextResponse.json({
+      verifications,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
       },
-      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
-    );
+    });
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+      return NextResponse.json({ error: 'Admin authorization required' }, { status: 403 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Failed to list verifications' }, { status: 500 });
   }
 }

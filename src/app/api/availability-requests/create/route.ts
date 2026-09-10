@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { requirePaidCustomer } from '@/lib/auth';
+import { requireActiveAccount } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { validateOffPlatformContent } from '@/lib/offPlatformFilter';
 
 export async function POST(req: Request) {
   try {
-    const customer = await requirePaidCustomer();
+    const customer = await requireActiveAccount();
     const body = await req.json();
 
 
@@ -81,6 +81,18 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, availabilityRequest });
   } catch (error: any) {
+    if (error.message === 'ACCOUNT_UNDER_REVIEW') {
+      return NextResponse.json(
+        { error: 'ACCOUNT_UNDER_REVIEW', message: 'Your account is under review. You will receive access once approved by an admin.' },
+        { status: 403 }
+      );
+    }
+    if (error.message === 'IDENTITY_VERIFICATION_REQUIRED' || error.message === 'KYC_REJECTED') {
+      return NextResponse.json(
+        { error: 'IDENTITY_VERIFICATION_REQUIRED', message: 'Please complete identity verification to continue.' },
+        { status: 403 }
+      );
+    }
     if (error.message === 'PAYMENT_REQUIRED') {
       return NextResponse.json(
         { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },

@@ -160,6 +160,62 @@ export default async function DashboardPage() {
           </div>
         )}
 
+        {/* Identity Verification Status Alert Banners */}
+        {currentUser.isRegistrationFeePaid && currentUser.accountStatus === 'UNDER_REVIEW' && (
+          <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-3">
+            <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-extrabold px-3.5 py-1 rounded-full">
+              <Clock className="w-4 h-4 text-amber-200" />
+              <span>Identity Verification — Under Manual Review</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white">Your Account Is Under Verification</h2>
+            <p className="text-xs sm:text-sm text-white/90 font-medium max-w-2xl leading-relaxed">
+              Our safety compliance team is manually reviewing your submitted government ID and live selfie. You will receive full platform access as soon as your account is approved.
+            </p>
+          </div>
+        )}
+
+        {currentUser.isRegistrationFeePaid && currentUser.accountStatus === 'REJECTED' && (
+          <div className="bg-gradient-to-r from-rose-700 via-rose-600 to-rose-700 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-3">
+            <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-extrabold px-3.5 py-1 rounded-full">
+              <ShieldCheck className="w-4 h-4 text-rose-200" />
+              <span>Identity Verification Rejected</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white">Verification Resubmission Required</h2>
+            <p className="text-xs sm:text-sm text-white/90 font-medium max-w-2xl leading-relaxed">
+              Your identity verification documents were rejected. Please submit clear, un-cropped government ID documents and a live selfie to re-verify.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/identity-verification"
+                className="inline-flex items-center gap-2 bg-white text-rose-700 font-extrabold text-xs px-6 py-3 rounded-2xl shadow-lg cursor-pointer"
+              >
+                Resubmit Identity Verification →
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {currentUser.isRegistrationFeePaid && currentUser.accountStatus === 'PENDING_IDENTITY_VERIFICATION' && (
+          <div className="bg-gradient-to-r from-purple-700 via-brand-600 to-purple-700 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-3">
+            <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-extrabold px-3.5 py-1 rounded-full">
+              <ShieldCheck className="w-4 h-4 text-purple-200" />
+              <span>Step Required — Identity Verification</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-white">Complete Identity Verification</h2>
+            <p className="text-xs sm:text-sm text-white/90 font-medium max-w-2xl leading-relaxed">
+              To keep Paireva safe and limited to genuine users, complete identity verification before using the platform.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="/identity-verification"
+                className="inline-flex items-center gap-2 bg-white text-brand-700 font-extrabold text-xs px-6 py-3 rounded-2xl shadow-lg cursor-pointer"
+              >
+                Verify Identity Now →
+              </Link>
+            </div>
+          </div>
+        )}
+
 
         {/* Quick Overview Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

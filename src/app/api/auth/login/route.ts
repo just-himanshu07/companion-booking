@@ -59,7 +59,7 @@ export async function POST(req: Request) {
       }
 
       // 2. Unverified email check: Dispatch new OTP code and DO NOT create session cookie
-      if (!user.isEmailVerified || user.accountStatus === 'PENDING') {
+      if (!user.isEmailVerified || user.accountStatus === 'PENDING_EMAIL_VERIFICATION' || user.accountStatus === 'PENDING_PAYMENT') {
         const { generateNumericOTP, hashOTP } = await import('@/lib/otp');
         const { sendVerificationOTP } = await import('@/lib/emailService');
 
@@ -96,19 +96,12 @@ export async function POST(req: Request) {
       }
     }
 
-    // Fully verified customer (or companion/admin): Create session cookie now
-    if (user.accountStatus !== 'ACTIVE') {
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { accountStatus: 'ACTIVE' },
-      });
-    }
-
+    // Both payment AND email are verified. Issue session cookie now!
     const token = signToken({
       userId: user.id,
       email: user.email,
       role: user.role,
-      accountStatus: 'ACTIVE',
+      accountStatus: user.accountStatus,
       isEmailVerified: true,
     });
 
@@ -119,6 +112,14 @@ export async function POST(req: Request) {
       targetRedirect = '/admin';
     } else if (user.role === 'COMPANION') {
       targetRedirect = '/companion-dashboard';
+    } else if (user.role === 'CUSTOMER') {
+      if (user.accountStatus === 'PENDING_IDENTITY_VERIFICATION') {
+        targetRedirect = '/identity-verification';
+      } else if (user.accountStatus === 'REJECTED') {
+        targetRedirect = '/identity-verification';
+      } else {
+        targetRedirect = '/dashboard';
+      }
     }
 
     return NextResponse.json({
@@ -129,7 +130,7 @@ export async function POST(req: Request) {
         id: user.id,
         email: user.email,
         role: user.role,
-        accountStatus: 'ACTIVE',
+        accountStatus: user.accountStatus,
         isEmailVerified: user.isEmailVerified,
         isRegistrationFeePaid: user.isRegistrationFeePaid,
         customerProfile: user.customerProfile,

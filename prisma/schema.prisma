@@ -43,6 +43,7 @@ model User {
   reviewsGiven                  Review[]          @relation("ReviewsGiven")
   availabilityRequestsAsCustomer AvailabilityRequest[] @relation("CustomerAvailabilityRequests")
   passwordResetTokens           PasswordResetToken[]
+  identityVerification          IdentityVerification?
 
 
   @@index([email])
@@ -456,7 +457,12 @@ enum ReportStatus {
 
 enum AccountStatus {
   PENDING
+  PENDING_PAYMENT
+  PENDING_EMAIL_VERIFICATION
+  PENDING_IDENTITY_VERIFICATION
+  UNDER_REVIEW
   ACTIVE
+  REJECTED
   SUSPENDED
   BANNED
 }
@@ -520,5 +526,41 @@ model PasswordResetToken {
 
   @@index([tokenHash])
   @@index([userId])
+}
+
+enum KYCStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum KYCDocumentType {
+  AADHAAR
+  PAN
+  DRIVING_LICENCE
+  PASSPORT
+  VOTER_ID
+}
+
+model IdentityVerification {
+  id               String          @id @default(uuid())
+  userId           String          @unique
+  documentType     KYCDocumentType
+  documentFrontUrl String
+  documentBackUrl  String?
+  selfieUrl        String
+  status           KYCStatus       @default(UNDER_REVIEW)
+  rejectionReason  String?
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
 

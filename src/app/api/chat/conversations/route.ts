@@ -1,18 +1,11 @@
 import { NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
+import { requireActiveAccount } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { verifyConfirmedBookingBetweenUsers } from '@/lib/messagingAuth';
 
 export async function GET() {
   try {
-    const user = await requireAuth();
-
-    if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
-      return NextResponse.json(
-        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
-        { status: 403 }
-      );
-    }
+    const user = await requireActiveAccount();
 
 
     const rawConversations = await prisma.conversation.findMany({
@@ -98,14 +91,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const user = await requireAuth();
-
-    if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
-      return NextResponse.json(
-        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
-        { status: 403 }
-      );
-    }
+    const user = await requireActiveAccount();
 
     const { companionUserId, companionProfileId } = await req.json();
 
