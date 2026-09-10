@@ -59,7 +59,7 @@ export default function BookingForm({ companion, currentUser }: BookingFormProps
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           companionId: companion.id,
-          activityId: selectedActivity,
+          ...(selectedActivity ? { activityId: selectedActivity } : {}),
           date: selectedDate,
           startTime: selectedTime,
           durationHours: duration,

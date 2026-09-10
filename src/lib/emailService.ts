@@ -21,9 +21,13 @@ export async function sendVerificationOTP(
 
     if (!apiKey) {
       console.warn('[EmailService Warning] RESEND_API_KEY is not set in environment.');
+      console.log(`==================================================`);
+      console.log(`🔑 [DEV MODE OTP for ${toEmail}]: ${otp}`);
+      console.log(`==================================================`);
       // Return success in dev mode so flow can be tested end-to-end even without API key configured
       return { success: true };
     }
+
 
     const numericOtp = Number(otp);
     if (isNaN(numericOtp)) {

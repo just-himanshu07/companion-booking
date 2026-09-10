@@ -38,7 +38,7 @@ export const loginSchema = z.object({
 
 export const bookingSchema = z.object({
   companionId: z.string().uuid('Invalid companion ID'),
-  activityId: z.string().uuid('Invalid activity ID'),
+  activityId: z.string().uuid('Invalid activity ID').optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, 'Start time must be in HH:MM format'),
   durationHours: z.number().min(1, 'Minimum booking duration is 1 hour').max(12, 'Maximum duration is 12 hours'),

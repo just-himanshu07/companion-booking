@@ -64,8 +64,13 @@ export default function BookingFormModal({
     setLoading(true);
 
     try {
-      // 1. Fetch available activities for companion to pick matching activity or default
-      const activityId = companion.activities?.[0]?.activity.id || 'activity_default';
+      // 1. Resolve matching activityId from companion's activities if available
+      const matchingActivity = companion.activities?.find(
+        (a) =>
+          a.activity.name.toLowerCase() === request.experienceType.toLowerCase() ||
+          a.activity.id === request.experienceType
+      );
+      const selectedActivityId = matchingActivity?.activity.id || companion.activities?.[0]?.activity.id;
 
       // 2. Call server API to create booking order
       const res = await fetch('/api/bookings/create', {
@@ -73,7 +78,7 @@ export default function BookingFormModal({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           companionId: companion.id,
-          activityId: companion.activities?.[0]?.activity.id || '00000000-0000-0000-0000-000000000000',
+          ...(selectedActivityId ? { activityId: selectedActivityId } : {}),
           date: request.requestedDate,
           startTime: request.requestedStartTime,
           durationHours: duration,

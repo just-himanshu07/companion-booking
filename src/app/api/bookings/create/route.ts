@@ -33,6 +33,61 @@ export async function POST(req: Request) {
       );
     }
 
+    // Verify & resolve valid activityId in current database
+    let resolvedActivityId = validatedData.activityId;
+    let activityRecord = null;
+
+    if (resolvedActivityId && resolvedActivityId !== '00000000-0000-0000-0000-000000000000') {
+      activityRecord = await prisma.activity.findUnique({
+        where: { id: resolvedActivityId },
+      });
+    }
+
+    if (!activityRecord && validatedData.availabilityRequestId) {
+      const request = await prisma.availabilityRequest.findUnique({
+        where: { id: validatedData.availabilityRequestId },
+        select: { experienceType: true },
+      });
+
+      if (request?.experienceType) {
+        const expLower = request.experienceType.trim().toLowerCase();
+        activityRecord = await prisma.activity.findFirst({
+          where: {
+            OR: [
+              { name: { equals: request.experienceType, mode: 'insensitive' } },
+              { slug: { equals: expLower } },
+              { name: { contains: request.experienceType, mode: 'insensitive' } },
+            ],
+          },
+        });
+      }
+    }
+
+    if (!activityRecord) {
+      const companionActivity = await prisma.companionActivity.findFirst({
+        where: { companionId: companion.id },
+        select: { activityId: true, activity: true },
+      });
+      if (companionActivity?.activity) {
+        activityRecord = companionActivity.activity;
+      }
+    }
+
+    if (!activityRecord) {
+      activityRecord = await prisma.activity.findFirst({
+        orderBy: { createdAt: 'asc' },
+      });
+    }
+
+    if (!activityRecord) {
+      return NextResponse.json(
+        { error: 'No valid social activity found in the system. Please select a valid activity.' },
+        { status: 400 }
+      );
+    }
+
+    resolvedActivityId = activityRecord.id;
+
     // Atomic double booking check inside Prisma transaction
     const bookingResult = await prisma.$transaction(async (tx) => {
       // 1. Check slot availability
@@ -77,7 +132,7 @@ export async function POST(req: Request) {
           bookingNumber,
           customerId: user.id,
           companionId: companion.id,
-          activityId: validatedData.activityId,
+          activityId: resolvedActivityId,
           date: validatedData.date,
           startTime: validatedData.startTime,
           endTime: `${parseInt(validatedData.startTime.split(':')[0], 10) + duration}:00`,

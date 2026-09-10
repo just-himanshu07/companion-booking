@@ -63,6 +63,17 @@ export async function GET(req: Request) {
               profilePhoto: true,
               hourlyPrice: true,
               city: { select: { name: true } },
+              activities: {
+                select: {
+                  activity: {
+                    select: {
+                      id: true,
+                      name: true,
+                      slug: true,
+                    },
+                  },
+                },
+              },
             },
           },
           customer: {
