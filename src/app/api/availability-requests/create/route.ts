@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { requireRole } from '@/lib/auth';
+import { requirePaidCustomer } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { validateOffPlatformContent } from '@/lib/offPlatformFilter';
 
 export async function POST(req: Request) {
   try {
-    const customer = await requireRole(['CUSTOMER']);
+    const customer = await requirePaidCustomer();
     const body = await req.json();
+
 
     const {
       companionId,
@@ -80,10 +81,17 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, availabilityRequest });
   } catch (error: any) {
+    if (error.message === 'PAYMENT_REQUIRED') {
+      return NextResponse.json(
+        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
+        { status: 403 }
+      );
+    }
     if (error.message === 'UNAUTHORIZED' || error.message === 'FORBIDDEN') {
       return NextResponse.json({ error: 'Authentication required as Customer.' }, { status: 401 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
 

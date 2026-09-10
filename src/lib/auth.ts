@@ -165,8 +165,19 @@ export async function requireMinimalAuth() {
 
 export async function requireVerifiedAuth() {
   const user = await requireAuth();
+  if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
+    throw new Error('PAYMENT_REQUIRED');
+  }
   if (!user.isEmailVerified || user.accountStatus !== 'ACTIVE') {
     throw new Error('VERIFICATION_REQUIRED');
+  }
+  return user;
+}
+
+export async function requirePaidCustomer() {
+  const user = await requireAuth();
+  if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
+    throw new Error('PAYMENT_REQUIRED');
   }
   return user;
 }
@@ -178,3 +189,4 @@ export async function requireRole(allowedRoles: Role[]) {
   }
   return user;
 }
+

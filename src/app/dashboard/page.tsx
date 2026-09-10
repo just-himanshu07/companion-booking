@@ -131,6 +131,36 @@ export default async function DashboardPage() {
           </div>
         </div>
 
+        {/* Unpaid Registration Fee Alert Banner */}
+        {!currentUser.isRegistrationFeePaid && (
+          <div className="bg-gradient-to-r from-amber-600 via-rosebrand-600 to-brand-600 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-extrabold px-3.5 py-1 rounded-full backdrop-blur-md">
+                  <ShieldCheck className="w-4 h-4 text-amber-200" />
+                  <span>Action Required — Registration Fee Pending</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                  Complete your ₹399 Registration Fee
+                </h2>
+                <p className="text-xs sm:text-sm text-white/90 font-medium max-w-2xl leading-relaxed">
+                  Your account is created, but platform features (checking availability, companion bookings, and messaging) require a one-time ₹399 registration payment.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href="/register?step=2"
+                  className="bg-white hover:bg-slate-100 text-brand-700 font-extrabold text-xs px-6 py-3.5 rounded-2xl shadow-lg transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-95 cursor-pointer"
+                >
+                  Pay ₹399 &amp; Activate Account →
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
+
+
         {/* Quick Overview Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link

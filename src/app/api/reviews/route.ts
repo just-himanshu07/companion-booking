@@ -7,6 +7,14 @@ import { createNotification } from '@/lib/notifications';
 export async function POST(req: Request) {
   try {
     const user = await requireAuth();
+
+    if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
+      return NextResponse.json(
+        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const validatedData = reviewSchema.parse(body);
 

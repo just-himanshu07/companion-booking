@@ -8,6 +8,14 @@ import { validateOffPlatformContent } from '@/lib/offPlatformFilter';
 export async function GET(req: Request) {
   try {
     const user = await requireAuth();
+
+    if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
+      return NextResponse.json(
+        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const conversationId = searchParams.get('conversationId');
     const since = searchParams.get('since');
@@ -190,6 +198,14 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const user = await requireAuth();
+
+    if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
+      return NextResponse.json(
+        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
+        { status: 403 }
+      );
+    }
+
     const { conversationId, text } = await req.json();
 
     if (!conversationId || !text?.trim()) {

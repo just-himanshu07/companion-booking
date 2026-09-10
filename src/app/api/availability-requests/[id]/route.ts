@@ -9,7 +9,14 @@ export async function PATCH(
 ) {
   try {
     const currentUser = await requireRole(['CUSTOMER', 'COMPANION']);
+    if (currentUser.role === 'CUSTOMER' && !currentUser.isRegistrationFeePaid) {
+      return NextResponse.json(
+        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
+        { status: 403 }
+      );
+    }
     const requestId = params.id;
+
     const body = await req.json();
 
     const {

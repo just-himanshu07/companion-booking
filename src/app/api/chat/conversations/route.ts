@@ -7,6 +7,14 @@ export async function GET() {
   try {
     const user = await requireAuth();
 
+    if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
+      return NextResponse.json(
+        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
+        { status: 403 }
+      );
+    }
+
+
     const rawConversations = await prisma.conversation.findMany({
       where: {
         OR: [{ customerId: user.id }, { companionUserId: user.id }],
@@ -91,6 +99,14 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const user = await requireAuth();
+
+    if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
+      return NextResponse.json(
+        { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
+        { status: 403 }
+      );
+    }
+
     const { companionUserId, companionProfileId } = await req.json();
 
     let targetCompanionUserId = companionUserId;

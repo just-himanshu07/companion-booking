@@ -71,18 +71,21 @@ export async function POST(req: Request) {
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // 6. Transactional update to mark payment success and store OTP credentials
+    const nextAccountStatus = user.isEmailVerified ? 'ACTIVE' : 'PENDING';
+
     await prisma.$transaction(async (tx) => {
       await tx.user.update({
         where: { id: user.id },
         data: {
           isRegistrationFeePaid: true,
-          accountStatus: 'PENDING',
+          accountStatus: nextAccountStatus,
           emailVerificationOtpHash: otpHash,
           emailVerificationOtpExpiresAt: otpExpiresAt,
           emailVerificationAttempts: 0,
           emailVerificationLastSentAt: new Date(),
         },
       });
+
 
       await tx.payment.update({
         where: { id: payment.id },

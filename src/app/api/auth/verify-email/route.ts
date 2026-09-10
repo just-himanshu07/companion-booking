@@ -85,35 +85,55 @@ export async function POST(req: Request) {
       );
     }
 
-    // OTP is valid! Activate account & clear OTP secrets
+    // OTP is valid! Mark email as verified and clear OTP secrets
+    // Account becomes ACTIVE only if registration fee is paid (or for non-customer roles)
+    const shouldActivate = dbUser.role !== 'CUSTOMER' || dbUser.isRegistrationFeePaid;
+    const nextAccountStatus = shouldActivate ? 'ACTIVE' : 'PENDING';
+
     const updatedUser = await prisma.user.update({
       where: { id: dbUser.id },
       data: {
         isEmailVerified: true,
-        accountStatus: 'ACTIVE',
+        accountStatus: nextAccountStatus,
         emailVerificationOtpHash: null,
         emailVerificationOtpExpiresAt: null,
         emailVerificationAttempts: 0,
       },
     });
 
-    // Re-issue updated JWT token with ACTIVE accountStatus and isEmailVerified: true
+    // Re-issue updated JWT token with computed accountStatus and isEmailVerified: true
     const updatedToken = signToken({
       userId: updatedUser.id,
       email: updatedUser.email,
       role: updatedUser.role,
-      accountStatus: 'ACTIVE',
+      accountStatus: updatedUser.accountStatus,
       isEmailVerified: true,
     });
 
     setAuthCookie(updatedToken);
 
+    if (dbUser.role === 'CUSTOMER' && !dbUser.isRegistrationFeePaid) {
+      return NextResponse.json({
+        success: true,
+        message: 'Email verified successfully! Please complete the ₹399 registration fee to activate platform access.',
+        isEmailVerified: true,
+        isRegistrationFeePaid: false,
+        accountStatus: 'PENDING',
+        paymentRequired: true,
+        redirectTo: '/register?step=2',
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Email verified successfully! Welcome to Paireva.',
       isEmailVerified: true,
-      accountStatus: 'ACTIVE',
+      isRegistrationFeePaid: updatedUser.isRegistrationFeePaid,
+      accountStatus: updatedUser.accountStatus,
+      paymentRequired: false,
+      redirectTo: '/dashboard',
     });
+
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Please log in to verify your email.' }, { status: 401 });

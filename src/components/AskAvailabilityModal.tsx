@@ -126,13 +126,16 @@ export default function AskAvailabilityModal({
       const data = await res.json();
 
       if (!res.ok) {
-        if (res.status === 400 && data.error) {
+        if (res.status === 403 && data.error === 'PAYMENT_REQUIRED') {
+          setError('PAYMENT_REQUIRED');
+        } else if (res.status === 400 && data.error) {
           setOffPlatformError(data.error);
         } else {
           throw new Error(data.error || 'Failed to send availability request.');
         }
         return;
       }
+
 
       setSuccessMsg('Availability request sent successfully! Redirecting to your dashboard...');
       setTimeout(() => {
@@ -168,12 +171,30 @@ export default function AskAvailabilityModal({
           </button>
         </div>
 
-        {error && (
+        {error === 'PAYMENT_REQUIRED' ? (
+          <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl text-xs text-amber-900 space-y-3 animate-in fade-in">
+            <div className="flex items-center gap-2 font-extrabold text-amber-950">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+              <span>One-Time Registration Payment Required</span>
+            </div>
+            <p className="text-amber-800 leading-relaxed font-medium">
+              To send availability requests and connect with companions, please complete the mandatory ₹399 one-time registration fee.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push('/register?step=2')}
+              className="w-full bg-amber-600 hover:bg-amber-700 text-white font-extrabold py-2.5 rounded-xl transition-all cursor-pointer shadow-sm text-xs"
+            >
+              Complete ₹399 Registration Payment →
+            </button>
+          </div>
+        ) : error ? (
           <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 flex items-start gap-2">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
-        )}
+        ) : null}
+
 
         {successMsg && (
           <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 flex items-center gap-2">

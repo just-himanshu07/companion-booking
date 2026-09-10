@@ -26,8 +26,15 @@ export async function GET(req: Request) {
     const where: any = {};
 
     if (user.role === 'CUSTOMER') {
+      if (!user.isRegistrationFeePaid) {
+        return NextResponse.json(
+          { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
+          { status: 403 }
+        );
+      }
       where.customerId = user.id;
     } else if (user.role === 'COMPANION') {
+
       const companionProfile = await prisma.companionProfile.findUnique({
         where: { userId: user.id },
         select: { id: true },
