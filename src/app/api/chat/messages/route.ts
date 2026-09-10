@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 
     if (user.role === 'CUSTOMER' && user.accountStatus !== 'ACTIVE') {
       return NextResponse.json(
-        { error: 'ACCOUNT_NOT_ACTIVE', message: 'You will access in-app messaging after your account verification is approved.' },
+        { error: 'ACCOUNT_VERIFICATION_REQUIRED', message: 'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.' },
         { status: 403 }
       );
     }

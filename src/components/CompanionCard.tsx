@@ -71,20 +71,35 @@ export default function CompanionCard({
       onClick={handleCardClick}
       className={`group bg-white rounded-3xl border border-[#F47B8F]/20 shadow-md transition-all duration-300 overflow-hidden flex flex-col ${
         isLocked
-          ? 'cursor-pointer hover:border-amber-400/60'
+          ? 'cursor-pointer hover:border-[#E94B83]/60'
           : 'hover:border-[#E94B83]/50 hover:shadow-xl hover:-translate-y-1'
       }`}
     >
-      {/* Image Container */}
+      {/* Photo Container — PHOTO ONLY IS BLURRED WHEN LOCKED */}
       <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
         <Image
           src={displayPhoto}
           alt={companion.displayName}
           fill
-          className={`object-cover transition-transform duration-500 ${isLocked ? 'filter blur-sm scale-105' : 'group-hover:scale-105'}`}
+          className={`object-cover transition-transform duration-500 ${
+            isLocked ? 'filter blur-md scale-105 select-none' : 'group-hover:scale-105'
+          }`}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#292126]/60 via-transparent to-transparent" />
+
+        {/* Subtle Dark Translucent Overlay & Centered Lock Icon for Unverified Users */}
+        {isLocked ? (
+          <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-center p-3 z-20">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 border border-white/30 backdrop-blur-md flex items-center justify-center text-white shadow-lg mb-1.5 animate-pulse">
+              <Lock className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-[11px] font-extrabold text-white uppercase tracking-wider bg-black/60 px-3 py-1 rounded-full backdrop-blur-md border border-white/20 shadow">
+              🔒 Verification Required
+            </span>
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-t from-[#292126]/60 via-transparent to-transparent" />
+        )}
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5 z-10">
@@ -112,24 +127,26 @@ export default function CompanionCard({
           />
         </button>
 
-        {/* Rating and City Overlay */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs font-bold z-10">
-          <div className="flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-full backdrop-blur-sm">
-            <MapPin className="w-3.5 h-3.5 text-[#F47B8F]" />
-            <span className="truncate">{companion.city.name}</span>
-          </div>
-
-          {companion.averageRating > 0 && (
+        {/* Rating and City Overlay (If Unlocked) */}
+        {!isLocked && (
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs font-bold z-10">
             <div className="flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-full backdrop-blur-sm">
-              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-              <span>{companion.averageRating.toFixed(1)}</span>
-              <span className="text-slate-300 font-normal">({companion.totalReviews})</span>
+              <MapPin className="w-3.5 h-3.5 text-[#F47B8F]" />
+              <span className="truncate">{companion.city.name}</span>
             </div>
-          )}
-        </div>
+
+            {companion.averageRating > 0 && (
+              <div className="flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-full backdrop-blur-sm">
+                <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                <span>{companion.averageRating.toFixed(1)}</span>
+                <span className="text-slate-300 font-normal">({companion.totalReviews})</span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Content */}
+      {/* Card Content — ALWAYS UNBLURRED & READABLE FOR UNVERIFIED USERS */}
       <div className="p-5 flex-1 flex flex-col justify-between">
         <div>
           <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -144,8 +161,25 @@ export default function CompanionCard({
             </div>
           </div>
 
+          {/* Location & Rating if locked */}
+          {isLocked && (
+            <div className="flex items-center justify-between text-xs font-bold text-[#756A70] my-1">
+              <div className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-[#E94B83]" />
+                <span>{companion.city.name}</span>
+              </div>
+              {companion.averageRating > 0 && (
+                <div className="flex items-center gap-1 text-amber-600">
+                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                  <span>{companion.averageRating.toFixed(1)}</span>
+                  <span className="text-[#756A70] font-normal">({companion.totalReviews})</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Activities Badges */}
-          <div className="flex flex-wrap gap-1.5 mt-3 mb-4">
+          <div className="flex flex-wrap gap-1.5 mt-2 mb-4">
             {companion.activities.slice(0, 3).map((act, i) => (
               <span
                 key={i}
@@ -166,10 +200,10 @@ export default function CompanionCard({
         {isLocked ? (
           <button
             onClick={handleCardClick}
-            className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold py-3 rounded-xl transition-all shadow-md cursor-pointer"
+            className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-[#E94B83] hover:bg-[#D43770] text-white text-xs font-extrabold py-3 rounded-xl transition-all shadow-md shadow-[#E94B83]/20 cursor-pointer"
           >
-            <Lock className="w-4 h-4 text-amber-400" />
-            <span>Available After Verification</span>
+            <Calendar className="w-4 h-4" />
+            <span>Ask Availability →</span>
           </button>
         ) : (
           <Link
@@ -177,7 +211,7 @@ export default function CompanionCard({
             className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-[#E94B83] hover:bg-[#D43770] text-white text-xs font-extrabold py-3 rounded-xl transition-all shadow-md shadow-[#E94B83]/20"
           >
             <Calendar className="w-4 h-4" />
-            Ask Availability →
+            <span>Ask Availability →</span>
           </Link>
         )}
       </div>

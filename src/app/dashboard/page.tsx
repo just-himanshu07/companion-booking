@@ -309,13 +309,9 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             )}
           </div>
 
-          <div className="relative rounded-3xl overflow-hidden p-2">
-            {/* Companion Cards Container (Blurred for unapproved accounts) */}
-            <div
-              className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300 ${
-                !isAccountActive ? 'filter blur-md select-none pointer-events-none opacity-60' : ''
-              }`}
-            >
+          <div className="relative rounded-3xl p-2">
+            {/* Companion Cards Grid (Photo-only blur rendered inside CompanionCard when locked) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300">
               {DUMMY_LOCKED_CARDS.map((comp) => (
                 <CompanionCard key={comp.id} companion={comp} isLocked={!isAccountActive} />
               ))}

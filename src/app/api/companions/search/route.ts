@@ -74,8 +74,8 @@ export async function GET(req: Request) {
 
       return NextResponse.json(
         {
-          error: 'ACCOUNT_NOT_ACTIVE',
-          message: 'You will access Discover and companion listings after your account verification is approved.',
+          error: 'ACCOUNT_VERIFICATION_REQUIRED',
+          message: 'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.',
           accountStatus: user.accountStatus,
         },
         { status: 403 }

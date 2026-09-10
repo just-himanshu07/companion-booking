@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Lock, ShieldAlert, ArrowRight, X, ShieldCheck } from 'lucide-react';
+import { Lock, ShieldAlert, ArrowRight, X } from 'lucide-react';
 
 interface AccessLockedModalProps {
   isOpen: boolean;
@@ -16,8 +16,8 @@ interface AccessLockedModalProps {
 export default function AccessLockedModal({
   isOpen,
   onClose,
-  title = 'Access Locked',
-  message = 'You will access Discover and marketplace features after your account verification is approved.',
+  title = 'Account Verification Required',
+  message = 'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.',
   accountStatus,
   rejectionReason,
 }: AccessLockedModalProps) {
@@ -38,7 +38,7 @@ export default function AccessLockedModal({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-[#756A70] hover:text-[#292126] hover:bg-slate-100 rounded-full transition-colors"
+          className="absolute top-4 right-4 p-2 text-[#756A70] hover:text-[#292126] hover:bg-slate-100 rounded-full transition-colors cursor-pointer"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
@@ -61,8 +61,8 @@ export default function AccessLockedModal({
           </p>
         </div>
 
-        {/* Status Callout Box */}
-        {isRejected ? (
+        {/* Rejection Alert Box (If Applicable) */}
+        {isRejected && (
           <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-left text-xs space-y-1.5 text-rose-900">
             <div className="font-extrabold text-rose-700 flex items-center gap-1.5">
               <ShieldAlert className="w-4 h-4 shrink-0" />
@@ -70,28 +70,6 @@ export default function AccessLockedModal({
             </div>
             <p className="text-slate-700 text-[11px]">
               Reason: <span className="font-semibold text-rose-800">{rejectionReason || 'Uploaded ID document or selfie was unclear.'}</span>
-            </p>
-            <p className="text-[11px] text-slate-500 font-medium">
-              Please submit clear government ID documents and a well-lit live selfie to re-verify.
-            </p>
-          </div>
-        ) : (
-          <div className="p-4 bg-[#FFF8F5] border border-[#F47B8F]/25 rounded-2xl text-left text-xs space-y-2 text-[#756A70]">
-            <div className="flex items-center justify-between font-bold text-[#6D315D]">
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                Account Status:
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] uppercase font-black bg-amber-100 text-amber-800 border border-amber-200">
-                {accountStatus === 'UNDER_REVIEW'
-                  ? 'Under Review'
-                  : accountStatus === 'PENDING_IDENTITY_VERIFICATION'
-                  ? 'Verification Required'
-                  : 'Unapproved Account'}
-              </span>
-            </div>
-            <p className="text-[11px] leading-relaxed">
-              Our admin compliance team manually reviews submitted ID documents to ensure platform safety. Full marketplace access will unlock automatically upon approval.
             </p>
           </div>
         )}
@@ -111,13 +89,12 @@ export default function AccessLockedModal({
 
           <button
             onClick={onClose}
-            className="w-full bg-slate-100 hover:bg-slate-200 text-[#292126] font-extrabold py-3 rounded-2xl transition-colors text-xs cursor-pointer"
+            className="w-full bg-slate-100 hover:bg-slate-200 text-[#292126] font-extrabold py-3.5 rounded-2xl transition-colors text-xs cursor-pointer shadow-sm"
           >
-            Okay, Got It
+            Got it
           </button>
         </div>
       </div>
     </div>
   );
 }
-

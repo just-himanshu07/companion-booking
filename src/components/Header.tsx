@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ShieldCheck, User as UserIcon, LogOut, Menu, X, Heart, MessageSquare, Calendar, Bell, Sparkles } from 'lucide-react';
+import { ShieldCheck, User as UserIcon, LogOut, Menu, X, Heart, MessageSquare, Calendar, Bell, Sparkles, Lock } from 'lucide-react';
 import AccessLockedModal from '@/components/AccessLockedModal';
 
 interface HeaderProps {
@@ -26,9 +26,9 @@ export default function Header({ currentUser }: HeaderProps) {
 
   // Access Locked Modal State
   const [lockedModalOpen, setLockedModalOpen] = useState(false);
-  const [modalTitle, setModalTitle] = useState('Access Locked');
+  const [modalTitle, setModalTitle] = useState('Account Verification Required');
   const [modalMessage, setModalMessage] = useState(
-    'You will access Discover after your account verification is approved.'
+    'Discover will be available after your account verification is approved.'
   );
 
   useEffect(() => {
@@ -116,13 +116,16 @@ export default function Header({ currentUser }: HeaderProps) {
                   onClick={(e) =>
                     triggerLockedModal(
                       e,
-                      'Access Locked',
-                      'You will access Discover after your account verification is approved.'
+                      'Account Verification Required',
+                      'Discover will be available after your account verification is approved.'
                     )
                   }
-                  className="hover:text-[#E94B83] transition-colors cursor-pointer"
+                  className="hover:text-[#E94B83] transition-colors cursor-pointer inline-flex items-center gap-1"
                 >
-                  Discover
+                  <span>Discover</span>
+                  {isCustomerUnapproved && (
+                    <Lock className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  )}
                 </Link>
               )}
               <Link href={howItWorksTarget} className="hover:text-[#E94B83] transition-colors">
@@ -162,8 +165,8 @@ export default function Header({ currentUser }: HeaderProps) {
                     onClick={(e) =>
                       triggerLockedModal(
                         e,
-                        'Available after verification',
-                        'You will access in-app messaging after your account verification is approved.'
+                        'Account Verification Required',
+                        'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.'
                       )
                     }
                     className="p-2 text-[#756A70] hover:text-[#6D315D] hover:bg-[#FFF0F3] rounded-full transition-colors cursor-pointer"
@@ -176,7 +179,7 @@ export default function Header({ currentUser }: HeaderProps) {
                   <div className="relative">
                     <button
                       onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                      className="flex items-center gap-2 text-xs font-bold text-[#6D315D] hover:bg-[#FFF0F3] p-1.5 px-3.5 rounded-full border border-[#F47B8F]/30 bg-white shadow-sm transition-colors"
+                      className="flex items-center gap-2 text-xs font-bold text-[#6D315D] hover:bg-[#FFF0F3] p-1.5 px-3.5 rounded-full border border-[#F47B8F]/30 bg-white shadow-sm transition-colors cursor-pointer"
                     >
                       <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#6D315D] to-[#E94B83] text-white flex items-center justify-center font-bold text-xs">
                         {(currentUser.customerProfile?.name || currentUser.companionProfile?.displayName || currentUser.email)[0].toUpperCase()}
@@ -252,8 +255,8 @@ export default function Header({ currentUser }: HeaderProps) {
                             setUserDropdownOpen(false);
                             triggerLockedModal(
                               e,
-                              'Available after verification',
-                              'You will access in-app messaging after your account verification is approved.'
+                              'Account Verification Required',
+                              'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.'
                             );
                           }}
                           className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-[#6D315D] hover:bg-[#FFF0F3]"
@@ -268,8 +271,8 @@ export default function Header({ currentUser }: HeaderProps) {
                             setUserDropdownOpen(false);
                             triggerLockedModal(
                               e,
-                              'Available after verification',
-                              'You will access saved favorites after your account verification is approved.'
+                              'Account Verification Required',
+                              'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.'
                             );
                           }}
                           className="flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-[#6D315D] hover:bg-[#FFF0F3]"
@@ -310,8 +313,8 @@ export default function Header({ currentUser }: HeaderProps) {
                     onClick={(e) =>
                       triggerLockedModal(
                         e,
-                        'Access Locked',
-                        'You will access companion listings after your account verification is approved.'
+                        'Account Verification Required',
+                        'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.'
                       )
                     }
                     className="text-xs font-extrabold bg-[#E94B83] hover:bg-[#D43770] text-white px-5 py-2.5 rounded-xl shadow-md shadow-[#E94B83]/20 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
@@ -326,7 +329,7 @@ export default function Header({ currentUser }: HeaderProps) {
             <div className="flex md:hidden items-center gap-2">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 text-[#6D315D] hover:bg-[#FFF0F3] rounded-xl border border-[#F47B8F]/30 bg-white shadow-sm"
+                className="p-2 text-[#6D315D] hover:bg-[#FFF0F3] rounded-xl border border-[#F47B8F]/30 bg-white shadow-sm cursor-pointer"
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -343,13 +346,13 @@ export default function Header({ currentUser }: HeaderProps) {
                 setMobileMenuOpen(false);
                 triggerLockedModal(
                   e,
-                  'Access Locked',
-                  'You will access Discover after your account verification is approved.'
+                  'Account Verification Required',
+                  'Discover will be available after your account verification is approved.'
                 );
               }}
               className="block text-base font-bold text-[#6D315D] hover:text-[#E94B83] py-2"
             >
-              Discover
+              Discover {isCustomerUnapproved && <Lock className="w-4 h-4 text-amber-500 inline ml-1" />}
             </Link>
             <Link
               href={howItWorksTarget}
@@ -415,8 +418,8 @@ export default function Header({ currentUser }: HeaderProps) {
                     setMobileMenuOpen(false);
                     triggerLockedModal(
                       e,
-                      'Available after verification',
-                      'You will access in-app messaging after your account verification is approved.'
+                      'Account Verification Required',
+                      'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.'
                     );
                   }}
                   className="block text-sm font-bold text-[#6D315D] py-1"
@@ -425,7 +428,7 @@ export default function Header({ currentUser }: HeaderProps) {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left text-sm font-bold text-rose-600 py-2"
+                  className="w-full text-left text-sm font-bold text-rose-600 py-2 cursor-pointer"
                 >
                   Logout
                 </button>

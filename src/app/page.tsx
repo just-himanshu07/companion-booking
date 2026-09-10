@@ -264,16 +264,39 @@ export default async function HomePage() {
 
           {/* FEATURED VERIFIED COMPANIONS GRID */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <h2 className="text-xl font-extrabold text-[#292126]">{genderPreferenceHeading}</h2>
               <Link href="/companions" className="text-xs font-bold text-[#E94B83] hover:underline">
                 View All Candidates ({featuredCompanions.length}+)
               </Link>
             </div>
 
+            {/* VERIFICATION GATE VISUAL BADGE FOR UNAPPROVED USERS */}
+            {currentUser?.role === 'CUSTOMER' && currentUser?.accountStatus !== 'ACTIVE' && (
+              <div className="p-4 bg-[#FFF0F3] border border-[#F47B8F]/30 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-2 font-bold text-[#6D315D]">
+                  <Lock className="w-4 h-4 text-[#E94B83] shrink-0" />
+                  <span>Candidate Photos Locked — Identity Verification Required</span>
+                </div>
+                <span className="text-[11px] text-[#756A70] font-medium">
+                  Candidate photos unlock automatically upon admin approval.
+                </span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredCompanions.map((comp) => (
-                <CompanionCard key={comp.id} companion={comp} />
+              {(currentUser?.role === 'CUSTOMER' && currentUser?.accountStatus !== 'ACTIVE'
+                ? featuredCompanions.map((comp) => ({
+                    ...comp,
+                    profilePhoto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80&blur=50',
+                  }))
+                : featuredCompanions
+              ).map((comp) => (
+                <CompanionCard
+                  key={comp.id}
+                  companion={comp}
+                  isLocked={currentUser?.role === 'CUSTOMER' && currentUser?.accountStatus !== 'ACTIVE'}
+                />
               ))}
             </div>
           </div>

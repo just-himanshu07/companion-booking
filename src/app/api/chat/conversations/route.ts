@@ -92,7 +92,7 @@ export async function GET() {
       error.message === 'PAYMENT_REQUIRED'
     ) {
       return NextResponse.json(
-        { error: 'ACCOUNT_NOT_ACTIVE', message: 'You will access in-app messaging after your account verification is approved.' },
+        { error: 'ACCOUNT_VERIFICATION_REQUIRED', message: 'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.' },
         { status: 403 }
       );
     }
@@ -165,7 +165,7 @@ export async function POST(req: Request) {
       error.message === 'PAYMENT_REQUIRED'
     ) {
       return NextResponse.json(
-        { error: 'ACCOUNT_NOT_ACTIVE', message: 'You will access in-app messaging after your account verification is approved.' },
+        { error: 'ACCOUNT_VERIFICATION_REQUIRED', message: 'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.' },
         { status: 403 }
       );
     }

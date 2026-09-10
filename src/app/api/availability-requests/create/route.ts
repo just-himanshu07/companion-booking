@@ -81,15 +81,17 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, availabilityRequest });
   } catch (error: any) {
-    if (error.message === 'ACCOUNT_UNDER_REVIEW') {
+    if (
+      error.message === 'ACCOUNT_UNDER_REVIEW' ||
+      error.message === 'IDENTITY_VERIFICATION_REQUIRED' ||
+      error.message === 'KYC_REJECTED' ||
+      error.message === 'ACCOUNT_NOT_ACTIVE'
+    ) {
       return NextResponse.json(
-        { error: 'ACCOUNT_UNDER_REVIEW', message: 'Your account is under review. You will receive access once approved by an admin.' },
-        { status: 403 }
-      );
-    }
-    if (error.message === 'IDENTITY_VERIFICATION_REQUIRED' || error.message === 'KYC_REJECTED') {
-      return NextResponse.json(
-        { error: 'IDENTITY_VERIFICATION_REQUIRED', message: 'Please complete identity verification to continue.' },
+        {
+          error: 'ACCOUNT_VERIFICATION_REQUIRED',
+          message: 'Your account is currently under verification. You will get access to candidates and platform features after your identity verification is approved.',
+        },
         { status: 403 }
       );
     }
