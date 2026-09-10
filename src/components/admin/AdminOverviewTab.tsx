@@ -27,6 +27,7 @@ export default function AdminOverviewTab({ initialStats, setActiveTab }: AdminOv
   const [loadingActivities, setLoadingActivities] = useState(false);
 
   const fetchStatsAndActivity = async () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
     try {
       const [statsRes, activityRes] = await Promise.all([
         fetch('/api/admin/stats'),
@@ -50,7 +51,18 @@ export default function AdminOverviewTab({ initialStats, setActiveTab }: AdminOv
   useEffect(() => {
     fetchStatsAndActivity();
     const interval = setInterval(fetchStatsAndActivity, 15000); // Poll every 15s
-    return () => clearInterval(interval);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchStatsAndActivity();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const users = stats?.users || {};

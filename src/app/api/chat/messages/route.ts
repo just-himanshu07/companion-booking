@@ -10,6 +10,7 @@ export async function GET(req: Request) {
     const user = await requireAuth();
     const { searchParams } = new URL(req.url);
     const conversationId = searchParams.get('conversationId');
+    const since = searchParams.get('since');
 
     if (!conversationId) {
       return NextResponse.json({ error: 'Conversation ID required' }, { status: 400 });
@@ -23,37 +24,145 @@ export async function GET(req: Request) {
 
     const conversation = access.conversation;
 
-    // Fetch messages for this unified conversation thread
-    const messages = await prisma.message.findMany({
-      where: { conversationId },
-      orderBy: { createdAt: 'asc' },
-      include: {
-        sender: {
+    const before = searchParams.get('before');
+
+    // Incremental polling mode: Fetch only messages newer than the 'since' timestamp
+    if (since) {
+      const sinceDate = new Date(since);
+      if (!isNaN(sinceDate.getTime())) {
+        const incrementalMessages = await prisma.message.findMany({
+          where: {
+            conversationId,
+            createdAt: { gt: sinceDate },
+          },
+          orderBy: { createdAt: 'asc' },
           select: {
             id: true,
-            email: true,
-            role: true,
-            customerProfile: { select: { name: true } },
-            companionProfile: { select: { displayName: true } },
+            conversationId: true,
+            senderId: true,
+            text: true,
+            isRead: true,
+            createdAt: true,
+            sender: {
+              select: {
+                id: true,
+                email: true,
+                role: true,
+                customerProfile: { select: { name: true } },
+                companionProfile: { select: { displayName: true } },
+              },
+            },
+          },
+        });
+
+        if (incrementalMessages.length > 0) {
+          // Mark unread incoming messages as read asynchronously
+          await prisma.message.updateMany({
+            where: {
+              conversationId,
+              senderId: { not: user.id },
+              isRead: false,
+            },
+            data: { isRead: true },
+          });
+        }
+
+        return NextResponse.json({
+          incremental: true,
+          messages: incrementalMessages,
+          conversationId,
+        });
+      }
+    }
+
+    // Older message pagination mode: Fetch messages older than the 'before' timestamp cursor
+    if (before) {
+      const beforeDate = new Date(before);
+      if (!isNaN(beforeDate.getTime())) {
+        const rawOlderMessages = await prisma.message.findMany({
+          where: {
+            conversationId,
+            createdAt: { lt: beforeDate },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+          select: {
+            id: true,
+            conversationId: true,
+            senderId: true,
+            text: true,
+            isRead: true,
+            createdAt: true,
+            sender: {
+              select: {
+                id: true,
+                email: true,
+                role: true,
+                customerProfile: { select: { name: true } },
+                companionProfile: { select: { displayName: true } },
+              },
+            },
+          },
+        });
+
+        const olderMessages = rawOlderMessages.reverse();
+
+        return NextResponse.json({
+          pagination: true,
+          messages: olderMessages,
+          hasMore: rawOlderMessages.length === 50,
+          conversationId,
+        });
+      }
+    }
+
+    // Initial load mode: Fetch latest 50 messages and timeline bookings concurrently
+    const [rawMessages, bookings] = await Promise.all([
+      prisma.message.findMany({
+        where: { conversationId },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+        select: {
+          id: true,
+          conversationId: true,
+          senderId: true,
+          text: true,
+          isRead: true,
+          createdAt: true,
+          sender: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              customerProfile: { select: { name: true } },
+              companionProfile: { select: { displayName: true } },
+            },
           },
         },
-      },
-    });
+      }),
+      prisma.booking.findMany({
+        where: {
+          customerId: conversation.customerId,
+          companion: { userId: conversation.companionUserId },
+          status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
+        },
+        select: {
+          id: true,
+          bookingNumber: true,
+          date: true,
+          startTime: true,
+          durationHours: true,
+          status: true,
+          createdAt: true,
+          activity: { select: { name: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
+    ]);
 
-    // Fetch all bookings between this customer and companion to render as timeline events
-    const bookings = await prisma.booking.findMany({
-      where: {
-        customerId: conversation.customerId,
-        companion: { userId: conversation.companionUserId },
-        status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
-      },
-      include: {
-        activity: { select: { name: true } },
-      },
-      orderBy: { createdAt: 'asc' },
-    });
+    const messages = rawMessages.reverse();
 
-    // Mark unread messages as read
+    // Asynchronously mark unread messages as read
     await prisma.message.updateMany({
       where: {
         conversationId,
@@ -64,9 +173,11 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json({
+      incremental: false,
       messages,
       bookings,
       conversation,
+      hasMore: rawMessages.length === 50,
     });
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED') {
@@ -120,21 +231,39 @@ export async function POST(req: Request) {
         senderId: user.id,
         text: text.trim(),
       },
+      select: {
+        id: true,
+        conversationId: true,
+        senderId: true,
+        text: true,
+        isRead: true,
+        createdAt: true,
+        sender: {
+          select: {
+            id: true,
+            email: true,
+            role: true,
+            customerProfile: { select: { name: true } },
+            companionProfile: { select: { displayName: true } },
+          },
+        },
+      },
     });
 
-    await prisma.conversation.update({
-      where: { id: conversationId },
-      data: { lastMessageAt: new Date() },
-    });
-
-    // Notify recipient
-    await createNotification(
-      recipientId,
-      'New Message Received',
-      `You received a new message regarding your companion booking.`,
-      'CHAT',
-      `/messages?conversationId=${conversationId}`
-    );
+    // Execute lastMessageAt update and recipient notification concurrently
+    await Promise.all([
+      prisma.conversation.update({
+        where: { id: conversationId },
+        data: { lastMessageAt: new Date() },
+      }),
+      createNotification(
+        recipientId,
+        'New Message Received',
+        `You received a new message regarding your companion booking.`,
+        'CHAT',
+        `/messages?conversationId=${conversationId}`
+      ),
+    ]);
 
     return NextResponse.json({ success: true, message });
   } catch (error: any) {

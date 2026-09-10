@@ -16,9 +16,13 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
   const [loading, setLoading] = useState(false);
   const [accessError, setAccessError] = useState<string | null>(null);
   const [offPlatformError, setOffPlatformError] = useState<string | null>(null);
+  const [hasMoreOlder, setHasMoreOlder] = useState(false);
+  const [loadingOlder, setLoadingOlder] = useState(false);
 
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const isFirstLoad = useRef(true);
+  const lastMessageTimestampRef = useRef<string | null>(null);
+  const isFetchingRef = useRef(false);
 
   const scrollToBottom = () => {
     requestAnimationFrame(() => {
@@ -30,27 +34,117 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
     });
   };
 
-  const fetchMessages = async () => {
+  const fetchInitialMessages = async (signal?: AbortSignal) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     try {
-      const res = await fetch(`/api/chat/messages?conversationId=${conversationId}`);
+      const res = await fetch(`/api/chat/messages?conversationId=${conversationId}`, { signal });
       const data = await res.json();
       if (res.ok) {
-        setMessages(data.messages || []);
+        const fetchedMessages = data.messages || [];
+        setMessages(fetchedMessages);
         setBookings(data.bookings || []);
+        setHasMoreOlder(data.hasMore || false);
         setAccessError(null);
+
+        if (fetchedMessages.length > 0) {
+          lastMessageTimestampRef.current = fetchedMessages[fetchedMessages.length - 1].createdAt;
+        }
       } else if (res.status === 403) {
         setAccessError(data.error || 'Messaging is available only after your booking is confirmed.');
       }
-    } catch (err) {}
+    } catch (err: any) {
+      if (err.name === 'AbortError') return;
+    } finally {
+      isFetchingRef.current = false;
+    }
+  };
+
+  const fetchOlderMessages = async () => {
+    if (loadingOlder || messages.length === 0 || !hasMoreOlder) return;
+    setLoadingOlder(true);
+    try {
+      const oldestTimestamp = messages[0].createdAt;
+      const res = await fetch(
+        `/api/chat/messages?conversationId=${conversationId}&before=${encodeURIComponent(oldestTimestamp)}`
+      );
+      const data = await res.json();
+      if (res.ok && data.messages && data.messages.length > 0) {
+        const olderMsgs = data.messages;
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const uniqueOlder = olderMsgs.filter((m: any) => !existingIds.has(m.id));
+          return [...uniqueOlder, ...prev];
+        });
+        setHasMoreOlder(data.hasMore || false);
+      } else {
+        setHasMoreOlder(false);
+      }
+    } catch (err) {
+      // ignore
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
+
+  const pollIncrementalMessages = async (signal?: AbortSignal) => {
+    if (isFetchingRef.current || document.visibilityState === 'hidden') return;
+    if (!lastMessageTimestampRef.current) {
+      return fetchInitialMessages(signal);
+    }
+
+    isFetchingRef.current = true;
+    try {
+      const res = await fetch(
+        `/api/chat/messages?conversationId=${conversationId}&since=${encodeURIComponent(lastMessageTimestampRef.current)}`,
+        { signal }
+      );
+      const data = await res.json();
+      if (res.ok && data.messages && data.messages.length > 0) {
+        const newMessages = data.messages;
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const uniqueNew = newMessages.filter((m: any) => !existingIds.has(m.id));
+          if (uniqueNew.length === 0) return prev;
+          return [...prev, ...uniqueNew];
+        });
+
+        lastMessageTimestampRef.current = newMessages[newMessages.length - 1].createdAt;
+      }
+    } catch (err: any) {
+      if (err.name === 'AbortError') return;
+    } finally {
+      isFetchingRef.current = false;
+    }
   };
 
   useEffect(() => {
     isFirstLoad.current = true;
+    lastMessageTimestampRef.current = null;
     setAccessError(null);
     setOffPlatformError(null);
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 4000); // Poll every 4 seconds
-    return () => clearInterval(interval);
+
+    const controller = new AbortController();
+    fetchInitialMessages(controller.signal);
+
+    // Poll every 4 seconds only when active tab is visible
+    const interval = setInterval(() => {
+      pollIncrementalMessages(controller.signal);
+    }, 4000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        pollIncrementalMessages(controller.signal);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [conversationId]);
 
   useEffect(() => {
@@ -113,7 +207,7 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
 
       if (res.ok) {
         setText(''); // Clear input on successful send only
-        await fetchMessages();
+        await fetchInitialMessages();
         scrollToBottom();
       } else {
         if (res.status === 403) {
@@ -233,6 +327,18 @@ export default function ChatComponent({ conversationId, currentUserId }: ChatCom
 
       {/* Unified Timeline Feed */}
       <div ref={chatContainerRef} className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4 max-h-[500px]">
+        {hasMoreOlder && (
+          <div className="flex justify-center mb-4">
+            <button
+              type="button"
+              onClick={fetchOlderMessages}
+              disabled={loadingOlder}
+              className="text-[11px] font-bold text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200 px-4 py-1.5 rounded-full transition-colors disabled:opacity-50 shadow-sm cursor-pointer"
+            >
+              {loadingOlder ? 'Loading earlier messages...' : '↑ Load earlier messages'}
+            </button>
+          </div>
+        )}
         {timelineItems.length > 0 ? (
           timelineItems.map((item) => {
             if (item.type === 'SECTION_DIVIDER') {

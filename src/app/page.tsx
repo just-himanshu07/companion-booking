@@ -52,17 +52,38 @@ export default async function HomePage() {
     prisma.city.findMany({
       where: { isPopular: true },
       take: 6,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        imageUrl: true,
+        isPopular: true,
+      },
     }),
     prisma.activity.findMany({
       take: 8,
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        icon: true,
+        category: true,
+      },
     }),
     currentUser
       ? prisma.booking.findMany({
           where: { customerId: currentUser.id },
           take: 2,
           orderBy: { createdAt: 'desc' },
-          include: {
-            companion: { select: { displayName: true } },
+          select: {
+            id: true,
+            bookingNumber: true,
+            status: true,
+            date: true,
+            startTime: true,
+            durationHours: true,
+            totalAmount: true,
+            companion: { select: { displayName: true, profilePhoto: true } },
             activity: { select: { name: true } },
           },
         })

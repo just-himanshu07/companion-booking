@@ -34,26 +34,41 @@ export default async function DashboardPage() {
   const [bookings, favorites, notifications] = await Promise.all([
     prisma.booking.findMany({
       where: { customerId: currentUser.id },
-      include: {
+      select: {
+        id: true,
+        bookingNumber: true,
+        date: true,
+        startTime: true,
+        durationHours: true,
+        totalAmount: true,
+        status: true,
+        createdAt: true,
         companion: {
-          include: {
-            city: true,
-            user: { select: { id: true, email: true } },
+          select: {
+            displayName: true,
+            profilePhoto: true,
+            city: { select: { name: true } },
           },
         },
-        activity: true,
-        review: true,
+        activity: { select: { name: true } },
       },
       orderBy: { createdAt: 'desc' },
       take: 5,
     }),
     prisma.favorite.findMany({
       where: { customerId: currentUser.id },
-      include: {
+      select: {
+        id: true,
+        createdAt: true,
         companion: {
-          include: {
-            city: true,
-            activities: { include: { activity: true } },
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            profilePhoto: true,
+            hourlyPrice: true,
+            averageRating: true,
+            city: { select: { name: true } },
           },
         },
       },
@@ -69,6 +84,14 @@ export default async function DashboardPage() {
               },
             }
           : {}),
+      },
+      select: {
+        id: true,
+        title: true,
+        message: true,
+        type: true,
+        isRead: true,
+        createdAt: true,
       },
       orderBy: { createdAt: 'desc' },
       take: 5,

@@ -1,6 +1,22 @@
 import { prisma } from '@/lib/db';
 
-export async function getAdminStats() {
+/**
+ * In-memory cache for admin dashboard statistics.
+ * 
+ * TTL: 10 seconds.
+ * Single-worker behavior: Shares cached stats across sequential requests within the same Node.js process.
+ * Multi-worker / Serverless behavior: Each isolated process/worker maintains its own module-level cache.
+ * Stale window: Max 10 seconds across separate worker instances; bypass with getAdminStats(true).
+ */
+let cachedStats: { data: any; expiresAt: number } | null = null;
+const STATS_CACHE_TTL_MS = 10000; // 10 seconds TTL
+
+export async function getAdminStats(forceRefresh = false) {
+  const nowMs = Date.now();
+  if (!forceRefresh && cachedStats && cachedStats.expiresAt > nowMs) {
+    return cachedStats.data;
+  }
+
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const startOfWeek = new Date(now);
@@ -192,7 +208,7 @@ export async function getAdminStats() {
     });
   }
 
-  return {
+  const result = {
     users: {
       total: totalUsersCount,
       today: newUsersToday,
@@ -234,5 +250,12 @@ export async function getAdminStats() {
     },
     trendSeries,
   };
+
+  cachedStats = {
+    data: result,
+    expiresAt: nowMs + STATS_CACHE_TTL_MS,
+  };
+
+  return result;
 }
 

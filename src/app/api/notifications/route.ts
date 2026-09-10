@@ -2,26 +2,48 @@ import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const user = await requireAuth();
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
 
-    const notifications = await prisma.notification.findMany({
-      where: {
-        userId: user.id,
-        ...(user.isRegistrationFeePaid
-          ? {
-              NOT: {
-                title: 'Welcome to Companion Marketplace!',
-              },
-            }
-          : {}),
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 30,
-    });
+    const where: any = {
+      userId: user.id,
+      ...(user.isRegistrationFeePaid
+        ? {
+            NOT: {
+              title: 'Welcome to Companion Marketplace!',
+            },
+          }
+        : {}),
+    };
 
-    return NextResponse.json({ notifications });
+    const [notifications, unreadCount] = await Promise.all([
+      prisma.notification.findMany({
+        where,
+        select: {
+          id: true,
+          userId: true,
+          title: true,
+          message: true,
+          type: true,
+          isRead: true,
+          link: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+      prisma.notification.count({
+        where: {
+          userId: user.id,
+          isRead: false,
+        },
+      }),
+    ]);
+
+    return NextResponse.json({ notifications, unreadCount });
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

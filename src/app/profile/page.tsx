@@ -40,6 +40,7 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
         review: true,
       },
       orderBy: { createdAt: 'desc' },
+      take: 20,
     }),
     prisma.favorite.findMany({
       where: { customerId: currentUser.id },
@@ -51,6 +52,7 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
           },
         },
       },
+      take: 20,
     }),
     prisma.notification.findMany({
       where: {
@@ -89,6 +91,7 @@ export default async function CustomerProfilePage({ searchParams }: ProfilePageP
         },
       },
       orderBy: { createdAt: 'desc' },
+      take: 20,
     }),
     prisma.conversation.findMany({
       where: { customerId: currentUser.id },

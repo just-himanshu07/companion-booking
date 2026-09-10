@@ -129,6 +129,8 @@ model CompanionProfile {
   @@index([averageRating])
   @@index([createdAt])
   @@index([verificationStatus, createdAt])
+  @@index([verificationStatus, isFeatured, averageRating])
+  @@index([verificationStatus, cityId, hourlyPrice])
 }
 
 model CompanionActivity {
@@ -204,6 +206,8 @@ model Booking {
   @@index([date])
   @@index([createdAt])
   @@index([status, createdAt])
+  @@index([customerId, status, createdAt])
+  @@index([companionId, status, createdAt])
 }
 
 model Payment {
@@ -275,6 +279,8 @@ model Conversation {
   messages        Message[]
 
   @@unique([customerId, companionUserId])
+  @@index([customerId, lastMessageAt])
+  @@index([companionUserId, lastMessageAt])
 }
 
 model Message {
@@ -289,6 +295,8 @@ model Message {
   sender         User         @relation(fields: [senderId], references: [id])
 
   @@index([conversationId])
+  @@index([conversationId, createdAt])
+  @@index([conversationId, isRead])
 }
 
 model Notification {
@@ -303,6 +311,7 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([userId, isRead, createdAt])
 }
 
 model Report {

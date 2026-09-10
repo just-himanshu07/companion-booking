@@ -11,7 +11,12 @@ export async function GET() {
       where: {
         OR: [{ customerId: user.id }, { companionUserId: user.id }],
       },
-      include: {
+      select: {
+        id: true,
+        customerId: true,
+        companionUserId: true,
+        lastMessageAt: true,
+        createdAt: true,
         customer: {
           select: {
             id: true,
@@ -29,35 +34,49 @@ export async function GET() {
         messages: {
           take: 1,
           orderBy: { createdAt: 'desc' },
+          select: { id: true, text: true, createdAt: true },
         },
       },
       orderBy: { lastMessageAt: 'desc' },
     });
 
-    const confirmedConversations = [];
-    for (const conv of rawConversations) {
-      const { isConfirmed, booking } = await verifyConfirmedBookingBetweenUsers(
-        conv.customerId,
-        conv.companionUserId
-      );
+    let confirmedConversations: any[] = [];
 
-      if (isConfirmed && booking) {
-        // Attach the primary/latest booking context for sidebar display badge
-        const latestBooking = await prisma.booking.findFirst({
-          where: {
-            customerId: conv.customerId,
-            companion: { userId: conv.companionUserId },
-            status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
-          },
-          include: { activity: { select: { name: true } } },
-          orderBy: { createdAt: 'desc' },
-        });
+    if (rawConversations.length > 0) {
+      const pairFilters = rawConversations.map((c) => ({
+        customerId: c.customerId,
+        companion: { userId: c.companionUserId },
+      }));
 
-        confirmedConversations.push({
-          ...conv,
-          booking: latestBooking,
-        });
+      const confirmedBookings = await prisma.booking.findMany({
+        where: {
+          OR: pairFilters,
+          status: { in: ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'] },
+        },
+        select: {
+          id: true,
+          customerId: true,
+          companion: { select: { userId: true } },
+          activity: { select: { name: true } },
+          createdAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const bookingMap = new Map<string, any>();
+      for (const b of confirmedBookings) {
+        const key = `${b.customerId}:${b.companion.userId}`;
+        if (!bookingMap.has(key)) {
+          bookingMap.set(key, b);
+        }
       }
+
+      confirmedConversations = rawConversations
+        .filter((c) => bookingMap.has(`${c.customerId}:${c.companionUserId}`))
+        .map((c) => ({
+          ...c,
+          booking: bookingMap.get(`${c.customerId}:${c.companionUserId}`),
+        }));
     }
 
     return NextResponse.json({ conversations: confirmedConversations });

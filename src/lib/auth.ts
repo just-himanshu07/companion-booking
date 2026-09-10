@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 import { prisma } from './db';
 import { Role, AccountStatus } from '@prisma/client';
 
@@ -26,7 +27,11 @@ export function verifyToken(token: string): JwtPayload | null {
   }
 }
 
-export async function getSessionUser() {
+/**
+ * Request-memoized lightweight session lookup for authentication & authorization checks.
+ * Avoids joining customer & companion profile tables unless full profile context is required.
+ */
+export const getMinimalSessionUser = cache(async () => {
   try {
     const cookieStore = cookies();
     const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
@@ -38,12 +43,69 @@ export async function getSessionUser() {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        accountStatus: true,
+        isRegistrationFeePaid: true,
+        isEmailVerified: true,
+        isPhoneVerified: true,
+      },
+    });
+
+    return user;
+  } catch (err) {
+    return null;
+  }
+});
+
+/**
+ * Request-memoized full session user lookup with profile context.
+ * Uses React.cache to guarantee 0 duplicate DB queries per HTTP request lifecycle.
+ */
+export const getSessionUser = cache(async () => {
+  try {
+    const cookieStore = cookies();
+    const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
+
+    if (!token) return null;
+
+    const payload = verifyToken(token);
+    if (!payload?.userId) return null;
+
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        accountStatus: true,
+        isRegistrationFeePaid: true,
+        isEmailVerified: true,
+        isPhoneVerified: true,
         customerProfile: true,
         companionProfile: {
-          include: {
-            city: true,
-            activities: true,
+          select: {
+            id: true,
+            userId: true,
+            username: true,
+            displayName: true,
+            fullName: true,
+            age: true,
+            gender: true,
+            cityId: true,
+            bio: true,
+            languages: true,
+            interests: true,
+            gallery: true,
+            profilePhoto: true,
+            verificationStatus: true,
+            hourlyPrice: true,
+            averageRating: true,
+            totalReviews: true,
+            city: { select: { id: true, name: true } },
+            activities: { select: { activityId: true, activity: { select: { id: true, name: true } } } },
           },
         },
       },
@@ -65,7 +127,7 @@ export async function getSessionUser() {
   } catch (err) {
     return null;
   }
-}
+});
 
 export function setAuthCookie(token: string) {
   const cookieStore = cookies();
@@ -93,6 +155,14 @@ export async function requireAuth() {
   return user;
 }
 
+export async function requireMinimalAuth() {
+  const user = await getMinimalSessionUser();
+  if (!user) {
+    throw new Error('UNAUTHORIZED');
+  }
+  return user;
+}
+
 export async function requireVerifiedAuth() {
   const user = await requireAuth();
   if (!user.isEmailVerified || user.accountStatus !== 'ACTIVE') {
@@ -102,7 +172,7 @@ export async function requireVerifiedAuth() {
 }
 
 export async function requireRole(allowedRoles: Role[]) {
-  const user = await requireAuth();
+  const user = await requireMinimalAuth();
   if (!allowedRoles.includes(user.role)) {
     throw new Error('FORBIDDEN');
   }

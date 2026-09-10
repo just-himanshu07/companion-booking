@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server';
 import { requireRole } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 
-export async function GET() {
+export async function GET(req: Request) {
   const startTime = Date.now();
   try {
     await requireRole(['ADMIN']);
+    const { searchParams } = new URL(req.url);
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const perCategoryTake = Math.min(10, Math.ceil(limit / 2));
 
     const [
       recentUsers,
@@ -16,7 +19,7 @@ export async function GET() {
     ] = await Promise.all([
       prisma.user.findMany({
         orderBy: { createdAt: 'desc' },
-        take: 5,
+        take: perCategoryTake,
         select: {
           id: true,
           email: true,
@@ -29,7 +32,7 @@ export async function GET() {
       prisma.payment.findMany({
         where: { status: 'SUCCESS' },
         orderBy: { createdAt: 'desc' },
-        take: 5,
+        take: perCategoryTake,
         select: {
           id: true,
           paymentNumber: true,
@@ -41,7 +44,7 @@ export async function GET() {
       }),
       prisma.booking.findMany({
         orderBy: { createdAt: 'desc' },
-        take: 5,
+        take: perCategoryTake,
         select: {
           id: true,
           bookingNumber: true,
@@ -54,7 +57,7 @@ export async function GET() {
       }),
       prisma.report.findMany({
         orderBy: { createdAt: 'desc' },
-        take: 5,
+        take: perCategoryTake,
         select: {
           id: true,
           reason: true,
@@ -65,7 +68,7 @@ export async function GET() {
       }),
       prisma.auditLog.findMany({
         orderBy: { createdAt: 'desc' },
-        take: 5,
+        take: perCategoryTake,
         select: {
           id: true,
           action: true,
@@ -139,7 +142,7 @@ export async function GET() {
 
     const duration = Date.now() - startTime;
     return NextResponse.json(
-      { activities: activities.slice(0, 15), queryDurationMs: duration },
+      { activities: activities.slice(0, limit), queryDurationMs: duration },
       { headers: { 'Cache-Control': 'no-store, max-age=0' } }
     );
   } catch (error: any) {
