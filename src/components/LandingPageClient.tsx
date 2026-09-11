@@ -406,7 +406,7 @@ export function FAQSection() {
     },
     {
       q: 'What does the ₹399 registration fee cover?',
-      a: 'The ₹399 one-time registration fee covers platform onboarding, 18+ age verification, identity document checks, and lifelong access to discover companions on Paireva.'
+      a: 'A one-time ₹399 registration fee is charged to create and activate your Paireva account. This covers account onboarding, profile verification, safety checks, and access to the Paireva platform. Companion booking charges, if applicable, are separate.'
     },
     {
       q: 'Are companion booking charges separate?',

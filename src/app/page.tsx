@@ -376,10 +376,10 @@ export default async function HomePage() {
                   <div className="pt-2">
                     <div className="inline-block bg-white border border-[#F47B8F]/30 p-4 rounded-2xl shadow-sm max-w-lg">
                       <span className="text-xs font-black text-[#6D315D] uppercase tracking-wider block">
-                        ₹399 One-Time Platform Registration
+                        ₹399 ONE-TIME PLATFORM REGISTRATION
                       </span>
                       <span className="text-[11px] text-[#756A70] block mt-1 leading-snug font-medium">
-                        Platform registration fee. Companion/booking charges, where applicable, are separate.
+                        A one-time ₹399 registration fee is charged to create and activate your Paireva account. This covers account onboarding, profile verification, safety checks, and access to the Paireva platform. Companion booking charges, if applicable, are separate.
                       </span>
                     </div>
                   </div>
@@ -654,7 +654,7 @@ export default async function HomePage() {
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-5xl sm:text-6xl font-black text-[#6D315D]">₹399</span>
                   </div>
-                  <span className="text-sm font-extrabold text-[#E94B83] block">One-Time Platform Registration</span>
+                  <span className="text-sm font-extrabold text-[#E94B83] block">₹399 ONE-TIME PLATFORM REGISTRATION</span>
 
                   <div className="space-y-3 text-xs text-[#292126] text-left pt-4 border-t border-slate-100 font-bold">
                     <div className="flex items-center gap-2.5">
@@ -684,8 +684,8 @@ export default async function HomePage() {
                     </Link>
                   </div>
 
-                  <p className="text-[11px] text-[#756A70] leading-relaxed border-t border-slate-100 pt-4 font-medium">
-                    Important: ₹399 is the platform registration fee. Companion or booking charges, where applicable, are separate.
+                  <p className="text-xs text-[#756A70] leading-relaxed border-t border-slate-100 pt-4 font-medium">
+                    A one-time ₹399 registration fee is charged to create and activate your Paireva account. This covers account onboarding, profile verification, safety checks, and access to the Paireva platform. Companion booking charges, if applicable, are separate.
                   </p>
                 </div>
               </div>
