@@ -22,6 +22,10 @@ export default async function MessagesPage({ searchParams }: MessagesPageProps) 
     redirect('/login');
   }
 
+  if (currentUser.role === 'CUSTOMER' && currentUser.accountStatus !== 'ACTIVE') {
+    redirect('/dashboard?locked=messages');
+  }
+
   const rawConversations = await prisma.conversation.findMany({
     where: {
       OR: [{ customerId: currentUser.id }, { companionUserId: currentUser.id }],

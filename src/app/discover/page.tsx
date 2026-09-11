@@ -21,6 +21,10 @@ export default async function DiscoverPage() {
     redirect('/login?redirectTo=/discover');
   }
 
+  if (currentUser.role === 'CUSTOMER' && currentUser.accountStatus !== 'ACTIVE') {
+    redirect('/dashboard?locked=discover');
+  }
+
   // Automatic gender filter preference for logged-in customer
   const genderWhereClause: any = { verificationStatus: 'VERIFIED' };
   if (currentUser?.customerProfile?.gender) {

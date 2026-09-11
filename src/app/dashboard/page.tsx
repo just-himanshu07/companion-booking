@@ -7,14 +7,79 @@ import Footer from '@/components/Footer';
 import CompanionCard from '@/components/CompanionCard';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { ShieldCheck, Calendar, Heart, Bell, User, MessageSquare, Sparkles, ArrowRight, Search, Clock, CheckCircle2 } from 'lucide-react';
+import {
+  ShieldCheck,
+  Calendar,
+  Heart,
+  Bell,
+  User,
+  MessageSquare,
+  Sparkles,
+  ArrowRight,
+  Search,
+  Clock,
+  CheckCircle2,
+  Lock,
+  ShieldAlert,
+} from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Dashboard — Paireva',
   description: 'Manage your Paireva customer account, companion bookings, favorites, and messages.',
 };
 
-export default async function DashboardPage() {
+interface DashboardPageProps {
+  searchParams?: {
+    locked?: string;
+  };
+}
+
+const DUMMY_LOCKED_CARDS = [
+  {
+    id: 'lock-card-1',
+    username: 'candidate_1',
+    displayName: 'Verified Candidate',
+    age: 24,
+    gender: 'Female',
+    hourlyPrice: 1500,
+    profilePhoto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    verificationStatus: 'VERIFIED',
+    averageRating: 4.9,
+    totalReviews: 12,
+    city: { name: 'Protected Location' },
+    activities: [{ activity: { name: 'Dining & Events' } }],
+  },
+  {
+    id: 'lock-card-2',
+    username: 'candidate_2',
+    displayName: 'Verified Candidate',
+    age: 23,
+    gender: 'Female',
+    hourlyPrice: 1800,
+    profilePhoto: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    verificationStatus: 'VERIFIED',
+    averageRating: 4.8,
+    totalReviews: 8,
+    city: { name: 'Protected Location' },
+    activities: [{ activity: { name: 'Coffee & Outings' } }],
+  },
+  {
+    id: 'lock-card-3',
+    username: 'candidate_3',
+    displayName: 'Verified Candidate',
+    age: 25,
+    gender: 'Female',
+    hourlyPrice: 2000,
+    profilePhoto: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80',
+    verificationStatus: 'VERIFIED',
+    averageRating: 5.0,
+    totalReviews: 15,
+    city: { name: 'Protected Location' },
+    activities: [{ activity: { name: 'Concerts & Shows' } }],
+  },
+];
+
+export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const currentUser = await getSessionUser();
 
   if (!currentUser) {
@@ -30,6 +95,10 @@ export default async function DashboardPage() {
   }
 
   const userName = currentUser.customerProfile?.name || currentUser.email.split('@')[0];
+  const isAccountActive = currentUser.accountStatus === 'ACTIVE';
+  const isUnderReview = currentUser.accountStatus === 'UNDER_REVIEW';
+  const isRejected = currentUser.accountStatus === 'REJECTED';
+  const isPendingIdentity = currentUser.accountStatus === 'PENDING_IDENTITY_VERIFICATION';
 
   const [bookings, favorites, notifications] = await Promise.all([
     prisma.booking.findMany({
@@ -120,13 +189,23 @@ export default async function DashboardPage() {
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <Link
-                href="/companions"
-                className="bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold text-xs px-6 py-3.5 rounded-2xl shadow-md shadow-[#E94B83]/20 transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-95 cursor-pointer"
-              >
-                <Search className="w-4 h-4" />
-                Find a Companion →
-              </Link>
+              {isAccountActive ? (
+                <Link
+                  href="/companions"
+                  className="bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold text-xs px-6 py-3.5 rounded-2xl shadow-md shadow-[#E94B83]/20 transition-all flex items-center gap-2 hover:scale-[1.02] active:scale-95 cursor-pointer"
+                >
+                  <Search className="w-4 h-4" />
+                  Find a Companion →
+                </Link>
+              ) : (
+                <button
+                  disabled
+                  className="bg-slate-200 text-slate-500 font-extrabold text-xs px-6 py-3.5 rounded-2xl flex items-center gap-2 cursor-not-allowed opacity-80"
+                >
+                  <Lock className="w-4 h-4 text-amber-600" />
+                  Marketplace Locked
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -161,7 +240,7 @@ export default async function DashboardPage() {
         )}
 
         {/* Identity Verification Status Alert Banners */}
-        {currentUser.isRegistrationFeePaid && currentUser.accountStatus === 'UNDER_REVIEW' && (
+        {currentUser.isRegistrationFeePaid && isUnderReview && (
           <div className="bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-3">
             <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-extrabold px-3.5 py-1 rounded-full">
               <Clock className="w-4 h-4 text-amber-200" />
@@ -174,20 +253,20 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {currentUser.isRegistrationFeePaid && currentUser.accountStatus === 'REJECTED' && (
+        {currentUser.isRegistrationFeePaid && isRejected && (
           <div className="bg-gradient-to-r from-rose-700 via-rose-600 to-rose-700 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-3">
             <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-extrabold px-3.5 py-1 rounded-full">
-              <ShieldCheck className="w-4 h-4 text-rose-200" />
+              <ShieldAlert className="w-4 h-4 text-rose-200" />
               <span>Identity Verification Rejected</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-extrabold text-white">Verification Resubmission Required</h2>
             <p className="text-xs sm:text-sm text-white/90 font-medium max-w-2xl leading-relaxed">
-              Your identity verification documents were rejected. Please submit clear, un-cropped government ID documents and a live selfie to re-verify.
+              Reason: {currentUser.identityVerification?.rejectionReason || 'Uploaded ID document or selfie was unclear.'}
             </p>
             <div className="pt-2">
               <Link
                 href="/identity-verification"
-                className="inline-flex items-center gap-2 bg-white text-rose-700 font-extrabold text-xs px-6 py-3 rounded-2xl shadow-lg cursor-pointer"
+                className="inline-flex items-center gap-2 bg-white text-rose-700 font-extrabold text-xs px-6 py-3 rounded-2xl shadow-lg cursor-pointer hover:bg-slate-100 transition-colors"
               >
                 Resubmit Identity Verification →
               </Link>
@@ -195,7 +274,7 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {currentUser.isRegistrationFeePaid && currentUser.accountStatus === 'PENDING_IDENTITY_VERIFICATION' && (
+        {currentUser.isRegistrationFeePaid && isPendingIdentity && (
           <div className="bg-gradient-to-r from-purple-700 via-brand-600 to-purple-700 text-white p-6 sm:p-8 rounded-3xl shadow-xl space-y-3">
             <div className="inline-flex items-center gap-2 bg-white/20 text-white text-xs font-extrabold px-3.5 py-1 rounded-full">
               <ShieldCheck className="w-4 h-4 text-purple-200" />
@@ -208,7 +287,7 @@ export default async function DashboardPage() {
             <div className="pt-2">
               <Link
                 href="/identity-verification"
-                className="inline-flex items-center gap-2 bg-white text-brand-700 font-extrabold text-xs px-6 py-3 rounded-2xl shadow-lg cursor-pointer"
+                className="inline-flex items-center gap-2 bg-white text-brand-700 font-extrabold text-xs px-6 py-3 rounded-2xl shadow-lg cursor-pointer hover:bg-slate-100 transition-colors"
               >
                 Verify Identity Now →
               </Link>
@@ -216,6 +295,77 @@ export default async function DashboardPage() {
           </div>
         )}
 
+        {/* MARKETPLACE SECTION (BLURRED & LOCKED FOR UNAPPROVED ACCOUNTS) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-[#6D315D] flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#E94B83]" />
+              Featured Verified Companions
+            </h2>
+            {isAccountActive && (
+              <Link href="/companions" className="text-xs font-bold text-[#E94B83] hover:underline">
+                Explore All →
+              </Link>
+            )}
+          </div>
+
+          <div className="relative rounded-3xl overflow-hidden p-2">
+            {/* Companion Cards Container (Blurred for unapproved accounts) */}
+            <div
+              className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 transition-all duration-300 ${
+                !isAccountActive ? 'filter blur-md select-none pointer-events-none opacity-60' : ''
+              }`}
+            >
+              {DUMMY_LOCKED_CARDS.map((comp) => (
+                <CompanionCard key={comp.id} companion={comp} isLocked={!isAccountActive} />
+              ))}
+            </div>
+
+            {/* Lock Overlay Card over Marketplace */}
+            {!isAccountActive && (
+              <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 bg-slate-950/40 backdrop-blur-sm rounded-3xl z-20">
+                <div className="max-w-md w-full bg-white/95 backdrop-blur-xl border border-[#F47B8F]/30 p-6 sm:p-8 rounded-3xl shadow-2xl text-center space-y-5 animate-in zoom-in-95 duration-200">
+                  <div className="w-14 h-14 bg-[#FFF0F3] border border-[#F47B8F]/30 text-[#E94B83] rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+                    <Lock className="w-7 h-7" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <span className="inline-flex items-center gap-1.5 bg-[#FFF0F3] text-[#6D315D] text-[10px] font-extrabold px-3 py-1 rounded-full border border-[#F47B8F]/30 uppercase tracking-wider">
+                      <ShieldAlert className="w-3.5 h-3.5 text-[#E94B83]" />
+                      Marketplace Locked
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-black text-[#292126]">
+                      {isUnderReview
+                        ? 'Your account is under verification'
+                        : isRejected
+                        ? 'Identity Verification Rejected'
+                        : 'Identity Verification Required'}
+                    </h3>
+                    <p className="text-xs text-[#756A70] font-medium leading-relaxed max-w-sm mx-auto">
+                      {isUnderReview
+                        ? 'Complete verification approval to access companions, bookings, and marketplace features. Our admin team is reviewing your identity documents and selfie.'
+                        : isRejected
+                        ? 'Your identity verification was rejected. Please resubmit clear government ID documents and live selfie.'
+                        : 'Complete identity verification approval to unlock companion listings, instant bookings, and messaging.'}
+                    </p>
+                  </div>
+
+                  {(isRejected || isPendingIdentity) && (
+                    <div className="pt-1">
+                      <Link
+                        href="/identity-verification"
+                        className="inline-flex items-center justify-center gap-2 w-full bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold py-3.5 rounded-2xl shadow-lg shadow-[#E94B83]/20 transition-all text-xs cursor-pointer"
+                      >
+                        <span>{isRejected ? 'Resubmit Verification' : 'Verify Identity Now'}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* Quick Overview Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -266,7 +416,7 @@ export default async function DashboardPage() {
               <User className="w-5 h-5 text-[#E94B83]" />
             </div>
             <div className="text-2xl font-black text-[#292126]">
-              {currentUser.isRegistrationFeePaid ? 'Active' : 'Pending'}
+              {currentUser.accountStatus === 'ACTIVE' ? 'Active' : 'Unapproved'}
             </div>
             <div className="text-xs font-bold text-[#6D315D] flex items-center justify-between">
               Account Profile <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -298,12 +448,21 @@ export default async function DashboardPage() {
                   Explore available companions in your city for coffee dates, dining, or movies.
                 </p>
                 <div className="pt-2">
-                  <Link
-                    href="/companions"
-                    className="inline-flex items-center gap-2 bg-[#E94B83] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-sm"
-                  >
-                    Browse Companions
-                  </Link>
+                  {isAccountActive ? (
+                    <Link
+                      href="/companions"
+                      className="inline-flex items-center gap-2 bg-[#E94B83] text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-sm"
+                    >
+                      Browse Companions
+                    </Link>
+                  ) : (
+                    <button
+                      disabled
+                      className="inline-flex items-center gap-2 bg-slate-200 text-slate-500 font-extrabold text-xs px-5 py-2.5 rounded-xl cursor-not-allowed opacity-80"
+                    >
+                      Browse Companions (Locked)
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
@@ -381,4 +540,3 @@ export default async function DashboardPage() {
     </div>
   );
 }
-

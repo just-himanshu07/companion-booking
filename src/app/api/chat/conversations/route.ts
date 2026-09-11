@@ -7,7 +7,6 @@ export async function GET() {
   try {
     const user = await requireActiveAccount();
 
-
     const rawConversations = await prisma.conversation.findMany({
       where: {
         OR: [{ customerId: user.id }, { companionUserId: user.id }],
@@ -85,6 +84,18 @@ export async function GET() {
     if (error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    if (
+      error.message === 'ACCOUNT_UNDER_REVIEW' ||
+      error.message === 'IDENTITY_VERIFICATION_REQUIRED' ||
+      error.message === 'KYC_REJECTED' ||
+      error.message === 'ACCOUNT_NOT_ACTIVE' ||
+      error.message === 'PAYMENT_REQUIRED'
+    ) {
+      return NextResponse.json(
+        { error: 'ACCOUNT_NOT_ACTIVE', message: 'You will access in-app messaging after your account verification is approved.' },
+        { status: 403 }
+      );
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -145,6 +156,18 @@ export async function POST(req: Request) {
   } catch (error: any) {
     if (error.message === 'UNAUTHORIZED') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (
+      error.message === 'ACCOUNT_UNDER_REVIEW' ||
+      error.message === 'IDENTITY_VERIFICATION_REQUIRED' ||
+      error.message === 'KYC_REJECTED' ||
+      error.message === 'ACCOUNT_NOT_ACTIVE' ||
+      error.message === 'PAYMENT_REQUIRED'
+    ) {
+      return NextResponse.json(
+        { error: 'ACCOUNT_NOT_ACTIVE', message: 'You will access in-app messaging after your account verification is approved.' },
+        { status: 403 }
+      );
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

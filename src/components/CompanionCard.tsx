@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ShieldCheck, Star, MapPin, Heart, Calendar } from 'lucide-react';
+import { ShieldCheck, Star, MapPin, Heart, Calendar, Lock } from 'lucide-react';
 
 interface CompanionCardProps {
   companion: {
@@ -21,14 +21,27 @@ interface CompanionCardProps {
     activities: { activity: { name: string } }[];
   };
   isFavoriteInitial?: boolean;
+  isLocked?: boolean;
+  onLockedClick?: () => void;
 }
 
-export default function CompanionCard({ companion, isFavoriteInitial = false }: CompanionCardProps) {
+export default function CompanionCard({
+  companion,
+  isFavoriteInitial = false,
+  isLocked = false,
+  onLockedClick,
+}: CompanionCardProps) {
   const [isFavorite, setIsFavorite] = useState(isFavoriteInitial);
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (isLocked && onLockedClick) {
+      onLockedClick();
+      return;
+    }
+
     setIsFavorite(!isFavorite);
     try {
       await fetch('/api/favorites', {
@@ -41,25 +54,40 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (isLocked && onLockedClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      onLockedClick();
+    }
+  };
+
   const isVerified = companion.verificationStatus === 'VERIFIED';
   const displayPhoto = companion.profilePhoto || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
   const roleLabel = companion.gender?.toLowerCase() === 'male' ? 'Rent Boyfriend' : companion.gender?.toLowerCase() === 'female' ? 'Rent Girlfriend' : 'Companion';
 
   return (
-    <div className="group bg-white rounded-3xl border border-[#F47B8F]/20 hover:border-[#E94B83]/50 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col hover:-translate-y-1">
+    <div
+      onClick={handleCardClick}
+      className={`group bg-white rounded-3xl border border-[#F47B8F]/20 shadow-md transition-all duration-300 overflow-hidden flex flex-col ${
+        isLocked
+          ? 'cursor-pointer hover:border-amber-400/60'
+          : 'hover:border-[#E94B83]/50 hover:shadow-xl hover:-translate-y-1'
+      }`}
+    >
       {/* Image Container */}
       <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
         <Image
           src={displayPhoto}
           alt={companion.displayName}
           fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
+          className={`object-cover transition-transform duration-500 ${isLocked ? 'filter blur-sm scale-105' : 'group-hover:scale-105'}`}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#292126]/60 via-transparent to-transparent" />
 
         {/* Top Badges */}
-        <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5">
+        <div className="absolute top-3 left-3 flex flex-wrap items-center gap-1.5 z-10">
           {isVerified && (
             <span className="inline-flex items-center gap-1 bg-emerald-600/90 text-white text-[11px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md shadow-sm">
               <ShieldCheck className="w-3.5 h-3.5" />
@@ -74,7 +102,7 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
         {/* Favorite Button */}
         <button
           onClick={toggleFavorite}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-[#292126] flex items-center justify-center backdrop-blur-md shadow-sm transition-transform active:scale-95"
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-[#292126] flex items-center justify-center backdrop-blur-md shadow-sm transition-transform active:scale-95 z-10 cursor-pointer"
           title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
         >
           <Heart
@@ -85,7 +113,7 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
         </button>
 
         {/* Rating and City Overlay */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs font-bold">
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-xs font-bold z-10">
           <div className="flex items-center gap-1 bg-black/50 px-2.5 py-1 rounded-full backdrop-blur-sm">
             <MapPin className="w-3.5 h-3.5 text-[#F47B8F]" />
             <span className="truncate">{companion.city.name}</span>
@@ -135,13 +163,23 @@ export default function CompanionCard({ companion, isFavoriteInitial = false }: 
         </div>
 
         {/* Action Button */}
-        <Link
-          href={`/companions/${companion.username}`}
-          className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-[#E94B83] hover:bg-[#D43770] text-white text-xs font-extrabold py-3 rounded-xl transition-all shadow-md shadow-[#E94B83]/20"
-        >
-          <Calendar className="w-4 h-4" />
-          Ask Availability →
-        </Link>
+        {isLocked ? (
+          <button
+            onClick={handleCardClick}
+            className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-extrabold py-3 rounded-xl transition-all shadow-md cursor-pointer"
+          >
+            <Lock className="w-4 h-4 text-amber-400" />
+            <span>Available After Verification</span>
+          </button>
+        ) : (
+          <Link
+            href={`/companions/${companion.username}`}
+            className="w-full mt-2 inline-flex items-center justify-center gap-2 bg-[#E94B83] hover:bg-[#D43770] text-white text-xs font-extrabold py-3 rounded-xl transition-all shadow-md shadow-[#E94B83]/20"
+          >
+            <Calendar className="w-4 h-4" />
+            Ask Availability →
+          </Link>
+        )}
       </div>
     </div>
   );

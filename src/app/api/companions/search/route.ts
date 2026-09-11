@@ -2,6 +2,51 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 
+const DUMMY_PLACEHOLDER_COMPANIONS = [
+  {
+    id: 'placeholder-1',
+    username: 'verified_candidate_1',
+    displayName: 'Verified Candidate',
+    age: 24,
+    gender: 'Female',
+    hourlyPrice: 1500,
+    profilePhoto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+    verificationStatus: 'VERIFIED',
+    averageRating: 4.9,
+    totalReviews: 12,
+    city: { id: 'c1', name: 'Location Hidden', slug: 'location-hidden' },
+    activities: [{ activity: { id: 'a1', name: 'Coffee & Outings', slug: 'coffee-outings', icon: '☕' } }],
+  },
+  {
+    id: 'placeholder-2',
+    username: 'verified_candidate_2',
+    displayName: 'Verified Candidate',
+    age: 23,
+    gender: 'Female',
+    hourlyPrice: 1800,
+    profilePhoto: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    verificationStatus: 'VERIFIED',
+    averageRating: 4.8,
+    totalReviews: 8,
+    city: { id: 'c2', name: 'Location Hidden', slug: 'location-hidden' },
+    activities: [{ activity: { id: 'a2', name: 'Dining & Events', slug: 'dining-events', icon: '🍽️' } }],
+  },
+  {
+    id: 'placeholder-3',
+    username: 'verified_candidate_3',
+    displayName: 'Verified Candidate',
+    age: 25,
+    gender: 'Female',
+    hourlyPrice: 2000,
+    profilePhoto: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=400&q=80',
+    verificationStatus: 'VERIFIED',
+    averageRating: 5.0,
+    totalReviews: 15,
+    city: { id: 'c3', name: 'Location Hidden', slug: 'location-hidden' },
+    activities: [{ activity: { id: 'a3', name: 'Concerts & Shows', slug: 'concerts-shows', icon: '🎵' } }],
+  },
+];
+
 export async function GET(req: Request) {
   try {
     const user = await getSessionUser();
@@ -13,6 +58,30 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
+    const isPlaceholderRequest = searchParams.get('placeholder') === 'true';
+
+    // SERVER-SIDE VERIFICATION AUTHORIZATION GATE:
+    // Non-ACTIVE customers cannot fetch real database companion profiles.
+    if (user.role === 'CUSTOMER' && user.accountStatus !== 'ACTIVE') {
+      if (isPlaceholderRequest) {
+        return NextResponse.json({
+          companions: DUMMY_PLACEHOLDER_COMPANIONS,
+          pagination: { page: 1, limit: 3, total: 3, totalPages: 1 },
+          isLocked: true,
+          accountStatus: user.accountStatus,
+        });
+      }
+
+      return NextResponse.json(
+        {
+          error: 'ACCOUNT_NOT_ACTIVE',
+          message: 'You will access Discover and companion listings after your account verification is approved.',
+          accountStatus: user.accountStatus,
+        },
+        { status: 403 }
+      );
+    }
+
     const city = searchParams.get('city');
     const activity = searchParams.get('activity');
     const date = searchParams.get('date');
@@ -30,9 +99,7 @@ export async function GET(req: Request) {
       verificationStatus: 'VERIFIED',
     };
 
-    // AUTOMATIC OPPOSITE GENDER MATCHING RULE:
-    // If a male customer searches -> show female candidates
-    // If a female customer searches -> show male candidates
+    // AUTOMATIC OPPOSITE GENDER MATCHING RULE
     if (explicitGender) {
       whereClause.gender = { equals: explicitGender, mode: 'insensitive' };
     } else if (user.customerProfile?.gender) {

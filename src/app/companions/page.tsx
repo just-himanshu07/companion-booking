@@ -31,6 +31,10 @@ export default async function CompanionsPage({ searchParams }: CompanionsPagePro
     redirect('/login?redirectTo=/companions');
   }
 
+  if (currentUser.role === 'CUSTOMER' && currentUser.accountStatus !== 'ACTIVE') {
+    redirect('/dashboard?locked=companions');
+  }
+
   // Companions cannot book other companions
   if (currentUser.role === 'COMPANION') {
     redirect('/companion-dashboard');

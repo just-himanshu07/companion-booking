@@ -26,6 +26,10 @@ export default async function CompanionProfilePage({ params, searchParams }: Com
     redirect(`/login?redirectTo=/companions/${params.username}`);
   }
 
+  if (currentUser.role === 'CUSTOMER' && currentUser.accountStatus !== 'ACTIVE') {
+    redirect('/dashboard?locked=profile');
+  }
+
   const companion = await prisma.companionProfile.findUnique({
     where: { username: params.username },
     include: {

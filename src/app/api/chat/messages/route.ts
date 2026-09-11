@@ -16,6 +16,13 @@ export async function GET(req: Request) {
       );
     }
 
+    if (user.role === 'CUSTOMER' && user.accountStatus !== 'ACTIVE') {
+      return NextResponse.json(
+        { error: 'ACCOUNT_NOT_ACTIVE', message: 'You will access in-app messaging after your account verification is approved.' },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const conversationId = searchParams.get('conversationId');
     const since = searchParams.get('since');
@@ -202,6 +209,13 @@ export async function POST(req: Request) {
     if (user.role === 'CUSTOMER' && !user.isRegistrationFeePaid) {
       return NextResponse.json(
         { error: 'PAYMENT_REQUIRED', message: 'Complete the ₹399 registration payment to continue.' },
+        { status: 403 }
+      );
+    }
+
+    if (user.role === 'CUSTOMER' && user.accountStatus !== 'ACTIVE') {
+      return NextResponse.json(
+        { error: 'ACCOUNT_NOT_ACTIVE', message: 'You will access in-app messaging after your account verification is approved.' },
         { status: 403 }
       );
     }
