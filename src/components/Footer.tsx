@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShieldCheck, Heart, Sparkles, Lock, AlertTriangle, Instagram, Twitter, Facebook } from 'lucide-react';
+import { ShieldCheck, Sparkles, Lock, AlertTriangle, Mail } from 'lucide-react';
 
 export default function Footer() {
   const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, hashTarget: string) => {
@@ -16,6 +16,7 @@ export default function Footer() {
       }
     }
   };
+
   return (
     <footer className="bg-[#6D315D] text-white border-t border-[#F47B8F]/20 pt-14 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -26,15 +27,15 @@ export default function Footer() {
               <AlertTriangle className="w-5 h-5 text-amber-300" />
             </div>
             <div>
-              <h4 className="text-white font-extrabold text-sm">Strict Non-Sexual Policy & Code of Conduct</h4>
-              <p className="text-xs text-rose-100/80 mt-0.5 max-w-3xl leading-relaxed">
-                Paireva is a legitimate marketplace for public social activities (coffee dates, dining, movies, concerts, sightseeing, events). Sexual services, prostitution, solicitation, and harassment are strictly prohibited and result in immediate lifetime bans and legal reporting.
+              <h4 className="text-white font-extrabold text-sm">Strict Non-Sexual Policy</h4>
+              <p className="text-xs text-rose-100/80 mt-0.5 max-w-3xl leading-relaxed font-medium">
+                Paireva is strictly for non-sexual social companionship — coffee, conversations, public events, walks, and shared activities. Sexual services, escorting, prostitution, and harassment are strictly prohibited.
               </p>
             </div>
           </div>
           <Link
             href="/prohibited-services"
-            className="text-xs font-extrabold bg-[#E94B83] hover:bg-[#D43770] text-white px-4 py-2.5 rounded-xl transition-colors whitespace-nowrap shadow-sm"
+            className="text-xs font-extrabold bg-[#E94B83] hover:bg-[#D43770] text-white px-4 py-2.5 rounded-xl transition-colors whitespace-nowrap shadow-sm cursor-pointer"
           >
             Read Safety Policy
           </Link>
@@ -51,13 +52,13 @@ export default function Footer() {
                 <span className="text-xl font-extrabold text-white tracking-tight">
                   Pair<span className="text-[#F47B8F]">eva</span>
                 </span>
-                <span className="text-[9px] font-bold uppercase tracking-widest text-rose-200/80 block -mt-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-rose-200/80 block -mt-1">
                   Real People. Real Company.
                 </span>
               </div>
             </Link>
             <p className="text-xs text-rose-100/80 leading-relaxed font-medium">
-              India's premier verified companion booking marketplace for coffee dates, events, conversations, and social experiences in public settings.
+              India's premier social companionship platform connecting people for public activities, coffee dates, events, and real conversations.
             </p>
             <div className="flex items-center gap-3 text-xs text-rose-100/90 pt-1">
               <div className="flex items-center gap-1 font-semibold">
@@ -66,7 +67,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-1 font-semibold">
                 <Lock className="w-4 h-4 text-amber-300" />
-                <span>Private & Discreet</span>
+                <span>Privacy First</span>
               </div>
             </div>
           </div>
@@ -81,7 +82,7 @@ export default function Footer() {
                   onClick={(e) => handleAnchorClick(e, '/#discover')}
                   className="hover:text-white transition-colors"
                 >
-                  Discover Companions
+                  Discover
                 </Link>
               </li>
               <li>
@@ -96,7 +97,7 @@ export default function Footer() {
               <li>
                 <Link href="/safety" className="hover:text-white transition-colors flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  Safety Center
+                  Safety
                 </Link>
               </li>
               <li>
@@ -109,13 +110,22 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="hover:text-white transition-colors">
-                  Contact Support
+                <Link href="/become-a-companion" className="hover:text-white transition-colors">
+                  Become a Companion
                 </Link>
               </li>
               <li>
-                <Link href="/feedback" className="hover:text-white transition-colors">
-                  Share Feedback
+                <Link
+                  href="/#pricing"
+                  onClick={(e) => handleAnchorClick(e, '/#pricing')}
+                  className="hover:text-white transition-colors"
+                >
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white transition-colors">
+                  Contact
                 </Link>
               </li>
             </ul>
@@ -127,7 +137,7 @@ export default function Footer() {
             <ul className="space-y-2.5 text-xs font-semibold text-rose-100/90">
               <li>
                 <Link href="/terms" className="hover:text-white transition-colors">
-                  Terms & Conditions
+                  Terms &amp; Conditions
                 </Link>
               </li>
               <li>
@@ -137,7 +147,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/refund-policy" className="hover:text-white transition-colors">
-                  Refund Policy
+                  Cancellation &amp; Refund Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/prohibited-services" className="hover:text-white transition-colors">
+                  Prohibited Activities
                 </Link>
               </li>
               <li>
@@ -145,33 +160,23 @@ export default function Footer() {
                   Community Guidelines
                 </Link>
               </li>
-              <li>
-                <Link href="/prohibited-services" className="hover:text-white transition-colors">
-                  Prohibited Services Policy
-                </Link>
-              </li>
             </ul>
           </div>
 
-          {/* Cities & Social */}
+          {/* Contact Column */}
           <div>
-            <h5 className="text-white font-extrabold text-xs uppercase tracking-wider mb-4 text-rose-200">Popular Cities</h5>
-            <ul className="space-y-2 text-xs font-semibold text-rose-100/90 mb-5">
-              <li>Mumbai • Delhi NCR • Bengaluru</li>
-              <li>Goa • Pune • Hyderabad</li>
-            </ul>
-
-            <h5 className="text-white font-extrabold text-xs uppercase tracking-wider mb-3 text-rose-200">Connect With Us</h5>
-            <div className="flex items-center gap-3">
-              <a href="#" className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
-                <Instagram className="w-4 h-4" />
+            <h5 className="text-white font-extrabold text-xs uppercase tracking-wider mb-4 text-rose-200">Contact</h5>
+            <div className="space-y-3 text-xs font-semibold text-rose-100/90">
+              <a
+                href="mailto:support@paireva.fun"
+                className="flex items-center gap-2 text-rose-100 hover:text-white transition-colors bg-white/10 p-3 rounded-xl border border-white/10"
+              >
+                <Mail className="w-4 h-4 text-[#E94B83]" />
+                <span>support@paireva.fun</span>
               </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
-                <Twitter className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
-                <Facebook className="w-4 h-4" />
-              </a>
+              <p className="text-[11px] text-rose-200/70 font-medium leading-relaxed">
+                Customer Support is available 24/7 for platform inquiries and assistance.
+              </p>
             </div>
           </div>
         </div>
@@ -180,7 +185,7 @@ export default function Footer() {
         <div className="border-t border-white/15 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-rose-200/80 gap-4">
           <p>© {new Date().getFullYear()} Paireva Social Marketplace. All rights reserved. 18+ Only Platform.</p>
           <div className="flex items-center gap-1 font-medium text-rose-100">
-            Made with <Heart className="w-3.5 h-3.5 text-[#E94B83] fill-[#E94B83] inline mx-0.5" /> for Authentic Companionship
+            <span>Real people. Real company.</span>
           </div>
         </div>
       </div>

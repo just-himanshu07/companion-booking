@@ -3,6 +3,15 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { ShieldCheck, Star, MapPin, Heart, ChevronDown, ChevronUp, Sparkles, Calendar, Coffee, Music, MessageSquare, ArrowRight, UserCheck, Lock } from 'lucide-react';
+import {
+  ShieldCheck,
+  Star,
+  MapPin,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Lock,
+} from 'lucide-react';
 
 interface CompanionItem {
   id: string;
@@ -28,6 +37,7 @@ interface LandingPageClientProps {
 
 export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = false }: LandingPageClientProps) {
   const [activeTab, setActiveTab] = useState<'All' | 'Girlfriend' | 'Boyfriend' | 'Coffee' | 'Events' | 'Conversation'>('All');
+  const [activeTab, setActiveTab] = useState<string>('All');
 
   // Fallback high quality demo candidates for visual preview (always 6 total)
   const demoCompanions: CompanionItem[] = [
@@ -45,6 +55,8 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
       city: { name: 'Mumbai' },
       activities: [{ activity: { name: 'Fine Dining' } }, { activity: { name: 'Coffee & Conversation' } }, { activity: { name: 'Art Galleries' } }],
       bio: 'Culinary lover and art historian. Great companion for upscale dining, indie movies, and stimulating talks.'
+      activities: [{ activity: { name: 'Coffee & Conversation' } }, { activity: { name: 'Fine Dining' } }, { activity: { name: 'Art Galleries' } }],
+      bio: 'Culinary enthusiast and art lover. Available for cafe meetups, indie cinema, and inspiring conversations.'
     },
     {
       id: 'demo-2',
@@ -60,6 +72,8 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
       city: { name: 'Delhi NCR' },
       activities: [{ activity: { name: 'Tech Conference' } }, { activity: { name: 'Sightseeing' } }, { activity: { name: 'Coffee' } }],
       bio: 'Tech enthusiast and heritage walk lover. Great date companion for tech expos, dinners, and casual coffee.'
+      activities: [{ activity: { name: 'Coffee & Conversation' } }, { activity: { name: 'Tech Events' } }, { activity: { name: 'City Walks' } }],
+      bio: 'Tech enthusiast and heritage walk lover. Great companion for tech expos, coffee, and casual city exploration.'
     },
     {
       id: 'demo-3',
@@ -75,6 +89,8 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
       city: { name: 'Bengaluru' },
       activities: [{ activity: { name: 'Concerts & Events' } }, { activity: { name: 'Shopping' } }, { activity: { name: 'Fine Dining' } }],
       bio: 'Fashion designer based in Indiranagar. Excellent partner for live concerts, rooftop dining, and boutique shopping.'
+      activities: [{ activity: { name: 'Concerts & Events' } }, { activity: { name: 'Fine Dining' } }, { activity: { name: 'Art Galleries' } }],
+      bio: 'Design practitioner based in Indiranagar. Excellent companion for live music, dining out, and boutique exhibitions.'
     },
     {
       id: 'demo-4',
@@ -90,6 +106,8 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
       city: { name: 'Goa' },
       activities: [{ activity: { name: 'Beach Sunset Dinner' } }, { activity: { name: 'Sightseeing' } }, { activity: { name: 'Music Festivals' } }],
       bio: 'Certified travel guide and foodie. Perfect host for beachside dinners, watersports events, and coastal tours.'
+      activities: [{ activity: { name: 'City Walks' } }, { activity: { name: 'Food & Dining' } }, { activity: { name: 'Concerts & Events' } }],
+      bio: 'Travel guide and foodie. Great host for coastal walks, food tours, and cultural festivals.'
     },
     {
       id: 'demo-5',
@@ -105,6 +123,8 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
       city: { name: 'Pune' },
       activities: [{ activity: { name: 'Coffee & Conversation' } }, { activity: { name: 'Art Galleries' } }, { activity: { name: 'Movies' } }],
       bio: 'Literature student who enjoys quiet cafe conversations, book club events, and cinema screenings.'
+      activities: [{ activity: { name: 'Coffee & Conversation' } }, { activity: { name: 'Book Clubs' } }, { activity: { name: 'Movies' } }],
+      bio: 'Literature graduate who enjoys quiet cafe conversations, book club discussions, and film screenings.'
     },
     {
       id: 'demo-6',
@@ -120,10 +140,13 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
       city: { name: 'Hyderabad' },
       activities: [{ activity: { name: 'Fine Dining' } }, { activity: { name: 'Business Networking' } }, { activity: { name: 'Coffee' } }],
       bio: 'Architect with a passion for cuisine and heritage. Great companion for dinner dates and formal events.'
+      activities: [{ activity: { name: 'Food & Dining' } }, { activity: { name: 'Networking' } }, { activity: { name: 'Coffee & Conversation' } }],
+      bio: 'Architect passionate about urban design and cuisine. Excellent companion for dinner outings and public networking events.'
     }
   ];
 
   // Guarantee exactly 6 companion cards (DB candidates first, padded with demo candidates)
+  // Guarantee exactly 6 companion cards
   const rawCompanions = initialCompanions.length >= 6
     ? initialCompanions.slice(0, 6)
     : [...initialCompanions, ...demoCompanions.slice(initialCompanions.length)].slice(0, 6);
@@ -135,6 +158,7 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
         ...c,
         displayName: '••••••',
         bio: 'Register or log in to view full profile details and bio.',
+        bio: 'Create an account or log in to view full companion profile details and bio.',
         city: { name: 'City hidden' },
         username: 'locked',
       }));
@@ -147,6 +171,8 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
     if (activeTab === 'Events') return c.activities.some(a => a.activity.name.toLowerCase().includes('event') || a.activity.name.toLowerCase().includes('concert'));
     if (activeTab === 'Conversation') return c.activities.some(a => a.activity.name.toLowerCase().includes('conversation') || a.activity.name.toLowerCase().includes('talk'));
     return true;
+    const tabLower = activeTab.toLowerCase();
+    return c.activities.some((a) => a.activity.name.toLowerCase().includes(tabLower));
   });
 
   return (
@@ -157,18 +183,22 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
           <div className="inline-flex items-center gap-2 bg-[#FFF0F3] border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3">
             <Sparkles className="w-3.5 h-3.5 text-[#E94B83]" />
             <span>{isLoggedIn ? 'Companion Discovery' : 'Member Teaser Preview'}</span>
+            <span>Discover Companions</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
             Meet Your Potential Companion
+            Meet people, not profiles.
           </h2>
           <p className="text-[#756A70] text-sm sm:text-base mt-2 max-w-2xl mx-auto font-medium">
             Explore a few of the people available on Paireva.
+            Explore verified companions available for real-world social activities and shared experiences.
           </p>
         </div>
 
         {/* Filter Tabs */}
         <div className="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar">
           {(['All', 'Girlfriend', 'Boyfriend', 'Coffee', 'Events', 'Conversation'] as const).map((tab) => (
+          {(['All', 'Coffee', 'Events', 'Food', 'Activities', 'Conversation'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -179,16 +209,19 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
               }`}
             >
               {tab === 'Girlfriend' ? 'Rent Girlfriend' : tab === 'Boyfriend' ? 'Rent Boyfriend' : tab}
+              {tab === 'All' ? 'All Activities' : tab}
             </button>
           ))}
         </div>
 
         {/* Exactly 6 Companion Cards (3x2 Desktop, 2x3 Tablet, 1-2 Mobile) */}
+        {/* Companion Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCompanions.map((comp) => {
             const roleLabel = comp.gender?.toLowerCase() === 'male' ? 'Rent Boyfriend' : 'Rent Girlfriend';
 
             // LOGGED OUT VISITOR CARD (Blurred Teaser)
+            // LOGGED OUT VISITOR CARD (Discreet Preview)
             if (!isLoggedIn) {
               return (
                 <div
@@ -209,9 +242,11 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
                       <span className="inline-flex items-center gap-1.5 bg-emerald-600/90 text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm backdrop-blur-md border border-white/20">
                         <ShieldCheck className="w-3.5 h-3.5 text-white" />
                         Verified Companion
+                        Verified Profile
                       </span>
                       <span className="inline-flex items-center gap-1 bg-[#6D315D]/90 text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-sm backdrop-blur-md border border-white/20">
                         {roleLabel}
+                        Social Companion
                       </span>
                     </div>
 
@@ -220,6 +255,7 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
                       <div className="bg-black/60 backdrop-blur-md border border-white/20 px-4 py-2 rounded-2xl flex items-center gap-2 shadow-xl">
                         <Lock className="w-4 h-4 text-[#E94B83]" />
                         <span className="text-xs font-extrabold text-white">Login to View Profile</span>
+                        <span className="text-xs font-extrabold text-white">Log in to View Profile</span>
                       </div>
                     </div>
 
@@ -255,6 +291,7 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
                       <p className="text-xs text-[#756A70] line-clamp-2 leading-relaxed mb-3 font-medium bg-[#FFF0F3]/60 p-2.5 rounded-xl border border-[#F47B8F]/20 flex items-start gap-2">
                         <Lock className="w-3.5 h-3.5 text-[#E94B83] shrink-0 mt-0.5" />
                         <span>Register or log in to view full profile details and bio.</span>
+                        <span>Create an account or log in to view full companion profile details and bio.</span>
                       </p>
 
                       {/* Masked Activity Chips */}
@@ -275,6 +312,7 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
                       className="w-full inline-flex items-center justify-center gap-2 bg-[#6D315D] hover:bg-[#58264A] text-white text-xs font-extrabold py-3.5 rounded-xl shadow-md transition-all cursor-pointer hover:scale-[1.01] active:scale-95"
                     >
                       <Lock className="w-3.5 h-3.5 text-[#E94B83]" /> Login to View Profile →
+                      <Lock className="w-3.5 h-3.5 text-[#E94B83]" /> Log In to View Profile →
                     </Link>
                   </div>
                 </div>
@@ -282,6 +320,7 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
             }
 
             // LOGGED IN USER CARD (Normal Profile)
+            // LOGGED IN USER CARD
             return (
               <div
                 key={comp.id}
@@ -359,6 +398,7 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
                     className="w-full inline-flex items-center justify-center gap-2 bg-[#E94B83] hover:bg-[#D43770] text-white text-xs font-extrabold py-3 rounded-xl shadow-md shadow-[#E94B83]/20 transition-all cursor-pointer"
                   >
                     View Profile & Availability →
+                    View Profile &amp; Availability →
                   </Link>
                 </div>
               </div>
@@ -371,6 +411,19 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
           <h3 className="text-2xl font-extrabold text-[#292126] tracking-tight">
             Want to see everyone?
           </h3>
+        {/* Bottom CTA Button */}
+        <div className="mt-12 text-center">
+          <Link
+            href="/companions"
+            className="bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold px-8 py-4 rounded-2xl shadow-lg shadow-[#E94B83]/25 transition-all hover:scale-[1.02] text-sm text-center inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+          >
+            Explore Companions →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
 
           <div>
             <Link
@@ -379,13 +432,49 @@ export function CompanionDiscoverySection({ initialCompanions, isLoggedIn = fals
             >
               View All Companions →
             </Link>
+export function HowItWorksSection() {
+  return (
+    <section id="how-it-works" className="scroll-mt-24 py-20 bg-[#FFF0F3] border-b border-[#F47B8F]/20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="inline-flex items-center gap-2 bg-white border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3 shadow-sm">
+            <span>Seamless Experience</span>
           </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
+            How It Works
+          </h2>
+          <p className="text-[#756A70] text-sm mt-2 font-medium">Your 3-step journey to finding the right companion</p>
+        </div>
 
           <p className="text-xs text-[#756A70] font-semibold">
             {isLoggedIn
               ? "Explore all companion profiles, availability schedules, and instant messaging."
               : "Sign in or create an account to explore full profiles."}
           </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white p-8 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-4 hover:shadow-md transition-all">
+            <span className="text-4xl font-black text-[#6D315D] block font-serif italic">01</span>
+            <h3 className="text-lg font-extrabold text-[#292126]">Discover</h3>
+            <p className="text-xs sm:text-sm text-[#756A70] leading-relaxed font-medium">
+              Browse companion profiles and find someone who matches what you're looking for.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-4 hover:shadow-md transition-all">
+            <span className="text-4xl font-black text-[#E94B83] block font-serif italic">02</span>
+            <h3 className="text-lg font-extrabold text-[#292126]">Connect</h3>
+            <p className="text-xs sm:text-sm text-[#756A70] leading-relaxed font-medium">
+              Choose an activity, date and location that work for both people.
+            </p>
+          </div>
+
+          <div className="bg-white p-8 rounded-3xl border border-[#F47B8F]/25 shadow-sm space-y-4 hover:shadow-md transition-all">
+            <span className="text-4xl font-black text-[#6D315D] block font-serif italic">03</span>
+            <h3 className="text-lg font-extrabold text-[#292126]">Meet</h3>
+            <p className="text-xs sm:text-sm text-[#756A70] leading-relaxed font-medium">
+              Meet in a safe, public setting and enjoy your time together.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -399,22 +488,31 @@ export function FAQSection() {
     {
       q: 'What is Paireva?',
       a: 'Paireva is India’s premier verified social companionship platform. It allows adults (18+) to rent companions by the hour for legitimate social experiences such as coffee dates, dining, movies, concerts, sightseeing, and public events.'
+      a: 'Paireva is a premier social companionship platform connecting adults (18+) for real-world, non-sexual activities such as coffee, dining, events, and local exploration.'
     },
     {
       q: 'How does renting a girlfriend or boyfriend work?',
       a: 'Register your account with a ₹399 one-time platform registration fee, browse photo ID verified companion profiles in your city, select your preferred date, activity, and time slot, and confirm your booking.'
+      q: 'Is Paireva a dating platform?',
+      a: 'No. Paireva is strictly a social companionship platform for shared activities and conversations. It is not a dating app, matchmaker, or escort service.'
     },
     {
       q: 'What does the ₹399 registration fee cover?',
       a: 'A one-time ₹399 registration fee is charged to create and activate your Paireva account. This covers account onboarding, profile verification, safety checks, and access to the Paireva platform. Companion booking charges, if applicable, are separate.'
+      q: 'What can I book a companion for?',
+      a: 'You can book companions for public social experiences including coffee & conversation, dining, concerts, exhibitions, city walks, or public events.'
     },
     {
       q: 'Are companion booking charges separate?',
       a: 'Yes. The ₹399 is the platform registration fee. The companion’s hourly booking rates (set individually by verified companions, e.g. ₹500–₹900/hr) are separate and paid upon booking.'
+      q: 'What does the ₹399 registration fee cover?',
+      a: 'A one-time ₹399 registration fee is charged to create and activate your Paireva account and access the platform. Companion or booking charges, where applicable, are separate.'
     },
     {
       q: 'How do I find a companion?',
       a: 'Use our discovery filters to browse by city (Mumbai, Delhi NCR, Bengaluru, Goa, Pune, Hyderabad), activity type, or companion preferences. Click "View Profile" to check galleries, bios, and availability.'
+      q: 'Are companion/booking charges included?',
+      a: 'No. The ₹399 registration fee activates your account on Paireva. Individual companion booking charges (set by verified companions by the hour) are separate.'
     },
     {
       q: 'Can I choose the type of experience?',
@@ -435,6 +533,8 @@ export function FAQSection() {
     {
       q: 'What are the platform rules?',
       a: 'All companion meetings MUST take place in public venues (cafes, restaurants, theaters, public event arenas). Paireva strictly prohibits sexual services, prostitution, harassment, and illegal activities.'
+      q: 'How does Paireva keep the community safe?',
+      a: 'Paireva enforces strict public-only meeting guidelines, profile reviews, real-time contact detail masking in chat, and a zero-tolerance policy against inappropriate behavior.'
     }
   ];
 
@@ -447,6 +547,7 @@ export function FAQSection() {
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
             Everything You Need to Know
+            Frequently Asked Questions
           </h2>
           <p className="text-[#756A70] text-sm mt-2 font-medium">
             Clear, transparent answers about Paireva platform, safety, and bookings.
@@ -464,6 +565,7 @@ export function FAQSection() {
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
                   className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 text-sm sm:text-base font-extrabold text-[#292126] hover:text-[#6D315D] transition-colors"
+                  className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 text-sm sm:text-base font-extrabold text-[#292126] hover:text-[#6D315D] transition-colors cursor-pointer"
                 >
                   <span>{faq.q}</span>
                   <div className="w-8 h-8 rounded-full bg-[#FFF0F3] text-[#6D315D] flex items-center justify-center shrink-0">
@@ -576,6 +678,7 @@ export function StickyMobileCTA() {
         className="bg-[#E94B83] text-white font-extrabold text-xs px-5 py-3 rounded-xl shadow-md shadow-[#E94B83]/30 flex items-center gap-1.5 active:scale-95 transition-transform cursor-pointer"
       >
         Find Your Companion →
+        Find a Companion →
       </Link>
     </div>
   );
