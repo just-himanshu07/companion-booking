@@ -9,8 +9,7 @@ import CompanionCard from '@/components/CompanionCard';
 import { CompanionDiscoverySection, FAQSection, HowItWorksSection, StickyMobileCTA } from '@/components/LandingPageClient';
 import { getSessionUser } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { ShieldCheck, Search, MapPin, Sparkles, Coffee, Heart, Lock, Calendar, CheckCircle2, UserCheck, ArrowRight, MessageSquare, Star } from 'lucide-react';
-import { ShieldCheck, Search, MapPin, Sparkles, Coffee, Heart, Lock, Calendar, CheckCircle2, ArrowRight, MessageSquare, Star, Ban, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Search, MapPin, Sparkles, Lock, Calendar, CheckCircle2, MessageSquare, Star } from 'lucide-react';
 
 export default async function HomePage() {
   const currentUser = await getSessionUser();
@@ -93,10 +92,8 @@ export default async function HomePage() {
 
   const genderPreferenceHeading =
     currentUser?.customerProfile?.gender?.toLowerCase() === 'male'
-      ? 'Female Candidates for You (Rent Girlfriend)'
       ? 'Female Companions for You'
       : currentUser?.customerProfile?.gender?.toLowerCase() === 'female'
-      ? 'Male Candidates for You (Rent Boyfriend)'
       ? 'Male Companions for You'
       : 'Featured Verified Companions';
 
@@ -116,11 +113,9 @@ export default async function HomePage() {
             <div className="relative z-10">
               <div className="inline-flex items-center gap-2 text-xs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full mb-3">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Opposite-Gender Match Active ({currentUser.customerProfile?.gender || 'Member'})</span>
                 <span>Verified Match Active ({currentUser.customerProfile?.gender || 'Member'})</span>
               </div>
               <h1 className="text-2xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-                Welcome to Paireva, <span className="text-[#6D315D] font-serif italic">{currentUser.customerProfile?.name || 'Member'}</span>!
                 Welcome back, <span className="text-[#6D315D] font-serif italic">{currentUser.customerProfile?.name || 'Member'}</span>
               </h1>
               <p className="text-xs sm:text-sm text-[#756A70] mt-1 font-medium">
@@ -156,8 +151,6 @@ export default async function HomePage() {
             <div className="bg-white p-4 rounded-2xl border border-[#F47B8F]/20 shadow-sm flex items-start gap-3">
               <div className="w-8 h-8 rounded-xl bg-[#FFF0F3] text-[#6D315D] border border-[#F47B8F]/30 flex items-center justify-center font-extrabold text-xs shrink-0">1</div>
               <div>
-                <h4 className="text-xs font-bold text-[#292126]">Opposite Gender Match</h4>
-                <p className="text-[11px] text-[#756A70] mt-0.5 leading-snug">Male members see female companions; female members see male companions.</p>
                 <h4 className="text-xs font-bold text-[#292126]">Verified Companions</h4>
                 <p className="text-[11px] text-[#756A70] mt-0.5 leading-snug">Connect with verified people for genuine social companionship.</p>
               </div>
@@ -167,7 +160,6 @@ export default async function HomePage() {
               <div className="w-8 h-8 rounded-xl bg-[#FFF0F3] text-[#E94B83] border border-[#F47B8F]/30 flex items-center justify-center font-extrabold text-xs shrink-0">2</div>
               <div>
                 <h4 className="text-xs font-bold text-[#292126]">Public Social Activities</h4>
-                <p className="text-[11px] text-[#756A70] mt-0.5 leading-snug">Book for fine dining, movies, concerts, sightseeing, and public events.</p>
                 <p className="text-[11px] text-[#756A70] mt-0.5 leading-snug">Book for coffee, dining, movies, concerts, sightseeing, and public events.</p>
               </div>
             </div>
@@ -175,8 +167,6 @@ export default async function HomePage() {
             <div className="bg-white p-4 rounded-2xl border border-[#F47B8F]/20 shadow-sm flex items-start gap-3">
               <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center justify-center font-extrabold text-xs shrink-0">3</div>
               <div>
-                <h4 className="text-xs font-bold text-[#292126]">Verified & Safe</h4>
-                <p className="text-[11px] text-[#756A70] mt-0.5 leading-snug">100% photo ID verified companions. Phone & email masked in chat.</p>
                 <h4 className="text-xs font-bold text-[#292126]">Verified &amp; Safe</h4>
                 <p className="text-[11px] text-[#756A70] mt-0.5 leading-snug">Photo ID verified companions. Contact details masked during chat.</p>
               </div>
@@ -186,7 +176,6 @@ export default async function HomePage() {
               <div className="w-8 h-8 rounded-xl bg-purple-50 text-[#6D315D] border border-purple-200 flex items-center justify-center font-extrabold text-xs shrink-0">4</div>
               <div>
                 <h4 className="text-xs font-bold text-[#292126]">Strictly Non-Sexual</h4>
-                <p className="text-[11px] text-[#756A70] mt-0.5 leading-snug">Social companionship only. Zero tolerance for harassment or illegal activity.</p>
                 <p className="text-[11px] text-[#756A70] mt-0.5 leading-snug">Social companionship only. Zero tolerance for harassment or illicit services.</p>
               </div>
             </div>
@@ -220,17 +209,14 @@ export default async function HomePage() {
             </div>
           )}
 
-          {/* COMPANION SEARCH & DISCOVERY WORKSPACE */}
           {/* COMPANION SEARCH WORKSPACE */}
           <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#F47B8F]/20 shadow-md space-y-6">
             <div className="flex items-center justify-between border-b border-[#F47B8F]/20 pb-4">
               <div>
-                <h2 className="text-xl font-extrabold text-[#292126]">Find Your Social Companion</h2>
                 <h2 className="text-xl font-extrabold text-[#292126]">Find Your Companion</h2>
                 <p className="text-xs text-[#756A70] mt-0.5 font-medium">Filter by city or activity</p>
               </div>
               <Link href="/companions" className="text-xs font-bold text-[#E94B83] hover:underline">
-                Open Directory & Filters →
                 Open Directory &amp; Filters →
               </Link>
             </div>
@@ -271,19 +257,16 @@ export default async function HomePage() {
                 type="submit"
                 className="w-full bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold text-xs py-3 px-6 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Search className="w-4 h-4" /> Search Candidates
                 <Search className="w-4 h-4" /> Search Companions
               </button>
             </form>
           </div>
 
-          {/* FEATURED VERIFIED COMPANIONS GRID */}
           {/* FEATURED COMPANIONS GRID */}
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <h2 className="text-xl font-extrabold text-[#292126]">{genderPreferenceHeading}</h2>
               <Link href="/companions" className="text-xs font-bold text-[#E94B83] hover:underline">
-                View All Candidates ({featuredCompanions.length}+)
                 View All Companions ({featuredCompanions.length}+)
               </Link>
             </div>
@@ -293,11 +276,9 @@ export default async function HomePage() {
               <div className="p-4 bg-[#FFF0F3] border border-[#F47B8F]/30 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
                 <div className="flex items-center gap-2 font-bold text-[#6D315D]">
                   <Lock className="w-4 h-4 text-[#E94B83] shrink-0" />
-                  <span>Candidate Photos Locked — Identity Verification Required</span>
                   <span>Photos Locked — Identity Verification Under Review</span>
                 </div>
                 <span className="text-[11px] text-[#756A70] font-medium">
-                  Candidate photos unlock automatically upon admin approval.
                   Photos unlock automatically upon admin verification approval.
                 </span>
               </div>
@@ -327,7 +308,6 @@ export default async function HomePage() {
             </Link>
             <span>•</span>
             <Link href="/prohibited-services" className="hover:text-[#6D315D]">
-              Prohibited Services Policy
               Prohibited Activities Policy
             </Link>
             <span>•</span>
@@ -338,15 +318,11 @@ export default async function HomePage() {
         </div>
       ) : (
         /* ========================================================================= */
-        /* 2. LOGGED-OUT VIEW: PAIREVA WARM ROMANTIC LUXURY BRANDING                 */
         /* 2. LOGGED-OUT VIEW: ELEGANT SOCIAL COMPANIONSHIP MARKETPLACE              */
         /* ========================================================================= */
         <>
           {/* ==================== 1. HERO SECTION ==================== */}
           <section className="relative py-16 lg:py-24 bg-[#FFF8F5] overflow-hidden border-b border-[#F47B8F]/20">
-            {/* Ambient Warm Gradients */}
-            <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-[#FFD8C8]/50 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-96 h-96 bg-[#F6A6B8]/30 rounded-full blur-3xl pointer-events-none" />
             {/* Ambient Warm Soft Background Glows */}
             <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-[#FFD8C8]/40 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 -mb-12 -ml-12 w-96 h-96 bg-[#F6A6B8]/25 rounded-full blur-3xl pointer-events-none" />
@@ -358,34 +334,27 @@ export default async function HomePage() {
                   {/* Eyebrow Pill */}
                   <div className="inline-flex items-center gap-2 bg-[#FFF0F3] border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-4 py-1.5 rounded-full shadow-sm">
                     <Sparkles className="w-4 h-4 text-[#E94B83]" />
-                    <span>REAL PEOPLE. REAL COMPANY.</span>
                     <span>SOCIAL COMPANIONSHIP MARKETPLACE</span>
                   </div>
 
                   {/* Headline */}
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-[#292126] tracking-tight leading-[1.15]">
-                    Rent a <span className="font-serif italic text-[#6D315D]">Girlfriend</span>.<br />
-                    Rent a <span className="font-serif italic text-[#E94B83]">Boyfriend</span>.<br />
-                    Or just <span className="font-serif italic text-[#F47B8F]">Some Company</span>.
                     Find Someone to<br />
                     <span className="font-serif italic text-[#6D315D]">Spend Time With.</span>
                   </h1>
 
                   {/* Supporting Copy */}
                   <p className="text-base sm:text-lg text-[#756A70] leading-relaxed max-w-xl font-medium">
-                    Looking for someone to talk to, grab coffee with, attend an event with, or simply spend time with? Discover companions available by the hour.
                     Meet real people for coffee, conversations, events, local activities, or simply some good company. Discover companions available for meaningful, real-world experiences.
                   </p>
 
                   {/* Primary & Secondary CTAs */}
-                  <div className="space-y-2 pt-2">
                   <div className="space-y-3 pt-2">
                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                       <Link
                         href="/companions"
                         className="bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold px-8 py-4 rounded-2xl shadow-lg shadow-[#E94B83]/25 transition-all hover:scale-[1.02] text-base text-center inline-flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                       >
-                        Find Your Companion →
                         Find a Companion →
                       </Link>
                       <Link
@@ -396,9 +365,6 @@ export default async function HomePage() {
                       </Link>
                     </div>
 
-                    {/* Small Supporting Text for Companion CTA */}
-                    <p className="text-xs text-[#756A70] font-semibold pl-1">
-                      Want to offer companionship? Join Paireva.
                     {/* Trust Line Below CTAs */}
                     <p className="text-xs text-[#756A70] font-semibold flex items-center gap-1.5 pt-1">
                       <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -426,7 +392,7 @@ export default async function HomePage() {
                     </div>
                     <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-[#F47B8F]/25 shadow-sm">
                       <Lock className="w-4 h-4 text-[#E94B83]" />
-                      <span>Private & Discreet</span>
+                      <span>Private &amp; Discreet</span>
                     </div>
                     <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full border border-[#F47B8F]/25 shadow-sm">
                       <ShieldCheck className="w-4 h-4 text-[#D9A85C]" />
@@ -435,13 +401,11 @@ export default async function HomePage() {
                   </div>
                 </div>
 
-                {/* RIGHT COLUMN: HIGH-QUALITY LIFESTYLE PHOTOGRAPH */}
                 {/* RIGHT COLUMN: ELEGANT COMPANIONSHIP LIFESTYLE PHOTO */}
                 <div className="lg:col-span-5 relative">
                   <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
                     <img
                       src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&q=80"
-                      alt="Young Adult Indian Couple Coffee Date Experience"
                       alt="Coffee date and conversation experience"
                       className="w-full h-full object-cover object-center"
                     />
@@ -450,8 +414,6 @@ export default async function HomePage() {
                     {/* Floating Accent Card */}
                     <div className="absolute bottom-6 left-6 right-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl border border-[#F47B8F]/30 shadow-xl flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] font-extrabold text-[#E94B83] uppercase tracking-wider block">Verified Companion</span>
-                        <h4 className="text-sm font-extrabold text-[#292126]">Warm Coffee & Real Conversations</h4>
                         <span className="text-[10px] font-extrabold text-[#E94B83] uppercase tracking-wider block">Real-World Outing</span>
                         <h4 className="text-sm font-extrabold text-[#292126]">Coffee &amp; Good Conversations</h4>
                       </div>
@@ -466,40 +428,6 @@ export default async function HomePage() {
             </div>
           </section>
 
-          {/* ==================== 2. EMOTIONAL BRAND SECTION ==================== */}
-          <section className="py-20 bg-[#FFF0F3] border-b border-[#F47B8F]/20 relative">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                {/* Left Photo */}
-                <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-xl border-4 border-white group">
-                  <img
-                    src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80"
-                    alt="Rooftop Date Shared Moment"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#6D315D]/60 via-transparent to-transparent" />
-                  <div className="absolute bottom-6 left-6 right-6 p-5 bg-white/90 rounded-2xl backdrop-blur-md border border-[#F47B8F]/30 shadow-lg">
-                    <p className="text-xs font-extrabold text-[#E94B83] uppercase tracking-widest">Meaningful Moments</p>
-                    <h4 className="text-base font-extrabold text-[#292126] mt-0.5">Someone to Share the Moment With</h4>
-                  </div>
-                </div>
-
-                {/* Right Copy */}
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-                      <span className="font-serif italic text-[#6D315D]">Good Company</span> Changes Everything.
-                    </h2>
-                    <p className="text-[#6D315D] font-serif text-xl sm:text-2xl mt-4 leading-relaxed italic">
-                      "Sometimes you don't need a relationship. You just want someone to share the moment with."
-                    </p>
-                    <div className="w-20 h-1 bg-[#E94B83] rounded-full mt-3" />
-                  </div>
-
-                  <p className="text-sm sm:text-base text-[#756A70] leading-relaxed font-medium">
-                    Coffee. Conversations. Events. A little company when you want it. Paireva provides a safe, discreet marketplace to discover like-minded companions available by the hour.
-                  </p>
-                </div>
           {/* ==================== 2. CLEAR NON-SEXUAL POSITIONING ==================== */}
           <section className="py-12 bg-white border-b border-[#F47B8F]/20">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-3">
@@ -519,36 +447,30 @@ export default async function HomePage() {
             </div>
           </section>
 
-          {/* ==================== 3. EXPERIENCE CARDS ==================== */}
           {/* ==================== 3. HOW IT WORKS ==================== */}
           <HowItWorksSection />
 
-          {/* ==================== 4. WHAT YOU CAN DO (ACTIVITIES GRID) ==================== */}
+          {/* ==================== 4. WHAT YOU CAN DO (SHARED EXPERIENCES GRID) ==================== */}
           <section className="py-20 bg-[#FFF8F5] border-b border-[#F47B8F]/20">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center max-w-2xl mx-auto mb-14">
                 <div className="inline-flex items-center gap-2 bg-[#FFF0F3] border border-[#F47B8F]/30 text-[#6D315D] text-xs font-extrabold px-3.5 py-1 rounded-full mb-3">
-                  <Heart className="w-3.5 h-3.5 text-[#E94B83] fill-[#E94B83]" />
-                  <span>Paireva Experiences</span>
+                  <Sparkles className="w-3.5 h-3.5 text-[#E94B83]" />
                   <span>Shared Experiences</span>
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-                  Sometimes You Just Want <span className="font-serif text-[#6D315D] italic">Good Company</span>.
                   Good company can look like anything.
                 </h2>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* CARD 1 */}
                 <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm hover:shadow-xl hover:border-[#E94B83]/50 transition-all duration-300 hover:-translate-y-1">
                   <div className="w-12 h-12 rounded-2xl bg-[#FFF0F3] text-2xl flex items-center justify-center mb-4 border border-[#F47B8F]/30">
                     ☕
                   </div>
-                  <h3 className="text-lg font-extrabold text-[#292126] mb-2">Coffee Dates</h3>
                   <h3 className="text-lg font-extrabold text-[#292126] mb-2">Coffee &amp; Conversation</h3>
                   <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Grab coffee. Talk. Laugh. Enjoy the moment.
                     Grab a coffee and have a real conversation.
                   </p>
                 </div>
@@ -556,13 +478,10 @@ export default async function HomePage() {
                 {/* CARD 2 */}
                 <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm hover:shadow-xl hover:border-[#E94B83]/50 transition-all duration-300 hover:-translate-y-1">
                   <div className="w-12 h-12 rounded-2xl bg-[#FFF0F3] text-2xl flex items-center justify-center mb-4 border border-[#F47B8F]/30">
-                    🥂
                     🎟️
                   </div>
-                  <h3 className="text-lg font-extrabold text-[#292126] mb-2">Event Companion</h3>
                   <h3 className="text-lg font-extrabold text-[#292126] mb-2">Events</h3>
                   <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Have someone by your side for your next event.
                     Attend concerts, exhibitions, festivals or public events together.
                   </p>
                 </div>
@@ -570,13 +489,10 @@ export default async function HomePage() {
                 {/* CARD 3 */}
                 <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm hover:shadow-xl hover:border-[#E94B83]/50 transition-all duration-300 hover:-translate-y-1">
                   <div className="w-12 h-12 rounded-2xl bg-[#FFF0F3] text-2xl flex items-center justify-center mb-4 border border-[#F47B8F]/30">
-                    💬
                     🚶
                   </div>
-                  <h3 className="text-lg font-extrabold text-[#292126] mb-2">Conversations</h3>
                   <h3 className="text-lg font-extrabold text-[#292126] mb-2">Explore</h3>
                   <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Sometimes you simply want someone to talk to.
                     Walk around the city, explore new places or discover local spots.
                   </p>
                 </div>
@@ -584,55 +500,14 @@ export default async function HomePage() {
                 {/* CARD 4 */}
                 <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm hover:shadow-xl hover:border-[#E94B83]/50 transition-all duration-300 hover:-translate-y-1">
                   <div className="w-12 h-12 rounded-2xl bg-[#FFF0F3] text-2xl flex items-center justify-center mb-4 border border-[#F47B8F]/30">
-                    ❤️
                     🍜
                   </div>
-                  <h3 className="text-lg font-extrabold text-[#292126] mb-2">Shared Moments</h3>
                   <h3 className="text-lg font-extrabold text-[#292126] mb-2">Food &amp; Conversations</h3>
                   <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Spend time together doing something you enjoy.
                     Share a meal and spend some quality time together.
                   </p>
                 </div>
-              </div>
-            </div>
-          </section>
 
-          {/* ==================== 4. COMPANION DISCOVERY ==================== */}
-          <CompanionDiscoverySection
-            initialCompanions={
-              currentUser
-                ? featuredCompanions
-                : featuredCompanions.map((comp) => ({
-                    ...comp,
-                    displayName: '••••••',
-                    bio: 'Register or log in to view full profile details and bio.',
-                    city: { name: 'City hidden' },
-                    username: 'locked',
-                  }))
-            }
-            isLoggedIn={!!currentUser}
-          />
-
-          {/* ==================== 5. HOW IT WORKS ==================== */}
-          <HowItWorksSection />
-
-          {/* ==================== 6. PREMIUM CINEMATIC BREAK ==================== */}
-          <section className="relative py-28 bg-[#6D315D] text-white overflow-hidden border-b border-[#F47B8F]/20">
-            <div className="absolute inset-0 z-0">
-              <img
-                src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=1920&q=80"
-                alt="City Sunset Romantic Scene"
-                className="w-full h-full object-cover filter brightness-[0.4]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#6D315D]/90 via-[#6D315D]/80 to-transparent" />
-            </div>
-
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-              <div className="max-w-xl space-y-6">
-                <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-rose-200 text-xs font-bold px-3.5 py-1 rounded-full backdrop-blur-md">
-                  <Sparkles className="w-3.5 h-3.5 text-[#E94B83]" />
-                  <span>Cinematic Companionship</span>
                 {/* CARD 5 */}
                 <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm hover:shadow-xl hover:border-[#E94B83]/50 transition-all duration-300 hover:-translate-y-1">
                   <div className="w-12 h-12 rounded-2xl bg-[#FFF0F3] text-2xl flex items-center justify-center mb-4 border border-[#F47B8F]/30">
@@ -644,22 +519,6 @@ export default async function HomePage() {
                   </p>
                 </div>
 
-                <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                  <span className="font-serif italic font-normal">Life is better</span><br />
-                  when shared.
-                </h2>
-
-                <p className="text-base text-rose-100/90 leading-relaxed font-medium">
-                  Find someone to laugh with. Talk with. Go somewhere with. Simply spend time with.
-                </p>
-
-                <div>
-                  <Link
-                    href="/companions"
-                    className="bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold px-8 py-4 rounded-2xl shadow-xl transition-all hover:scale-105 inline-flex items-center gap-2 text-sm cursor-pointer"
-                  >
-                    Find Your Companion →
-                  </Link>
                 {/* CARD 6 */}
                 <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm hover:shadow-xl hover:border-[#E94B83]/50 transition-all duration-300 hover:-translate-y-1">
                   <div className="w-12 h-12 rounded-2xl bg-[#FFF0F3] text-2xl flex items-center justify-center mb-4 border border-[#F47B8F]/30">
@@ -674,78 +533,22 @@ export default async function HomePage() {
             </div>
           </section>
 
-          {/* ==================== 7. TRUST SECTION ==================== */}
-          <section className="py-20 bg-[#FFF8F5] border-b border-[#F47B8F]/20">
-          {/* ==================== 5. TRUST / SAFETY SECTION ==================== */}
-          <section className="py-20 bg-[#FFF0F3] border-b border-[#F47B8F]/20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center max-w-2xl mx-auto mb-16">
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-                  Built Around Trust.
-                  Built around trust.
-                </h2>
-                <p className="text-[#756A70] text-sm mt-2 font-medium">Safety, verification, and privacy built into every step</p>
-                <p className="text-[#756A70] text-sm mt-2 font-medium">Safety, privacy, and community guidelines built into every step</p>
-              </div>
+          {/* ==================== 5. COMPANION DISCOVERY ==================== */}
+          <CompanionDiscoverySection
+            initialCompanions={
+              currentUser
+                ? featuredCompanions
+                : featuredCompanions.map((comp) => ({
+                    ...comp,
+                    displayName: '••••••',
+                    bio: 'Create an account or log in to view full companion profile details and bio.',
+                    city: { name: 'City hidden' },
+                    username: 'locked',
+                  }))
+            }
+            isLoggedIn={!!currentUser}
+          />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* TRUST 1 */}
-                {/* FEATURE 1 */}
-                <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm space-y-3 hover:shadow-md transition-all">
-                  <div className="w-12 h-12 rounded-2xl bg-[#FFF0F3] text-2xl flex items-center justify-center font-bold">🔒</div>
-                  <h3 className="text-base font-extrabold text-[#292126]">Privacy First</h3>
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 text-2xl flex items-center justify-center font-bold">✓</div>
-                  <h3 className="text-base font-extrabold text-[#292126]">Verified Profiles</h3>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Your personal information should stay personal.
-                    Profiles are reviewed to help maintain a trustworthy community.
-                  </p>
-                </div>
-
-                {/* TRUST 2 */}
-                {/* FEATURE 2 */}
-                <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm space-y-3 hover:shadow-md transition-all">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-2xl flex items-center justify-center font-bold">✓</div>
-                  <h3 className="text-base font-extrabold text-[#292126]">Verified Profiles</h3>
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 text-2xl flex items-center justify-center font-bold">🔒</div>
-                  <h3 className="text-base font-extrabold text-[#292126]">Privacy First</h3>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Verification indicators help you make informed choices.
-                    Your personal information is handled responsibly.
-                  </p>
-                </div>
-
-                {/* TRUST 3 */}
-                {/* FEATURE 3 */}
-                <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm space-y-3 hover:shadow-md transition-all">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-50 text-2xl flex items-center justify-center font-bold">💳</div>
-                  <h3 className="text-base font-extrabold text-[#292126]">Secure Payments</h3>
-                  <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 text-2xl flex items-center justify-center font-bold">🛡️</div>
-                  <h3 className="text-base font-extrabold text-[#292126]">Safety Guidelines</h3>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Use a secure payment experience on the platform.
-                    Clear rules help keep real-world interactions respectful and safe.
-                  </p>
-                </div>
-
-                {/* TRUST 4 */}
-                {/* FEATURE 4 */}
-                <div className="bg-white p-7 rounded-3xl border border-[#F47B8F]/20 shadow-sm space-y-3 hover:shadow-md transition-all">
-                  <div className="w-12 h-12 rounded-2xl bg-[#FFF0F3] text-2xl flex items-center justify-center font-bold">🛡️</div>
-                  <h3 className="text-base font-extrabold text-[#292126]">Clear Experiences</h3>
-                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 text-2xl flex items-center justify-center font-bold">🚫</div>
-                  <h3 className="text-base font-extrabold text-[#292126]">Zero Tolerance</h3>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Know what you're booking before you confirm.
-                    Sexual services, escorting, harassment and inappropriate arrangements are prohibited.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ==================== 8. ₹399 REGISTRATION SECTION ==================== */}
-          <section className="py-20 bg-[#FFF0F3] border-b border-[#F47B8F]/20">
           {/* ==================== 6. REGISTRATION FEE SECTION ==================== */}
           <section id="pricing" className="scroll-mt-24 py-20 bg-[#FFF8F5] border-b border-[#F47B8F]/20">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8">
@@ -754,7 +557,6 @@ export default async function HomePage() {
                   <span>Transparent Pricing</span>
                 </div>
                 <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-                  Start Your Paireva Journey
                   Platform Pricing
                 </h2>
               </div>
@@ -762,7 +564,6 @@ export default async function HomePage() {
               {/* Pricing Card */}
               <div className="bg-white border border-[#F47B8F]/30 rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden">
                 <div className="space-y-6 max-w-md mx-auto">
-                  <span className="text-xs font-extrabold uppercase tracking-widest text-[#756A70] block">One-Time Platform Fee</span>
                   <span className="text-xs font-extrabold uppercase tracking-widest text-[#756A70] block">Platform Fee</span>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-5xl sm:text-6xl font-black text-[#6D315D]">₹399</span>
@@ -787,11 +588,11 @@ export default async function HomePage() {
                       <span>Discover available companions</span>
                     </div>
                   </div>
+
                   <p className="text-xs text-[#756A70] leading-relaxed border-t border-slate-100 pt-4 font-medium">
-                    A one-time ₹399 registration fee is charged to create and activate your Paireva account and access the platform. Companion or booking charges, where applicable, are separate.
+                    A one-time ₹399 registration fee is charged to create and activate your Paireva account. This covers account onboarding, profile verification, safety checks, and access to the Paireva platform. Companion booking charges, if applicable, are separate.
                   </p>
 
-                  <div className="pt-4">
                   <div className="pt-2">
                     <Link
                       href="/register"
@@ -800,50 +601,12 @@ export default async function HomePage() {
                       Register for ₹399 →
                     </Link>
                   </div>
-
-                  <p className="text-xs text-[#756A70] leading-relaxed border-t border-slate-100 pt-4 font-medium">
-                    A one-time ₹399 registration fee is charged to create and activate your Paireva account. This covers account onboarding, profile verification, safety checks, and access to the Paireva platform. Companion booking charges, if applicable, are separate.
-                  </p>
-                  <div className="pt-2">
-                    <Link
-                      href="/terms"
-                      className="text-xs font-extrabold text-[#6D315D] hover:text-[#E94B83] underline transition-colors"
-                    >
-                      View Pricing &amp; Policies →
-                    </Link>
-                  </div>
                 </div>
               </div>
             </div>
           </section>
 
-          {/* ==================== 9. SOCIAL PROOF ==================== */}
-          <section className="py-20 bg-[#FFF8F5] border-b border-[#F47B8F]/20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-12">
-              <div className="max-w-3xl mx-auto">
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-[#292126] tracking-tight">
-                  Your next great experience starts with <span className="font-serif text-[#6D315D] italic">finding the right company</span>.
-                </h2>
-                <p className="text-sm text-[#756A70] mt-3 font-medium">
-                  Designed for authentic human connection in safe public settings across India.
-                </p>
-          {/* ==================== 7. FEATURED COMPANIONS ==================== */}
-          <CompanionDiscoverySection
-            initialCompanions={
-              currentUser
-                ? featuredCompanions
-                : featuredCompanions.map((comp) => ({
-                    ...comp,
-                    displayName: '••••••',
-                    bio: 'Create an account or log in to view full companion profile details and bio.',
-                    city: { name: 'City hidden' },
-                    username: 'locked',
-                  }))
-            }
-            isLoggedIn={!!currentUser}
-          />
-
-          {/* ==================== 8. DEDICATED SAFETY BANNER ==================== */}
+          {/* ==================== 7. DEDICATED SAFETY BANNER ==================== */}
           <section className="py-20 bg-[#6D315D] text-white border-b border-[#F47B8F]/20 relative overflow-hidden">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-8 relative z-10">
               <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 text-rose-200 text-xs font-extrabold px-3.5 py-1 rounded-full backdrop-blur-md">
@@ -851,36 +614,15 @@ export default async function HomePage() {
                 <span>Safety Guidelines</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-3xl border border-[#F47B8F]/20 shadow-sm space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FFF0F3] text-[#6D315D] flex items-center justify-center font-bold mx-auto">🤝</div>
-                  <h4 className="text-sm font-extrabold text-[#292126]">Public Outings Only</h4>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Every date and meeting takes place safely in public restaurants, cafes, and event spaces.
-                  </p>
-                </div>
               <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
                 Meet smart. Meet safe.
               </h2>
 
-                <div className="bg-white p-6 rounded-3xl border border-[#F47B8F]/20 shadow-sm space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FFF0F3] text-[#E94B83] flex items-center justify-center font-bold mx-auto">✨</div>
-                  <h4 className="text-sm font-extrabold text-[#292126]">Verified Identities</h4>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Govt photo ID verification checks keep the community authentic and safe.
-                  </p>
               <div className="bg-white/10 border border-white/15 rounded-3xl p-6 sm:p-8 backdrop-blur-md text-left max-w-xl mx-auto space-y-3.5 text-xs sm:text-sm font-medium text-rose-100">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>Keep first meetings in public places.</span>
                 </div>
-
-                <div className="bg-white p-6 rounded-3xl border border-[#F47B8F]/20 shadow-sm space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-[#FFF0F3] text-[#D9A85C] flex items-center justify-center font-bold mx-auto">🔒</div>
-                  <h4 className="text-sm font-extrabold text-[#292126]">Full Discretion</h4>
-                  <p className="text-xs text-[#756A70] leading-relaxed font-medium">
-                    Complete privacy protection and masked contact details during in-app messaging.
-                  </p>
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                   <span>Keep communication respectful.</span>
@@ -898,59 +640,19 @@ export default async function HomePage() {
                   <span>If something feels wrong, leave.</span>
                 </div>
               </div>
-            </div>
-          </section>
 
-          {/* ==================== 10. FAQ ACCORDION ==================== */}
-          <FAQSection />
-
-          {/* ==================== 11. FINAL CTA BANNER ==================== */}
-          <section className="relative py-24 bg-[#6D315D] text-white text-center overflow-hidden border-b border-[#F47B8F]/20">
-            <div className="absolute inset-0 z-0">
-              <img
-                src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1920&q=80"
-                alt="Romantic Shared Moment"
-                className="w-full h-full object-cover filter brightness-[0.35]"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#6D315D]/90 via-[#6D315D]/80 to-[#6D315D]/90" />
-            </div>
-
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
-              <h2 className="text-4xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                <span className="font-serif italic font-normal">Don't Just Make Plans.</span><br />
-                Make Moments.
-              </h2>
-
-              <p className="text-rose-100/90 text-base sm:text-lg max-w-xl mx-auto font-medium">
-                Find someone to talk to. Find someone to laugh with. Find someone to share an experience with.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <div>
                 <Link
-                  href="/companions"
-                  className="bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold text-base px-10 py-5 rounded-2xl shadow-2xl transition-all inline-block hover:scale-105 cursor-pointer"
                   href="/safety"
                   className="bg-[#E94B83] hover:bg-[#D43770] text-white font-extrabold text-xs sm:text-sm px-8 py-4 rounded-2xl shadow-xl transition-all inline-block hover:scale-105 cursor-pointer"
                 >
-                  Find Your Companion →
                   Read Safety Guidelines →
                 </Link>
-                <Link
-                  href="/become-a-companion"
-                  className="bg-white/10 hover:bg-white/20 text-white font-extrabold text-base px-8 py-5 rounded-2xl border border-white/20 transition-all cursor-pointer backdrop-blur-sm"
-                >
-                  Become a Companion →
-                </Link>
               </div>
-
-              <p className="text-xs text-rose-200 font-extrabold uppercase tracking-wider">
-                One-Time Platform Registration: ₹399
-              </p>
             </div>
           </section>
 
-          {/* ==================== 9. FAQ PREVIEW ==================== */}
+          {/* ==================== 8. FAQ SECTION ==================== */}
           <FAQSection />
 
           {/* STICKY MOBILE CTA BAR */}
@@ -962,3 +664,4 @@ export default async function HomePage() {
     </div>
   );
 }
+
