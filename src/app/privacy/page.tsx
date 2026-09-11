@@ -200,7 +200,7 @@ export default async function PrivacyPage() {
               You have rights regarding your personal information, including the right to access, review, update, or correct your profile data through your account dashboard.
             </p>
             <p className="text-[#756A70]">
-              <strong>Account Deletion:</strong> If you wish to permanently delete your account and remove your personal profile from public discovery, please submit an account deletion request to <strong>[SUPPORT_EMAIL]</strong> from your registered email address. We will process your request after verifying identity, subject to legal record retention requirements.
+              <strong>Account Deletion:</strong> If you wish to permanently delete your account and remove your personal profile from public discovery, please submit an account deletion request to <a href="mailto:contact.himanshuraj@gmail.com" className="text-[#E94B83] underline font-bold">contact.himanshuraj@gmail.com</a> from your registered email address. We will process your request after verifying identity, subject to legal record retention requirements.
             </p>
           </section>
 
@@ -223,11 +223,7 @@ export default async function PrivacyPage() {
               If you have questions, concerns, or complaints regarding data privacy or grievance redressal, please contact our Grievance Officer:
             </p>
             <div className="bg-[#FFF8F5] p-5 rounded-2xl border border-[#F47B8F]/30 text-xs space-y-1 font-medium text-[#292126]">
-              <div><strong>Entity:</strong> [LEGAL_ENTITY_NAME]</div>
-              <div><strong>Grievance Officer:</strong> [GRIEVANCE_OFFICER_NAME]</div>
-              <div><strong>Grievance Email:</strong> [GRIEVANCE_EMAIL]</div>
-              <div><strong>Support Email:</strong> [SUPPORT_EMAIL]</div>
-              <div><strong>Registered Address:</strong> [REGISTERED_ADDRESS]</div>
+              <div><strong>Support Email:</strong> <a href="mailto:contact.himanshuraj@gmail.com" className="text-[#E94B83] underline font-bold">contact.himanshuraj@gmail.com</a></div>
             </div>
           </section>
         </div>

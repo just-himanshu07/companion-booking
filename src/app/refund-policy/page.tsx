@@ -170,9 +170,7 @@ export default async function RefundPolicyPage() {
               If you experience any issue relating to a booking, payment, refund, duplicate charge, cancellation, or other platform-related matter, please contact Paireva through the email address below.
             </p>
             <div className="bg-[#FFF8F5] p-5 rounded-2xl border border-[#F47B8F]/30 text-xs sm:text-sm space-y-1.5 font-medium text-[#292126]">
-              <div><strong>Platform:</strong> Paireva</div>
               <div><strong>Support Email:</strong> <a href="mailto:contact.himanshuraj@gmail.com" className="text-[#E94B83] underline font-bold">contact.himanshuraj@gmail.com</a></div>
-              <div><strong>Website:</strong> <Link href="https://www.paireva.fun" className="text-[#E94B83] underline font-bold">https://www.paireva.fun</Link></div>
             </div>
             <p className="text-[#756A70]">
               We encourage users to contact us first so that we can review the issue and attempt to resolve the matter.

@@ -216,10 +216,7 @@ export default async function ProhibitedServicesPage() {
             </div>
 
             <div className="bg-[#FFF8F5] p-5 rounded-2xl border border-[#F47B8F]/30 text-xs space-y-1 font-medium text-[#292126] mt-4">
-              <div><strong>Safety / Compliance Contact:</strong> [LEGAL_ENTITY_NAME]</div>
-              <div><strong>Safety Email:</strong> [SUPPORT_EMAIL]</div>
-              <div><strong>Grievance Email:</strong> [GRIEVANCE_EMAIL]</div>
-              <div><strong>Website:</strong> https://www.paireva.fun</div>
+              <div><strong>Support Email:</strong> <a href="mailto:contact.himanshuraj@gmail.com" className="text-[#E94B83] underline font-bold">contact.himanshuraj@gmail.com</a></div>
             </div>
           </section>
 

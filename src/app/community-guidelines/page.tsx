@@ -160,7 +160,7 @@ export default async function CommunityGuidelinesPage() {
             </p>
             <ul className="list-disc list-inside space-y-1 text-[#756A70] pl-2 font-medium">
               <li>Use the <strong>"Report User"</strong> or <strong>"Report Message"</strong> button in the app.</li>
-              <li>Email our moderation team directly at <strong>[SUPPORT_EMAIL]</strong>.</li>
+              <li>Email our moderation team directly at <a href="mailto:contact.himanshuraj@gmail.com" className="text-[#E94B83] underline font-bold">contact.himanshuraj@gmail.com</a>.</li>
             </ul>
             <div className="bg-[#FFF8F5] p-5 rounded-2xl border border-[#F47B8F]/40 space-y-2 mt-3">
               <div className="font-extrabold text-[#6D315D] text-xs flex items-center gap-1.5">

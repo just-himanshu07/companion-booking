@@ -135,7 +135,7 @@ export default async function TermsPage() {
               <li>Maintain the security and confidentiality of your account credentials.</li>
               <li>Never create fake identities, upload fraudulent verification documents, or impersonate others.</li>
               <li>Never share, transfer, or sell your account to another individual.</li>
-              <li>Notify Paireva immediately at <strong>[SUPPORT_EMAIL]</strong> if you suspect unauthorized access.</li>
+              <li>Notify Paireva immediately at <a href="mailto:contact.himanshuraj@gmail.com" className="text-[#E94B83] underline font-bold">contact.himanshuraj@gmail.com</a> if you suspect unauthorized access.</li>
             </ul>
           </section>
 
@@ -267,7 +267,7 @@ export default async function TermsPage() {
               16. Intellectual Property
             </h2>
             <p className="text-[#756A70]">
-              The Paireva name, logo, software, design system, source code, and trademarks are the exclusive intellectual property of <strong>[LEGAL_ENTITY_NAME]</strong>. Unauthorized copying, scraping, or reproduction is strictly prohibited.
+              The Paireva name, logo, software, design system, source code, and trademarks are the exclusive intellectual property of <strong>Paireva</strong>. Unauthorized copying, scraping, or reproduction is strictly prohibited.
             </p>
           </section>
 
@@ -297,7 +297,7 @@ export default async function TermsPage() {
               19. Governing Law & Jurisdiction
             </h2>
             <p className="text-[#756A70]">
-              These Terms shall be governed by and construed in accordance with the laws of <strong>India</strong>. Any legal dispute or court proceeding arising under these Terms shall be subject to the exclusive jurisdiction of the competent courts in <strong>[JURISDICTION]</strong>, India.
+              These Terms shall be governed by and construed in accordance with the laws of <strong>India</strong>. Any legal dispute or court proceeding arising under these Terms shall be subject to the exclusive jurisdiction of the competent courts in India.
             </p>
           </section>
 
@@ -310,11 +310,7 @@ export default async function TermsPage() {
               For support inquiries, legal notices, or policy questions, please contact us:
             </p>
             <div className="bg-[#FFF8F5] p-5 rounded-2xl border border-[#F47B8F]/30 text-xs space-y-1 font-medium text-[#292126]">
-              <div><strong>Entity:</strong> [LEGAL_ENTITY_NAME]</div>
-              <div><strong>Support Email:</strong> [SUPPORT_EMAIL]</div>
-              <div><strong>Grievance Officer Email:</strong> [GRIEVANCE_EMAIL]</div>
-              <div><strong>Registered Address:</strong> [REGISTERED_ADDRESS]</div>
-              <div><strong>Website:</strong> https://www.paireva.fun</div>
+              <div><strong>Support Email:</strong> <a href="mailto:contact.himanshuraj@gmail.com" className="text-[#E94B83] underline font-bold">contact.himanshuraj@gmail.com</a></div>
             </div>
           </section>
         </div>
